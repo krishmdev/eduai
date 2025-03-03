@@ -1,0 +1,65 @@
+[project]
+name = "eduai"
+version = "0.1.0"
+description = "AP-style science item generation with a LoRA-tuned Llama 3.2, curriculum tagging, and an adaptive test driven by knowledge tracing"
+readme = "README.md"
+license = "MIT"
+requires-python = ">=3.11,<3.12"
+authors = [{ name = "Krish Maheshwari" }]
+dependencies = [
+    "numpy==2.4.6",
+    "scipy==1.17.1",
+    "pyyaml==6.0.3",
+    "jsonschema==4.26.0",
+    "rapidfuzz==3.14.6",
+    "pydantic==2.13.5",
+    "pydantic-settings==2.15.0",
+    "fastapi==0.141.1",
+    "uvicorn==0.53.0",
+    "jinja2==3.1.6",
+    "python-multipart==0.0.20",
+    "typer==0.27.2",
+    "rich==15.0.0",
+    "httpx==0.28.1",
+    "matplotlib==3.11.2",
+]
+
+[project.optional-dependencies]
+embed = [
+    "sentence-transformers==6.1.0",
+    "transformers==5.17.0",
+    "torch==2.14.0",
+    "scikit-learn==1.9.1",
+    "huggingface-hub==1.32.0",
+]
+mlx = [
+    "mlx==0.32.2; sys_platform == 'darwin'",
+    "mlx-lm==0.31.3; sys_platform == 'darwin'",
+]
+dev = [
+    "pytest==9.1.1",
+    "ruff==0.16.8",
+]
+
+[project.scripts]
+eduai = "eduai.cli:app"
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/eduai"]
+
+[tool.ruff]
+line-length = 110
+target-version = "py311"
+extend-exclude = ["notebooks"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "SIM"]
+ignore = ["E501", "B008"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-q"
