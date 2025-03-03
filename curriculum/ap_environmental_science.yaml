@@ -1,0 +1,201 @@
+# Own-wording taxonomy loosely following the scope of an AP Environmental Science course.
+# Unit names are short generic titles; every objective sentence was written for this project.
+# Weights are our own rough blueprint numbers, not official exam percentages.
+subject: APES
+name: AP Environmental Science
+units:
+  - id: APES.1
+    name: Ecosystems
+    weight: 0.10
+    topics:
+      - id: APES.1.1
+        name: Biomes
+        objectives:
+          - id: APES.1.1.a
+            text: Relate the climate of terrestrial and aquatic biomes to the organisms that live there.
+            keywords: [biome, tundra, desert, rainforest, grassland, taiga, wetland, coral reef]
+            bloom: understand
+          - id: APES.1.1.b
+            text: Describe zones of freshwater and marine ecosystems and how light, salinity, and depth shape them.
+            keywords: [aquatic ecosystem, estuary, ocean zone, intertidal, plankton, salinity, freshwater]
+            bloom: understand
+      - id: APES.1.2
+        name: Biogeochemical cycles
+        objectives:
+          - id: APES.1.2.a
+            text: Trace carbon and nitrogen through reservoirs and describe how nitrogen fixation makes nitrogen usable.
+            keywords: [carbon cycle, nitrogen cycle, nitrogen fixation, reservoir, phosphorus cycle, biogeochemical]
+            bloom: understand
+          - id: APES.1.2.b
+            text: Describe the water cycle processes of evaporation, transpiration, condensation, precipitation, and runoff.
+            keywords: [water cycle, evaporation, transpiration, condensation, precipitation, runoff, groundwater]
+            bloom: remember
+  - id: APES.2
+    name: Biodiversity
+    weight: 0.09
+    topics:
+      - id: APES.2.1
+        name: Biodiversity and succession
+        objectives:
+          - id: APES.2.1.a
+            text: Explain why genetic, species, and ecosystem diversity make ecosystems more resilient.
+            keywords: [biodiversity, species diversity, ecosystem services, resilience, keystone species]
+            bloom: understand
+          - id: APES.2.1.b
+            text: Describe primary and secondary succession and the role of pioneer species.
+            keywords: [ecological succession, primary succession, secondary succession, pioneer species, climax community]
+            bloom: understand
+  - id: APES.3
+    name: Populations
+    weight: 0.10
+    topics:
+      - id: APES.3.1
+        name: Population dynamics
+        objectives:
+          - id: APES.3.1.a
+            text: Compare r-selected and K-selected species and their survivorship curves.
+            keywords: [r-selected, k-selected, survivorship curve, reproductive strategy, life history]
+            bloom: analyze
+          - id: APES.3.1.b
+            text: Interpret age-structure diagrams and the demographic transition for human populations.
+            keywords: [human population, age structure, demographic transition, birth rate, death rate, fertility]
+            bloom: analyze
+  - id: APES.4
+    name: Earth systems
+    weight: 0.14
+    topics:
+      - id: APES.4.1
+        name: Geology
+        objectives:
+          - id: APES.4.1.a
+            text: Explain plate tectonics and how plate boundaries produce earthquakes, volcanoes, and mountains.
+            keywords: [plate tectonics, plate boundary, earthquake, volcano, mantle, crust, continental drift, magma]
+            bloom: understand
+          - id: APES.4.1.b
+            text: Describe the rock cycle and how weathering and erosion shape landforms and form soil.
+            keywords: [rock cycle, igneous, sedimentary, metamorphic, weathering, erosion, soil, mineral]
+            bloom: understand
+          - id: APES.4.1.c
+            text: Describe soil horizons, soil texture, and why soil fertility matters for plants.
+            keywords: [soil, soil horizon, humus, topsoil, clay, sand, soil fertility]
+            bloom: remember
+      - id: APES.4.2
+        name: Atmosphere and climate
+        objectives:
+          - id: APES.4.2.a
+            text: Describe the layers and composition of the atmosphere and how uneven solar heating drives winds and weather.
+            keywords: [atmosphere, troposphere, stratosphere, air pressure, wind, weather, front, humidity]
+            bloom: understand
+          - id: APES.4.2.b
+            text: Explain how latitude, ocean currents, and landforms shape regional climate.
+            keywords: [climate, latitude, ocean current, rain shadow, el nino, climate zone]
+            bloom: understand
+          - id: APES.4.2.c
+            text: Explain how hurricanes, tornadoes, and thunderstorms form and the hazards they bring.
+            keywords: [hurricane, tornado, thunderstorm, storm, lightning, flood, natural hazard]
+            bloom: understand
+  - id: APES.5
+    name: Land and water use
+    weight: 0.10
+    topics:
+      - id: APES.5.1
+        name: Agriculture and resources
+        objectives:
+          - id: APES.5.1.a
+            text: Evaluate the environmental costs of agriculture, irrigation, and deforestation.
+            keywords: [agriculture, irrigation, deforestation, fertilizer, pesticide, soil erosion, overgrazing]
+            bloom: evaluate
+          - id: APES.5.1.b
+            text: Describe how minerals and fresh water are extracted and managed, and the impacts of mining.
+            keywords: [mining, natural resource, freshwater, aquifer, ore, renewable resource, conservation]
+            bloom: understand
+          - id: APES.5.1.c
+            text: Evaluate sustainable practices in forestry, fishing, and urban land use.
+            keywords: [sustainability, sustainable forestry, overfishing, urbanization, urban sprawl, land use]
+            bloom: evaluate
+  - id: APES.6
+    name: Energy resources
+    weight: 0.12
+    topics:
+      - id: APES.6.1
+        name: Nonrenewable energy
+        objectives:
+          - id: APES.6.1.a
+            text: Describe how coal, oil, and natural gas form and the tradeoffs of burning them for energy.
+            keywords: [fossil fuel, coal, petroleum, natural gas, nonrenewable, combustion, power plant]
+            bloom: understand
+          - id: APES.6.1.b
+            text: Weigh the benefits and risks of nuclear power, including waste storage.
+            keywords: [nuclear power, uranium, nuclear waste, reactor, fission, radiation]
+            bloom: evaluate
+      - id: APES.6.2
+        name: Renewable energy
+        objectives:
+          - id: APES.6.2.a
+            text: Compare solar, wind, hydroelectric, geothermal, and biomass energy sources.
+            keywords: [renewable energy, solar energy, wind power, hydroelectric, geothermal, biomass, biofuel]
+            bloom: analyze
+          - id: APES.6.2.b
+            text: Explain how electricity is generated from turbines and how conservation and efficiency reduce demand.
+            keywords: [electricity generation, turbine, energy conservation, energy efficiency, fuel cell, hybrid]
+            bloom: understand
+  - id: APES.7
+    name: Air pollution
+    weight: 0.10
+    topics:
+      - id: APES.7.1
+        name: Air quality
+        objectives:
+          - id: APES.7.1.a
+            text: Identify primary and secondary air pollutants such as smog and describe their sources and health effects.
+            keywords: [air pollution, smog, pollutant, particulate matter, carbon monoxide, ozone, emissions]
+            bloom: remember
+          - id: APES.7.1.b
+            text: Explain how acid rain forms and how thermal inversions trap pollutants.
+            keywords: [acid rain, sulfur dioxide, nitrogen oxide, thermal inversion, acid deposition]
+            bloom: understand
+  - id: APES.8
+    name: Water and land pollution
+    weight: 0.11
+    topics:
+      - id: APES.8.1
+        name: Pollution of water and land
+        objectives:
+          - id: APES.8.1.a
+            text: Explain how nutrient runoff causes eutrophication and oxygen-depleted dead zones.
+            keywords: [eutrophication, nutrient runoff, algal bloom, dead zone, dissolved oxygen, water pollution]
+            bloom: understand
+          - id: APES.8.1.b
+            text: Describe how toxins bioaccumulate and biomagnify up food chains.
+            keywords: [bioaccumulation, biomagnification, toxin, mercury, ddt, pesticide]
+            bloom: understand
+          - id: APES.8.1.c
+            text: Compare methods for managing solid waste and treating wastewater.
+            keywords: [landfill, recycling, solid waste, sewage treatment, wastewater, composting]
+            bloom: analyze
+  - id: APES.9
+    name: Global change
+    weight: 0.14
+    topics:
+      - id: APES.9.1
+        name: Climate change
+        objectives:
+          - id: APES.9.1.a
+            text: Explain the greenhouse effect and how rising greenhouse gas levels warm the planet.
+            keywords: [greenhouse effect, greenhouse gas, carbon dioxide, methane, global warming, climate change]
+            bloom: understand
+          - id: APES.9.1.b
+            text: Describe impacts of warming such as sea-level rise, ocean acidification, and shifting species ranges.
+            keywords: [sea level rise, ocean acidification, melting ice, glacier, coral bleaching]
+            bloom: understand
+      - id: APES.9.2
+        name: Ozone and extinction
+        objectives:
+          - id: APES.9.2.a
+            text: Explain how CFCs thin the stratospheric ozone layer and why that increases UV exposure.
+            keywords: [ozone layer, cfc, ultraviolet radiation, ozone depletion, stratosphere]
+            bloom: understand
+          - id: APES.9.2.b
+            text: Relate habitat loss, invasive species, and overharvesting to species extinction.
+            keywords: [extinction, endangered species, habitat loss, invasive species, overharvesting, habitat fragmentation]
+            bloom: understand

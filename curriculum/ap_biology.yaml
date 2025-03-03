@@ -1,0 +1,242 @@
+# Own-wording taxonomy loosely following the scope of an AP Biology course.
+# Unit names are short generic titles; every objective sentence was written for this project.
+# Weights are our own rough blueprint numbers, not official exam percentages.
+subject: BIO
+name: AP Biology
+units:
+  - id: BIO.1
+    name: Molecules of life
+    weight: 0.10
+    topics:
+      - id: BIO.1.1
+        name: Water and carbon chemistry
+        objectives:
+          - id: BIO.1.1.a
+            text: Explain how hydrogen bonding between water molecules gives water cohesion, high specific heat, and its role as a solvent for living systems.
+            keywords: [water, hydrogen bond, polarity, cohesion, specific heat, solvent]
+            bloom: understand
+          - id: BIO.1.1.b
+            text: Relate the bonding versatility of carbon to the variety of organic molecules found in cells.
+            keywords: [carbon, organic molecule, covalent bond, functional group, hydrocarbon]
+            bloom: understand
+      - id: BIO.1.2
+        name: Biological macromolecules
+        objectives:
+          - id: BIO.1.2.a
+            text: Identify the monomers, bonds, and cellular roles of carbohydrates, lipids, proteins, and nucleic acids.
+            keywords: [monomer, polymer, carbohydrate, lipid, protein, nucleic acid, amino acid, glucose, fatty acid]
+            bloom: remember
+          - id: BIO.1.2.b
+            text: Predict how a change in amino acid sequence or folding can alter the shape and function of a protein.
+            keywords: [protein structure, amino acid sequence, folding, denaturation, primary structure]
+            bloom: apply
+  - id: BIO.2
+    name: Cells
+    weight: 0.13
+    topics:
+      - id: BIO.2.1
+        name: Cell structures
+        objectives:
+          - id: BIO.2.1.a
+            text: Compare prokaryotic and eukaryotic cells in terms of nucleus, organelles, and size.
+            keywords: [prokaryote, eukaryote, nucleus, bacteria, organelle, cell wall]
+            bloom: understand
+          - id: BIO.2.1.b
+            text: Describe the function of major organelles such as ribosomes, the endoplasmic reticulum, Golgi apparatus, mitochondria, and chloroplasts.
+            keywords: [ribosome, endoplasmic reticulum, golgi, mitochondria, chloroplast, lysosome, vacuole]
+            bloom: remember
+      - id: BIO.2.2
+        name: Membranes and transport
+        objectives:
+          - id: BIO.2.2.a
+            text: Explain how the phospholipid bilayer and membrane proteins control what enters and leaves a cell.
+            keywords: [plasma membrane, phospholipid bilayer, membrane protein, selective permeability, channel]
+            bloom: understand
+          - id: BIO.2.2.b
+            text: Distinguish diffusion, osmosis, facilitated diffusion, and active transport, and predict water movement across a membrane from solute concentrations.
+            keywords: [diffusion, osmosis, active transport, concentration gradient, hypertonic, hypotonic, endocytosis]
+            bloom: apply
+  - id: BIO.3
+    name: Energy in cells
+    weight: 0.12
+    topics:
+      - id: BIO.3.1
+        name: Enzymes
+        objectives:
+          - id: BIO.3.1.a
+            text: Explain how enzymes lower activation energy and how temperature, pH, and inhibitors change reaction rates.
+            keywords: [enzyme, catalyst, activation energy, active site, substrate, inhibitor]
+            bloom: understand
+      - id: BIO.3.2
+        name: Photosynthesis
+        objectives:
+          - id: BIO.3.2.a
+            text: Describe how the light reactions and the Calvin cycle convert light energy into chemical energy stored in sugar.
+            keywords: [photosynthesis, chlorophyll, light reactions, calvin cycle, carbon dioxide, glucose, chloroplast]
+            bloom: understand
+      - id: BIO.3.3
+        name: Cellular respiration
+        objectives:
+          - id: BIO.3.3.a
+            text: Trace how glycolysis, the Krebs cycle, and the electron transport chain release energy from glucose to make ATP.
+            keywords: [cellular respiration, glycolysis, krebs cycle, electron transport chain, atp, mitochondria, oxygen]
+            bloom: understand
+          - id: BIO.3.3.b
+            text: Compare aerobic respiration with fermentation in terms of oxygen use, products, and ATP yield.
+            keywords: [fermentation, anaerobic, lactic acid, alcohol, aerobic, atp yield]
+            bloom: analyze
+  - id: BIO.4
+    name: Signaling, homeostasis, and division
+    weight: 0.12
+    topics:
+      - id: BIO.4.1
+        name: Signaling and homeostasis
+        objectives:
+          - id: BIO.4.1.a
+            text: Describe how signal molecules such as hormones bind receptors and trigger responses in target cells.
+            keywords: [hormone, receptor, signal transduction, endocrine, target cell, neurotransmitter]
+            bloom: understand
+          - id: BIO.4.1.b
+            text: Explain how negative and positive feedback loops keep body conditions such as temperature and blood sugar within a range.
+            keywords: [homeostasis, negative feedback, positive feedback, insulin, body temperature, regulation]
+            bloom: understand
+      - id: BIO.4.2
+        name: Cell cycle
+        objectives:
+          - id: BIO.4.2.a
+            text: Order the phases of the cell cycle and mitosis and describe what happens to chromosomes in each.
+            keywords: [cell cycle, mitosis, interphase, prophase, metaphase, anaphase, telophase, cytokinesis]
+            bloom: remember
+          - id: BIO.4.2.b
+            text: Explain how checkpoint failures and uncontrolled division lead to cancer.
+            keywords: [cancer, tumor, checkpoint, uncontrolled division, mutation, cell cycle regulation]
+            bloom: understand
+      - id: BIO.4.3
+        name: Body systems and defense
+        objectives:
+          - id: BIO.4.3.a
+            text: Describe how the immune system recognizes and responds to pathogens.
+            keywords: [immune system, antibody, antigen, pathogen, lymphocyte, vaccine, infection]
+            bloom: understand
+          - id: BIO.4.3.b
+            text: Explain how organ systems such as the nervous and circulatory systems coordinate to support an organism.
+            keywords: [nervous system, neuron, circulatory system, heart, blood, organ system, digestive system]
+            bloom: understand
+  - id: BIO.5
+    name: Heredity
+    weight: 0.13
+    topics:
+      - id: BIO.5.1
+        name: Meiosis and variation
+        objectives:
+          - id: BIO.5.1.a
+            text: Explain how meiosis produces haploid gametes and how crossing over and independent assortment create genetic variation.
+            keywords: [meiosis, gamete, haploid, diploid, crossing over, sexual reproduction, chromosome]
+            bloom: understand
+      - id: BIO.5.2
+        name: Inheritance patterns
+        objectives:
+          - id: BIO.5.2.a
+            text: Use Punnett squares and the laws of segregation and independent assortment to predict offspring ratios.
+            keywords: [mendel, punnett square, dominant, recessive, allele, genotype, phenotype, heterozygous]
+            bloom: apply
+          - id: BIO.5.2.b
+            text: Describe inheritance that departs from simple dominance, including incomplete dominance, codominance, and sex-linked traits.
+            keywords: [incomplete dominance, codominance, sex-linked, x chromosome, polygenic, blood type]
+            bloom: understand
+          - id: BIO.5.2.c
+            text: Relate chromosome number changes and single-gene mutations to human genetic disorders.
+            keywords: [genetic disorder, nondisjunction, trisomy, down syndrome, pedigree, carrier]
+            bloom: apply
+  - id: BIO.6
+    name: Gene expression
+    weight: 0.13
+    topics:
+      - id: BIO.6.1
+        name: DNA structure and replication
+        objectives:
+          - id: BIO.6.1.a
+            text: Describe the double-helix structure of DNA and complementary base pairing.
+            keywords: [dna, double helix, nucleotide, base pairing, adenine, thymine, guanine, cytosine]
+            bloom: remember
+          - id: BIO.6.1.b
+            text: Explain semiconservative DNA replication and the roles of helicase and DNA polymerase.
+            keywords: [replication, semiconservative, dna polymerase, helicase, template strand]
+            bloom: understand
+      - id: BIO.6.2
+        name: Transcription and translation
+        objectives:
+          - id: BIO.6.2.a
+            text: Trace the flow of information from DNA to mRNA to protein, including codons and the roles of tRNA and ribosomes.
+            keywords: [transcription, translation, mrna, trna, codon, rna polymerase, genetic code]
+            bloom: understand
+          - id: BIO.6.2.b
+            text: Predict the effect of point and frameshift mutations on the protein a gene encodes.
+            keywords: [mutation, point mutation, frameshift, substitution, mutagen]
+            bloom: apply
+      - id: BIO.6.3
+        name: Regulation and biotechnology
+        objectives:
+          - id: BIO.6.3.a
+            text: Explain how cells turn genes on and off, and how tools such as PCR, gel electrophoresis, and recombinant DNA are used.
+            keywords: [gene regulation, operon, biotechnology, pcr, recombinant dna, genetic engineering, cloning]
+            bloom: understand
+  - id: BIO.7
+    name: Evolution
+    weight: 0.15
+    topics:
+      - id: BIO.7.1
+        name: Natural selection
+        objectives:
+          - id: BIO.7.1.a
+            text: Explain how variation, inheritance, and differential reproductive success lead to adaptation by natural selection.
+            keywords: [natural selection, adaptation, fitness, darwin, variation, survival]
+            bloom: understand
+          - id: BIO.7.1.b
+            text: Evaluate fossil, anatomical, and molecular evidence for common ancestry.
+            keywords: [fossil, homologous structure, vestigial, common ancestor, evidence for evolution, comparative anatomy]
+            bloom: evaluate
+      - id: BIO.7.2
+        name: Population genetics and speciation
+        objectives:
+          - id: BIO.7.2.a
+            text: Describe how genetic drift, gene flow, and mutation change allele frequencies in a population.
+            keywords: [genetic drift, gene flow, allele frequency, hardy-weinberg, gene pool, bottleneck]
+            bloom: understand
+          - id: BIO.7.2.b
+            text: Explain how reproductive isolation leads to new species.
+            keywords: [speciation, reproductive isolation, species, geographic isolation, allopatric]
+            bloom: understand
+      - id: BIO.7.3
+        name: Classification and life's history
+        objectives:
+          - id: BIO.7.3.a
+            text: Interpret phylogenetic trees and use the domain and kingdom system to classify organisms.
+            keywords: [phylogeny, cladogram, taxonomy, domain, kingdom, classification, archaea]
+            bloom: analyze
+          - id: BIO.7.3.b
+            text: Describe major features of viruses, bacteria, protists, fungi, plants, and animals as groups of living things.
+            keywords: [virus, bacteria, protist, fungi, plant, animal, invertebrate, vertebrate]
+            bloom: remember
+  - id: BIO.8
+    name: Ecology
+    weight: 0.12
+    topics:
+      - id: BIO.8.1
+        name: Energy flow and cycles
+        objectives:
+          - id: BIO.8.1.a
+            text: Describe how energy moves through food chains and webs and why only about ten percent passes to each trophic level.
+            keywords: [food chain, food web, producer, consumer, decomposer, trophic level, energy pyramid]
+            bloom: understand
+          - id: BIO.8.1.b
+            text: Explain how organisms interact through predation, competition, and symbiosis.
+            keywords: [predation, competition, symbiosis, mutualism, parasitism, commensalism, niche]
+            bloom: understand
+      - id: BIO.8.2
+        name: Populations
+        objectives:
+          - id: BIO.8.2.a
+            text: Relate carrying capacity and limiting factors to exponential and logistic population growth.
+            keywords: [population growth, carrying capacity, limiting factor, exponential, logistic, birth rate]
+            bloom: apply

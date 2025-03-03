@@ -1,0 +1,209 @@
+# Own-wording taxonomy loosely following the scope of an AP Chemistry course.
+# Unit names are short generic titles; every objective sentence was written for this project.
+# Weights are our own rough blueprint numbers, not official exam percentages.
+subject: CHEM
+name: AP Chemistry
+units:
+  - id: CHEM.1
+    name: Atoms and the periodic table
+    weight: 0.13
+    topics:
+      - id: CHEM.1.1
+        name: Atomic structure
+        objectives:
+          - id: CHEM.1.1.a
+            text: Describe the charges, masses, and locations of protons, neutrons, and electrons, and use them to identify isotopes and ions.
+            keywords: [proton, neutron, electron, nucleus, isotope, atomic number, mass number, ion]
+            bloom: remember
+          - id: CHEM.1.1.b
+            text: Write electron configurations and relate valence electrons to how an element reacts.
+            keywords: [electron configuration, orbital, energy level, valence electron, shell, quantum]
+            bloom: apply
+          - id: CHEM.1.1.c
+            text: Use the mole and molar mass to convert between mass, moles, and number of particles.
+            keywords: [mole, avogadro, molar mass, stoichiometry, atomic mass unit]
+            bloom: apply
+      - id: CHEM.1.2
+        name: Periodic trends
+        objectives:
+          - id: CHEM.1.2.a
+            text: Explain trends in atomic radius, ionization energy, and electronegativity across periods and down groups.
+            keywords: [periodic table, atomic radius, ionization energy, electronegativity, group, period, trend]
+            bloom: understand
+          - id: CHEM.1.2.b
+            text: Classify elements as metals, nonmetals, or metalloids and describe the properties of main element families.
+            keywords: [metal, nonmetal, metalloid, alkali metal, halogen, noble gas, transition metal]
+            bloom: remember
+  - id: CHEM.2
+    name: Chemical bonding
+    weight: 0.12
+    topics:
+      - id: CHEM.2.1
+        name: Bond types
+        objectives:
+          - id: CHEM.2.1.a
+            text: Distinguish ionic, covalent, and metallic bonding by how electrons are transferred or shared.
+            keywords: [ionic bond, covalent bond, metallic bond, electron transfer, shared electrons, cation, anion]
+            bloom: understand
+          - id: CHEM.2.1.b
+            text: Name ionic and molecular compounds and write their formulas.
+            keywords: [chemical formula, compound name, polyatomic ion, subscript, nomenclature]
+            bloom: apply
+      - id: CHEM.2.2
+        name: Molecular shape
+        objectives:
+          - id: CHEM.2.2.a
+            text: Draw Lewis structures and use VSEPR to predict molecular geometry and polarity.
+            keywords: [lewis structure, vsepr, molecular geometry, polar molecule, lone pair, bond angle]
+            bloom: apply
+  - id: CHEM.3
+    name: Intermolecular forces and states of matter
+    weight: 0.13
+    topics:
+      - id: CHEM.3.1
+        name: Intermolecular forces
+        objectives:
+          - id: CHEM.3.1.a
+            text: Rank substances by boiling point using London dispersion, dipole-dipole, and hydrogen-bond forces.
+            keywords: [intermolecular force, hydrogen bonding, dipole, london dispersion, boiling point, van der waals]
+            bloom: analyze
+      - id: CHEM.3.2
+        name: Gases
+        objectives:
+          - id: CHEM.3.2.a
+            text: Apply the ideal gas law and the relationships among pressure, volume, temperature, and amount of gas.
+            keywords: [ideal gas law, pressure, volume, boyle, charles, gas law, kinetic molecular theory]
+            bloom: apply
+      - id: CHEM.3.3
+        name: Phases and solutions
+        objectives:
+          - id: CHEM.3.3.a
+            text: Describe the particle arrangement in solids, liquids, and gases and the energy changes during phase transitions.
+            keywords: [solid, liquid, gas, phase change, melting, boiling, condensation, sublimation]
+            bloom: understand
+          - id: CHEM.3.3.b
+            text: Calculate solution concentration and explain how solubility depends on polarity and temperature.
+            keywords: [solution, solute, solvent, concentration, molarity, solubility, dissolve]
+            bloom: apply
+          - id: CHEM.3.3.c
+            text: Distinguish elements, compounds, and mixtures, and physical from chemical properties and changes.
+            keywords: [element, compound, mixture, physical change, chemical change, pure substance, matter]
+            bloom: understand
+  - id: CHEM.4
+    name: Chemical reactions
+    weight: 0.13
+    topics:
+      - id: CHEM.4.1
+        name: Equations and stoichiometry
+        objectives:
+          - id: CHEM.4.1.a
+            text: Balance chemical equations using conservation of mass and use them to find limiting reactants and yields.
+            keywords: [balanced equation, reactant, product, conservation of mass, limiting reactant, coefficient]
+            bloom: apply
+      - id: CHEM.4.2
+        name: Reaction types
+        objectives:
+          - id: CHEM.4.2.a
+            text: Classify reactions as synthesis, decomposition, single or double replacement, combustion, or precipitation.
+            keywords: [synthesis, decomposition, replacement reaction, combustion, precipitate, reaction type]
+            bloom: understand
+          - id: CHEM.4.2.b
+            text: Identify oxidation and reduction in a reaction by tracking electron transfer and oxidation numbers.
+            keywords: [oxidation, reduction, redox, oxidation number, oxidizing agent, electron transfer]
+            bloom: apply
+  - id: CHEM.5
+    name: Reaction rates
+    weight: 0.09
+    topics:
+      - id: CHEM.5.1
+        name: Kinetics
+        objectives:
+          - id: CHEM.5.1.a
+            text: Explain how concentration, temperature, surface area, and catalysts affect reaction rate using collision theory.
+            keywords: [reaction rate, collision theory, catalyst, activation energy, temperature, surface area]
+            bloom: understand
+          - id: CHEM.5.1.b
+            text: Interpret rate laws and half-life for first-order processes, including radioactive decay.
+            keywords: [rate law, reaction order, half-life, first order, radioactive decay, rate constant]
+            bloom: apply
+  - id: CHEM.6
+    name: Thermochemistry
+    weight: 0.10
+    topics:
+      - id: CHEM.6.1
+        name: Energy in reactions
+        objectives:
+          - id: CHEM.6.1.a
+            text: Classify reactions as exothermic or endothermic and interpret energy diagrams.
+            keywords: [exothermic, endothermic, enthalpy, heat of reaction, energy diagram]
+            bloom: understand
+          - id: CHEM.6.1.b
+            text: Use specific heat and calorimetry data to calculate heat transferred.
+            keywords: [specific heat, calorimetry, heat capacity, joule, calorie, temperature change]
+            bloom: apply
+      - id: CHEM.6.2
+        name: Nuclear chemistry
+        objectives:
+          - id: CHEM.6.2.a
+            text: Compare alpha, beta, and gamma radiation and the energy released in fission and fusion.
+            keywords: [radioactivity, alpha particle, beta particle, gamma ray, fission, fusion, nuclear reaction]
+            bloom: understand
+  - id: CHEM.7
+    name: Equilibrium
+    weight: 0.10
+    topics:
+      - id: CHEM.7.1
+        name: Chemical equilibrium
+        objectives:
+          - id: CHEM.7.1.a
+            text: Write equilibrium expressions and interpret the size of the equilibrium constant.
+            keywords: [equilibrium, equilibrium constant, reversible reaction, dynamic equilibrium, k]
+            bloom: apply
+          - id: CHEM.7.1.b
+            text: Use Le Chatelier's principle to predict how a system at equilibrium responds to a disturbance.
+            keywords: [le chatelier, shift, stress, equilibrium position, concentration change]
+            bloom: apply
+  - id: CHEM.8
+    name: Acids and bases
+    weight: 0.11
+    topics:
+      - id: CHEM.8.1
+        name: Acid-base chemistry
+        objectives:
+          - id: CHEM.8.1.a
+            text: Define acids and bases using the Arrhenius and Bronsted-Lowry models and identify conjugate pairs.
+            keywords: [acid, base, arrhenius, bronsted-lowry, proton donor, conjugate, hydronium, hydroxide]
+            bloom: understand
+          - id: CHEM.8.1.b
+            text: Relate pH to hydrogen ion concentration and compare strong and weak acids.
+            keywords: [ph, hydrogen ion, strong acid, weak acid, ph scale, neutral, ionization]
+            bloom: apply
+          - id: CHEM.8.1.c
+            text: Explain neutralization, titration, and how buffers resist changes in pH.
+            keywords: [neutralization, titration, buffer, salt, indicator, equivalence point]
+            bloom: understand
+  - id: CHEM.9
+    name: Entropy and electrochemistry
+    weight: 0.09
+    topics:
+      - id: CHEM.9.1
+        name: Spontaneity
+        objectives:
+          - id: CHEM.9.1.a
+            text: Predict the sign of entropy change and use Gibbs free energy to judge whether a process is spontaneous.
+            keywords: [entropy, gibbs free energy, spontaneous, disorder, second law of thermodynamics]
+            bloom: analyze
+      - id: CHEM.9.2
+        name: Electrochemical cells
+        objectives:
+          - id: CHEM.9.2.a
+            text: Describe how galvanic and electrolytic cells convert between chemical and electrical energy.
+            keywords: [electrochemical cell, galvanic cell, electrolysis, anode, cathode, battery, electrode]
+            bloom: understand
+      - id: CHEM.9.3
+        name: Organic chemistry basics
+        objectives:
+          - id: CHEM.9.3.a
+            text: Recognize hydrocarbons and common functional groups and name simple organic compounds.
+            keywords: [hydrocarbon, alkane, alkene, functional group, isomer, organic compound, polymer]
+            bloom: remember

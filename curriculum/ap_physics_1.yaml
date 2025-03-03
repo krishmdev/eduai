@@ -1,0 +1,201 @@
+# Own-wording taxonomy loosely following the scope of an AP Physics 1 course. The current course
+# centres on mechanics and fluids; this blueprint also keeps waves and simple circuits, which
+# earlier versions of the course covered and which SciQ has many questions about.
+# Unit names are short generic titles; every objective sentence was written for this project.
+# Weights are our own rough blueprint numbers, not official exam percentages.
+subject: PHYS1
+name: AP Physics 1
+units:
+  - id: PHYS1.1
+    name: Motion in one and two dimensions
+    weight: 0.13
+    topics:
+      - id: PHYS1.1.1
+        name: Describing motion
+        objectives:
+          - id: PHYS1.1.1.a
+            text: Distinguish distance from displacement and speed from velocity, and compute average velocity.
+            keywords: [displacement, distance, speed, velocity, vector, scalar, average velocity]
+            bloom: understand
+          - id: PHYS1.1.1.b
+            text: Use kinematic equations to relate acceleration, velocity, displacement, and time for constant acceleration.
+            keywords: [acceleration, kinematic equation, constant acceleration, free fall, deceleration]
+            bloom: apply
+          - id: PHYS1.1.1.c
+            text: Read position-time and velocity-time graphs to find velocity, acceleration, and displacement.
+            keywords: [position-time graph, velocity-time graph, slope, area under curve, motion graph]
+            bloom: analyze
+      - id: PHYS1.1.2
+        name: Projectiles
+        objectives:
+          - id: PHYS1.1.2.a
+            text: Treat horizontal and vertical motion of a projectile independently to predict range and time of flight.
+            keywords: [projectile, trajectory, horizontal motion, vertical motion, range, launch angle]
+            bloom: apply
+  - id: PHYS1.2
+    name: Forces
+    weight: 0.16
+    topics:
+      - id: PHYS1.2.1
+        name: Newton's laws
+        objectives:
+          - id: PHYS1.2.1.a
+            text: Explain inertia and apply Newton's first law to objects at rest or moving at constant velocity.
+            keywords: [inertia, newton's first law, balanced forces, net force, mass]
+            bloom: understand
+          - id: PHYS1.2.1.b
+            text: Use free-body diagrams and F = ma to find the acceleration of an object from the forces on it.
+            keywords: [newton's second law, free-body diagram, net force, acceleration, newton, f=ma]
+            bloom: apply
+          - id: PHYS1.2.1.c
+            text: Identify action-reaction force pairs using Newton's third law.
+            keywords: [newton's third law, action, reaction, force pair, interaction]
+            bloom: understand
+      - id: PHYS1.2.2
+        name: Common forces
+        objectives:
+          - id: PHYS1.2.2.a
+            text: Model friction, normal, tension, and spring forces, including Hooke's law.
+            keywords: [friction, normal force, tension, spring force, hooke's law, static friction, kinetic friction]
+            bloom: apply
+          - id: PHYS1.2.2.b
+            text: Distinguish mass from weight and compute weight from gravitational field strength.
+            keywords: [weight, mass, gravity, gravitational force, kilogram, gravitational field]
+            bloom: understand
+  - id: PHYS1.3
+    name: Circular motion and gravitation
+    weight: 0.10
+    topics:
+      - id: PHYS1.3.1
+        name: Circular motion
+        objectives:
+          - id: PHYS1.3.1.a
+            text: Explain that a centripetal net force is needed for circular motion and compute centripetal acceleration.
+            keywords: [circular motion, centripetal force, centripetal acceleration, uniform circular motion, radius]
+            bloom: apply
+      - id: PHYS1.3.2
+        name: Gravitation
+        objectives:
+          - id: PHYS1.3.2.a
+            text: Apply Newton's law of universal gravitation and relate it to orbits of planets and satellites.
+            keywords: [universal gravitation, orbit, satellite, planet, gravitational attraction, kepler]
+            bloom: apply
+  - id: PHYS1.4
+    name: Work, energy, and power
+    weight: 0.16
+    topics:
+      - id: PHYS1.4.1
+        name: Energy forms
+        objectives:
+          - id: PHYS1.4.1.a
+            text: Calculate the work done by a force and relate net work to the change in kinetic energy.
+            keywords: [work, joule, kinetic energy, work-energy theorem, force, displacement]
+            bloom: apply
+          - id: PHYS1.4.1.b
+            text: Compute gravitational and elastic potential energy and describe energy transformations between forms.
+            keywords: [potential energy, gravitational potential energy, elastic potential energy, energy transformation, energy forms]
+            bloom: apply
+      - id: PHYS1.4.2
+        name: Conservation and power
+        objectives:
+          - id: PHYS1.4.2.a
+            text: Apply conservation of mechanical energy and account for energy lost to friction as thermal energy.
+            keywords: [conservation of energy, mechanical energy, thermal energy, energy loss, closed system]
+            bloom: apply
+          - id: PHYS1.4.2.b
+            text: Relate power to the rate of doing work, and describe machines in terms of efficiency and mechanical advantage.
+            keywords: [power, watt, efficiency, simple machine, mechanical advantage, lever, pulley]
+            bloom: apply
+  - id: PHYS1.5
+    name: Momentum
+    weight: 0.10
+    topics:
+      - id: PHYS1.5.1
+        name: Impulse and collisions
+        objectives:
+          - id: PHYS1.5.1.a
+            text: Relate impulse to change in momentum and explain how extending collision time reduces force.
+            keywords: [momentum, impulse, collision time, change in momentum, force]
+            bloom: understand
+          - id: PHYS1.5.1.b
+            text: Apply conservation of momentum to elastic and inelastic collisions.
+            keywords: [conservation of momentum, elastic collision, inelastic collision, closed system, recoil]
+            bloom: apply
+  - id: PHYS1.6
+    name: Rotation
+    weight: 0.08
+    topics:
+      - id: PHYS1.6.1
+        name: Torque and angular momentum
+        objectives:
+          - id: PHYS1.6.1.a
+            text: Compute torque from force and lever arm and use it to analyze rotational equilibrium.
+            keywords: [torque, lever arm, rotational equilibrium, pivot, fulcrum, rotation]
+            bloom: apply
+          - id: PHYS1.6.1.b
+            text: Explain conservation of angular momentum when a rotating object changes its shape.
+            keywords: [angular momentum, rotational inertia, angular velocity, spin, moment of inertia]
+            bloom: understand
+  - id: PHYS1.7
+    name: Oscillations and waves
+    weight: 0.12
+    topics:
+      - id: PHYS1.7.1
+        name: Oscillations
+        objectives:
+          - id: PHYS1.7.1.a
+            text: Relate the period of a mass-spring system or pendulum to its physical properties.
+            keywords: [simple harmonic motion, period, pendulum, oscillation, frequency, spring]
+            bloom: apply
+      - id: PHYS1.7.2
+        name: Mechanical waves and sound
+        objectives:
+          - id: PHYS1.7.2.a
+            text: Describe transverse and longitudinal waves and use v = f times wavelength.
+            keywords: [wave, wavelength, frequency, amplitude, transverse wave, longitudinal wave, wave speed, medium]
+            bloom: apply
+          - id: PHYS1.7.2.b
+            text: Explain pitch, loudness, the Doppler effect, and why sound needs a medium.
+            keywords: [sound, pitch, loudness, decibel, doppler effect, echo, hertz]
+            bloom: understand
+          - id: PHYS1.7.2.c
+            text: Describe light as an electromagnetic wave and explain reflection and refraction.
+            keywords: [light, electromagnetic wave, electromagnetic spectrum, reflection, refraction, lens, mirror]
+            bloom: understand
+  - id: PHYS1.8
+    name: Fluids
+    weight: 0.07
+    topics:
+      - id: PHYS1.8.1
+        name: Pressure and buoyancy
+        objectives:
+          - id: PHYS1.8.1.a
+            text: Relate density and pressure in fluids, including how pressure grows with depth.
+            keywords: [density, pressure, fluid, depth, pascal, atmospheric pressure]
+            bloom: apply
+          - id: PHYS1.8.1.b
+            text: Use Archimedes' principle to explain buoyancy and predict whether an object floats.
+            keywords: [buoyancy, archimedes, buoyant force, float, sink, displaced fluid]
+            bloom: apply
+  - id: PHYS1.9
+    name: Charge and simple circuits
+    weight: 0.08
+    topics:
+      - id: PHYS1.9.1
+        name: Electric charge
+        objectives:
+          - id: PHYS1.9.1.a
+            text: Explain charging by friction, conduction, and induction and the attraction and repulsion of charges.
+            keywords: [electric charge, static electricity, coulomb, conductor, insulator, electric field, attraction]
+            bloom: understand
+      - id: PHYS1.9.2
+        name: Circuits and magnetism
+        objectives:
+          - id: PHYS1.9.2.a
+            text: Apply Ohm's law and rules for series and parallel resistors in simple circuits.
+            keywords: [circuit, current, voltage, resistance, ohm's law, series circuit, parallel circuit]
+            bloom: apply
+          - id: PHYS1.9.2.b
+            text: Describe magnetic fields around magnets and currents and how electromagnets and generators work.
+            keywords: [magnet, magnetic field, electromagnet, electromagnetic induction, generator, motor]
+            bloom: understand
