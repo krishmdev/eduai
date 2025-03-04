@@ -1,0 +1,27 @@
+{
+  "all-MiniLM-L6-v2": {
+    "tau": 0.2967,
+    "percentile": 20,
+    "n_gold_in_curriculum": 114
+  },
+  "bge-small-en-v1.5": {
+    "tau": 0.5881,
+    "percentile": 20,
+    "n_gold_in_curriculum": 114
+  },
+  "bge-small-en-v1.5 (no query prefix)": {
+    "tau": 0.6291,
+    "percentile": 20,
+    "n_gold_in_curriculum": 114
+  },
+  "bge-small-en-v1.5+rerank": {
+    "tau": -10.7987,
+    "percentile": 20,
+    "n_gold_in_curriculum": 114
+  },
+  "bge-small-en-v1.5+rerank (no gate)": {
+    "tau": -10.7987,
+    "percentile": 20,
+    "n_gold_in_curriculum": 114
+  }
+}

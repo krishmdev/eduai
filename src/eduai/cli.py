@@ -76,5 +76,34 @@ def tagger_sample_gold(
     console.print(f"wrote {n} candidates to {out}")
 
 
+@tagger_app.command("eval")
+def tagger_eval(
+    gold: Path = typer.Option(Path("data/gold/tagging_gold.jsonl")),
+    out: Path = typer.Option(Path("reports/tagger_eval.md")),
+) -> None:
+    from eduai.curriculum.tagger import build_tagger
+    from eduai.curriculum.taxonomy import default_taxonomy
+    from eduai.data.sciq import read_jsonl
+    from eduai.evaluation import tagging
+    from eduai.manifest import write_manifest
+
+    tax = default_taxonomy()
+    taggers = [
+        build_tagger(tax, "minilm", rerank=False),
+        build_tagger(tax, "bge-small", rerank=False),
+        build_tagger(tax, "bge-small", rerank=False, query_prefix=False),
+        build_tagger(tax, "bge-small", rerank=True),
+        build_tagger(tax, "bge-small", rerank=True, use_gate=False),
+    ]
+    results = tagging.run(tax, gold, taggers)
+    tagging.save_calibration(results)
+    manifest = out.with_name("tagger_eval_manifest.json")
+    write_manifest(manifest, {"task": "tagger-eval", "gold": str(gold)})
+    out.parent.mkdir(parents=True, exist_ok=True)
+    out.write_text(tagging.render_markdown(results, read_jsonl(gold), manifest.name))
+    (out.with_suffix(".json")).write_text(json.dumps([r.__dict__ for r in results], indent=2) + "\n")
+    console.print(out.read_text())
+
+
 if __name__ == "__main__":
     app()
