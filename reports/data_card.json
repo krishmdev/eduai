@@ -1,0 +1,180 @@
+{
+  "eligibility": {
+    "train": {
+      "total": 11679,
+      "grounded": 10481,
+      "blank_support": 1198
+    },
+    "valid": {
+      "total": 1000,
+      "grounded": 887,
+      "blank_support": 113
+    },
+    "test": {
+      "total": 1000,
+      "grounded": 884,
+      "blank_support": 116
+    }
+  },
+  "per_split": {
+    "train": {
+      "total": 11679,
+      "eligible": 7646,
+      "excluded_unaligned": 2204,
+      "moved_by_grouping": 631,
+      "excluded_blank_support": 1198
+    },
+    "valid": {
+      "eligible": 923,
+      "total": 1000,
+      "excluded_blank_support": 113,
+      "excluded_unaligned": 176,
+      "moved_by_grouping": 37
+    },
+    "test": {
+      "eligible": 1105,
+      "total": 1000,
+      "excluded_unaligned": 198,
+      "excluded_blank_support": 116
+    }
+  },
+  "per_subject": {
+    "APES": {
+      "total": 2322,
+      "eligible": 1613,
+      "excluded_unaligned": 466,
+      "excluded_blank_support": 243,
+      "moved_by_grouping": 97
+    },
+    "BIO": {
+      "total": 6481,
+      "eligible": 4080,
+      "excluded_unaligned": 1433,
+      "moved_by_grouping": 280,
+      "excluded_blank_support": 968
+    },
+    "CHEM": {
+      "total": 2965,
+      "eligible": 2515,
+      "excluded_unaligned": 317,
+      "moved_by_grouping": 191,
+      "excluded_blank_support": 133
+    },
+    "PHYS1": {
+      "total": 1911,
+      "excluded_unaligned": 362,
+      "eligible": 1466,
+      "excluded_blank_support": 83,
+      "moved_by_grouping": 100
+    }
+  },
+  "grouping": {
+    "passage_links": 118,
+    "qa_links": 62,
+    "cosine_links": 1848,
+    "groups": 11651,
+    "largest_group": 21,
+    "reassigned": {
+      "train->test": 466,
+      "train->valid": 304,
+      "valid->test": 43
+    },
+    "cross_split_groups_after": 0
+  },
+  "difficulty_cuts": [
+    -0.26,
+    0.261
+  ],
+  "difficulty_by_split": {
+    "train": {
+      "easy": 3259,
+      "hard": 3286,
+      "medium": 3210
+    },
+    "valid": {
+      "medium": 379,
+      "easy": 363,
+      "hard": 393
+    },
+    "test": {
+      "medium": 495,
+      "easy": 462,
+      "hard": 405
+    }
+  },
+  "quotas": {
+    "train": {
+      "target": 3000,
+      "achieved": 3000,
+      "shrunk": false,
+      "letters": {
+        "A": 750,
+        "B": 750,
+        "C": 750,
+        "D": 750
+      },
+      "stimulus": 1200,
+      "misconception": 900,
+      "by_subject": {
+        "BIO": 1267,
+        "CHEM": 769,
+        "APES": 515,
+        "PHYS1": 449
+      },
+      "by_difficulty": {
+        "easy": 908,
+        "hard": 1097,
+        "medium": 995
+      }
+    },
+    "valid": {
+      "target": 300,
+      "achieved": 300,
+      "shrunk": false,
+      "letters": {
+        "A": 75,
+        "B": 75,
+        "C": 75,
+        "D": 75
+      },
+      "stimulus": 120,
+      "misconception": 90,
+      "by_subject": {
+        "CHEM": 77,
+        "APES": 52,
+        "BIO": 117,
+        "PHYS1": 54
+      },
+      "by_difficulty": {
+        "easy": 88,
+        "medium": 99,
+        "hard": 113
+      }
+    },
+    "test": {
+      "target": 200,
+      "achieved": 200,
+      "shrunk": false,
+      "letters": {
+        "A": 50,
+        "B": 50,
+        "C": 50,
+        "D": 50
+      },
+      "stimulus": 80,
+      "misconception": 60,
+      "by_subject": {
+        "BIO": 88,
+        "CHEM": 57,
+        "APES": 26,
+        "PHYS1": 29
+      },
+      "by_difficulty": {
+        "easy": 62,
+        "hard": 65,
+        "medium": 73
+      }
+    },
+    "eval_prompts": 150
+  }
+}

@@ -1,0 +1,33 @@
+{
+  "recorded_at": "2026-09-23T02:31:47-0400",
+  "host": {
+    "chip": "Apple M1 Pro",
+    "ram_gb": 16.0,
+    "os": "Darwin 26.5.1",
+    "python": "3.11.13",
+    "power": "Now drawing from 'AC Power'"
+  },
+  "compute_lease": {
+    "held": false,
+    "holder": null
+  },
+  "extra": {
+    "task": "data-build",
+    "seed": "7",
+    "tagger": "bge-small-en-v1.5+rerank",
+    "tau": "-10.7987",
+    "embedder_id": "st/BAAI/bge-small-en-v1.5/5c38ec7c405e/384/9d0a59a7",
+    "seconds": "305.8"
+  },
+  "repo": {
+    "commit": "32f0ff72cec296b3f5d59c4e4238cb1c6e4cba7c",
+    "dirty": true
+  },
+  "packages": {
+    "numpy": "2.4.6",
+    "sentence-transformers": "6.1.0",
+    "torch": "2.14.0",
+    "mlx": "0.32.2",
+    "mlx-lm": "0.31.3"
+  }
+}

@@ -58,6 +58,45 @@ def curriculum_validate() -> None:
         raise typer.Exit(1)
 
 
+@data_app.command("build")
+def data_build(
+    sciq: Path = typer.Option(..., help="Directory with SciQ train/valid/test.json"),
+    out: Path = typer.Option(Path("data")),
+    reports: Path = typer.Option(Path("reports")),
+    seed: int = 7,
+) -> None:
+    import time
+
+    from eduai.curriculum.tagger import build_tagger
+    from eduai.curriculum.taxonomy import default_taxonomy
+    from eduai.data.build_sft import Builder, save_card
+    from eduai.data.samples import write_samples
+    from eduai.data.sciq import load_sciq
+    from eduai.manifest import write_manifest
+
+    t0 = time.time()
+    tax = default_taxonomy()
+    tagger = build_tagger(tax, "bge-small", rerank=True)
+    if tagger.tau is None:
+        raise typer.BadParameter("no tau calibration; run `eduai tagger eval` first")
+    items = load_sciq(sciq)
+    result = Builder(tax, tagger, tagger.embedder, seed=seed).run(items, out)
+    save_card(result.card, reports)
+    write_samples(out)
+    write_manifest(
+        reports / "data_card_manifest.json",
+        {
+            "task": "data-build",
+            "seed": seed,
+            "tagger": tagger.mode,
+            "tau": tagger.tau,
+            "embedder_id": tagger.embedder.embedder_id,
+            "seconds": round(time.time() - t0, 1),
+        },
+    )
+    console.print((reports / "data_card.md").read_text())
+
+
 @tagger_app.command("sample-gold")
 def tagger_sample_gold(
     sciq: Path = typer.Option(..., help="Directory with SciQ train/valid/test.json"),
