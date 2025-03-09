@@ -33,30 +33,54 @@ EMBED_FILES = (
     "1_Pooling/config.json",
 )
 MODEL_PINS: dict[str, ModelPin] = {
-    "bge-small": ModelPin("bge-small", "BAAI/bge-small-en-v1.5", "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a", EMBED_FILES),
+    "bge-small": ModelPin(
+        "bge-small", "BAAI/bge-small-en-v1.5", "5c38ec7c405ec4b44b94cc5a9bb96e735b38267a", EMBED_FILES
+    ),
     "minilm": ModelPin(
-        "minilm", "sentence-transformers/all-MiniLM-L6-v2", "1110a243fdf4706b3f48f1d95db1a4f5529b4d41", EMBED_FILES
+        "minilm",
+        "sentence-transformers/all-MiniLM-L6-v2",
+        "1110a243fdf4706b3f48f1d95db1a4f5529b4d41",
+        EMBED_FILES,
     ),
     "rerank": ModelPin(
         "rerank",
         "cross-encoder/ms-marco-MiniLM-L6-v2",
         "233902d25c440f23af6f7d6e94d2946bac0bee0a",
-        ("config.json", "model.safetensors", "special_tokens_map.json", "tokenizer.json", "tokenizer_config.json", "vocab.txt"),
+        (
+            "config.json",
+            "model.safetensors",
+            "special_tokens_map.json",
+            "tokenizer.json",
+            "tokenizer_config.json",
+            "vocab.txt",
+        ),
     ),
     "llama-3b": ModelPin(
         "llama-3b",
         "mlx-community/Llama-3.2-3B-Instruct-4bit",
         "7f0dc925e0d0afb0322d96f9255cfddf2ba5636e",
-        ("config.json", "model.safetensors", "model.safetensors.index.json", "special_tokens_map.json",
-         "tokenizer.json", "tokenizer_config.json"),
+        (
+            "config.json",
+            "model.safetensors",
+            "model.safetensors.index.json",
+            "special_tokens_map.json",
+            "tokenizer.json",
+            "tokenizer_config.json",
+        ),
         optional=True,
     ),
     "llama-1b": ModelPin(
         "llama-1b",
         "mlx-community/Llama-3.2-1B-Instruct-4bit",
         "08231374eeacb049a0eade7922910865b8fce912",
-        ("config.json", "model.safetensors", "model.safetensors.index.json", "special_tokens_map.json",
-         "tokenizer.json", "tokenizer_config.json"),
+        (
+            "config.json",
+            "model.safetensors",
+            "model.safetensors.index.json",
+            "special_tokens_map.json",
+            "tokenizer.json",
+            "tokenizer_config.json",
+        ),
         optional=True,
     ),
 }
