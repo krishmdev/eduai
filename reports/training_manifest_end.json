@@ -1,0 +1,20 @@
+{
+  "recorded_at": "2026-09-23T04:34:56-0400",
+  "host": {
+    "chip": "Apple M1 Pro",
+    "ram_gb": 16.0,
+    "os": "Darwin 26.5.1",
+    "python": "3.14.6",
+    "power": "Now drawing from 'AC Power'"
+  },
+  "compute_lease": {
+    "held": true,
+    "holder": "eduai-train"
+  },
+  "extra": {
+    "config": "configs/lora_llama32_3b.yaml",
+    "phase": "training",
+    "wall_seconds": "6995",
+    "exit": "0"
+  }
+}
