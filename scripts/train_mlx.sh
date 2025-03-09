@@ -22,7 +22,7 @@ if [[ -x "$manifest_tool" ]]; then
 fi
 start=$(date +%s)
 set +e
-uv run python -m mlx_lm lora -c "$config" "${extra[@]}" "$@" 2>&1 | tee "$log"
+uv run python -m mlx_lm lora -c "$config" ${extra[@]+"${extra[@]}"} "$@" 2>&1 | tee "$log"
 status=${PIPESTATUS[0]}
 set -e
 end=$(date +%s)
