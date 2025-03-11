@@ -111,8 +111,10 @@ def text_hash(texts: Sequence[str]) -> str:
 
 
 def cached_encode(
-    embedder: Embedder, texts: Sequence[str], *, query: bool = False, cache_dir: Path = CACHE_DIR
+    embedder: Embedder, texts: Sequence[str], *, query: bool = False, cache_dir: Path | None = None
 ) -> np.ndarray:
+    if cache_dir is None:
+        cache_dir = Path(os.environ.get("EDUAI_CACHE_DIR", CACHE_DIR))
     key = hashlib.sha256(f"{embedder.embedder_id}|{int(query)}|{text_hash(texts)}".encode()).hexdigest()[:24]
     path = cache_dir / f"{key}.npy"
     if path.exists():

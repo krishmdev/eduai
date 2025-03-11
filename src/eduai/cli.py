@@ -58,6 +58,17 @@ def curriculum_validate() -> None:
         raise typer.Exit(1)
 
 
+@curriculum_app.command("neighbors")
+def curriculum_neighbors() -> None:
+    from eduai.curriculum.embedder import get_embedder
+    from eduai.curriculum.neighbors import build_graph, save_graph, similarity_stats
+    from eduai.curriculum.taxonomy import default_taxonomy
+
+    graph = build_graph(default_taxonomy(), get_embedder("bge-small"))
+    save_graph(graph)
+    console.print(similarity_stats(graph))
+
+
 @data_app.command("build")
 def data_build(
     sciq: Path = typer.Option(..., help="Directory with SciQ train/valid/test.json"),
