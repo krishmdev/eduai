@@ -155,5 +155,17 @@ def tagger_eval(
     console.print(out.read_text())
 
 
+@app.command("fetch-adapter")
+def fetch_adapter(source: str = typer.Option(None, help="Local tarball path or URL instead of the release")) -> None:
+    import importlib.util
+
+    from eduai.config import ROOT
+
+    spec = importlib.util.spec_from_file_location("fetch_adapter", ROOT / "scripts" / "fetch_adapter.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    console.print(f"adapter installed at {mod.fetch(source=source)}")
+
+
 if __name__ == "__main__":
     app()
