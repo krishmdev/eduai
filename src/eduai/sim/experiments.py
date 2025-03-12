@@ -179,7 +179,7 @@ def experiment_a(tax: Taxonomy, cfg: SimConfig) -> dict:
                 "stopped_by_precision": float(np.mean(lengths < cfg.a_max_stop)),
             }
         )
-    # SD vs 1/sqrt(sum I) at a fixed 20 responses, the comparison the review asked for.
+    # Posterior SD vs 1/sqrt(sum I) at a fixed 20 responses.
     res20 = run_assessment(tax, cfg, "adaptive", 20, None, rng_seed=3)
     at20 = {
         "mean_posterior_sd": float(np.mean([r["sd"] for r in res20])),
@@ -204,7 +204,7 @@ def fit_bkt_params(tax: Taxonomy, cfg: SimConfig, n_students: int = 200) -> tupl
     seqs = []
     for _ in range(n_students):
         stu = make_student(tax, cfg.subject, rng)
-        for lo, items in by_lo.items():
+        for items in by_lo.values():
             seq = []
             for _ in range(8):
                 it = items[int(rng.integers(len(items)))]
