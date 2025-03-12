@@ -1,0 +1,31 @@
+{
+  "recorded_at": "2026-09-23T07:18:25-0400",
+  "host": {
+    "chip": "Apple M1 Pro",
+    "ram_gb": 16.0,
+    "os": "Darwin 26.5.1",
+    "python": "3.11.13",
+    "power": "Now drawing from 'AC Power'"
+  },
+  "compute_lease": {
+    "held": true,
+    "holder": "localhost-ai-bench"
+  },
+  "extra": {
+    "task": "simulate",
+    "students": "500",
+    "seed": "20260923",
+    "seconds": "100.8"
+  },
+  "repo": {
+    "commit": "87fe89c0b4cf97806da3fbdea124b8aeaf11c6ee",
+    "dirty": true
+  },
+  "packages": {
+    "numpy": "2.4.6",
+    "sentence-transformers": "6.1.0",
+    "torch": "2.14.0",
+    "mlx": "0.32.2",
+    "mlx-lm": "0.31.3"
+  }
+}

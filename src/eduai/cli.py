@@ -155,8 +155,29 @@ def tagger_eval(
     console.print(out.read_text())
 
 
+@app.command("simulate")
+def simulate(students: int = 500, out: Path = typer.Option(Path("reports")), seed: int = 20260923) -> None:
+    from eduai.curriculum.taxonomy import default_taxonomy
+    from eduai.manifest import write_manifest
+    from eduai.sim import experiments, plots, report
+
+    cfg = experiments.SimConfig(students=students, seed=seed)
+    res = experiments.run_all(default_taxonomy(), cfg)
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "sim_results.json").write_text(json.dumps(res, indent=1, default=float) + "\n")
+    plots.sim_figures(res, out / "figures")
+    write_manifest(
+        out / "sim_manifest.json",
+        {"task": "simulate", "students": students, "seed": seed, "seconds": res["seconds"]},
+    )
+    (out / "sim_report.md").write_text(report.render(res, "sim_manifest.json"))
+    console.print(f"wrote {out / 'sim_report.md'} in {res['seconds']} s")
+
+
 @app.command("fetch-adapter")
-def fetch_adapter(source: str = typer.Option(None, help="Local tarball path or URL instead of the release")) -> None:
+def fetch_adapter(
+    source: str = typer.Option(None, help="Local tarball path or URL instead of the release"),
+) -> None:
     import importlib.util
 
     from eduai.config import ROOT
