@@ -19,6 +19,20 @@ from eduai.curriculum.embedder import Embedder, cached_encode
 from eduai.curriculum.taxonomy import Taxonomy
 
 CALIBRATION_PATH = ROOT / "configs" / "tagger_calibration.json"
+STIMULUS_PREFIX = "Based on the excerpt, "
+
+
+def tag_text(stem: str, correct: str) -> str:
+    """The one text format the tagger sees: gold eval, SFT builder and validator all use it.
+
+    Stimulus framing is stripped and neither the explanation nor the stimulus is included, so
+    generated and reference items are scored on the same footing.
+    """
+    stem = stem.strip()
+    if stem.startswith(STIMULUS_PREFIX):
+        rest = stem[len(STIMULUS_PREFIX) :]
+        stem = rest[:1].upper() + rest[1:]
+    return f"{stem} Answer: {correct.strip()}"
 
 
 @dataclass
@@ -27,6 +41,8 @@ class TagResult:
     subject: str
     score: float
     top3: list[str]
+    # Top-1 score >= tau. For a *given* target LO use Tagger.is_aligned, which compares the
+    # target's own score (the statistic tau was calibrated on) and requires it in the top 3.
     aligned: bool
     scores: dict[str, float] = field(default_factory=dict)
 
@@ -144,6 +160,22 @@ class Tagger:
                 )
             )
         return results
+
+    def is_aligned(self, texts: Sequence[str], targets: Sequence[str]) -> list[dict]:
+        results = self.tag_texts(texts)
+        target_scores = self.score_pair(texts, targets)
+        out = []
+        for r, t, sc in zip(results, targets, target_scores, strict=True):
+            in_top3 = t in r.top3
+            out.append(
+                {
+                    "aligned": bool(in_top3 and self.tau is not None and float(sc) >= self.tau),
+                    "target_in_top3": in_top3,
+                    "target_score": float(sc),
+                    "top1": r.lo_id,
+                }
+            )
+        return out
 
     def score_pair(self, texts: Sequence[str], lo_ids: Sequence[str]) -> np.ndarray:
         """Score of a specific LO for each text, on the same scale as `tag_texts`."""

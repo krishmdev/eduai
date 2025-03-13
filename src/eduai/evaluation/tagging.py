@@ -8,7 +8,7 @@ from pathlib import Path
 
 import numpy as np
 
-from eduai.curriculum.tagger import CALIBRATION_PATH, Tagger
+from eduai.curriculum.tagger import CALIBRATION_PATH, Tagger, tag_text
 from eduai.curriculum.taxonomy import Taxonomy
 from eduai.data.sciq import read_jsonl
 
@@ -23,6 +23,7 @@ class ModeResult:
     top1_lenient: float
     top3: float
     subject_acc: float
+    unit_acc: float
     tau: float
     in_aligned: float
     off_rejected: float
@@ -32,7 +33,7 @@ class ModeResult:
 
 
 def gold_text(row: dict) -> str:
-    return f"{row['question']} Answer: {row['answer']}"
+    return tag_text(row["question"], row["answer"])
 
 
 def calibrate_tau(gold_scores: np.ndarray) -> float:
@@ -53,14 +54,21 @@ def evaluate_mode(tagger: Tagger, gold: list[dict], seed: int = 0) -> ModeResult
     top1_l = np.mean([ok(i, True) for i in in_idx])
     top3 = np.mean([gold[i]["lo_id"] in results[i].top3 for i in in_idx])
     subj = np.mean([results[i].subject == gold[i]["subject"] for i in in_idx])
+    tax = tagger.tax
+    unit = np.mean([tax.lo(results[i].lo_id).unit_id == tax.lo(gold[i]["lo_id"]).unit_id for i in in_idx])
 
     gold_lo_scores = tagger.score_pair([texts[i] for i in in_idx], [gold[i]["lo_id"] for i in in_idx])
     top_scores = np.array([r.score for r in results])
     tau = calibrate_tau(gold_lo_scores)
 
-    # Aligned = gold LO in top 3 and top score >= tau, the same rule the generation validator uses.
+    # Aligned = gold LO in the top 3 and the gold LO's own score >= tau: the rule the generation
+    # validator applies to a requested target LO.
+    pos_all = {i: k for k, i in enumerate(in_idx)}
+
     def aligned_rate(idx: list[int], t: float) -> float:
-        return float(np.mean([gold[i]["lo_id"] in results[i].top3 and top_scores[i] >= t for i in idx]))
+        return float(
+            np.mean([gold[i]["lo_id"] in results[i].top3 and gold_lo_scores[pos_all[i]] >= t for i in idx])
+        )
 
     def off_reject_rate(idx: list[int], t: float) -> float:
         return float(np.mean([top_scores[i] < t for i in idx])) if idx else float("nan")
@@ -77,7 +85,9 @@ def evaluate_mode(tagger: Tagger, gold: list[dict], seed: int = 0) -> ModeResult
         t = calibrate_tau(gold_lo_scores[[pos[i] for i in fit]])
         taus.append(t)
         in_hits += [
-            gold[i]["lo_id"] in results[i].top3 and top_scores[i] >= t for i in in_idx if i in folds[f]
+            gold[i]["lo_id"] in results[i].top3 and gold_lo_scores[pos[i]] >= t
+            for i in in_idx
+            if i in folds[f]
         ]
         off_hits += [top_scores[i] < t for i in off_idx if i in folds[f]]
     return ModeResult(
@@ -87,6 +97,7 @@ def evaluate_mode(tagger: Tagger, gold: list[dict], seed: int = 0) -> ModeResult
         top1_lenient=float(top1_l),
         top3=float(top3),
         subject_acc=float(subj),
+        unit_acc=float(unit),
         tau=tau,
         in_aligned=aligned_rate(in_idx, tau),
         off_rejected=off_reject_rate(off_idx, tau),
@@ -122,15 +133,18 @@ def render_markdown(results: list[ModeResult], gold: list[dict], manifest_path: 
         "",
         "Text tagged: question plus correct answer. Top-1 strict counts only the primary gold LO; "
         "lenient also accepts the listed alternates. Aligned means the gold LO is in the top 3 and "
-        f"the top score is at least tau (the {TAU_PERCENTILE}th percentile of gold-LO scores). "
-        "The CV columns fit tau on one half of the gold set and score the other half.",
+        f"its own score is at least tau (the {TAU_PERCENTILE}th percentile of gold-LO scores); that is "
+        "the rule the generation validator applies to a requested LO. Off-curriculum rejected means "
+        "the top-1 score of an off-curriculum item falls below tau. The CV columns fit tau on one half "
+        "of the gold set and score the other half.",
         "",
-        "| Mode | Top-1 strict | Top-1 lenient | Top-3 | Subject gate | tau | Aligned (CV) | Off-curriculum rejected (CV) |",
-        "|---|---|---|---|---|---|---|---|",
+        "| Mode | Top-1 strict | Top-1 lenient | Top-3 | Unit | Subject gate | tau | Aligned (CV) | "
+        "Off-curriculum rejected (CV) |",
+        "|---|---|---|---|---|---|---|---|---|",
     ]
     for r in results:
         lines.append(
-            f"| {r.mode} | {r.top1:.1%} | {r.top1_lenient:.1%} | {r.top3:.1%} | {r.subject_acc:.1%} | "
+            f"| {r.mode} | {r.top1:.1%} | {r.top1_lenient:.1%} | {r.top3:.1%} | {r.unit_acc:.1%} | {r.subject_acc:.1%} | "
             f"{r.tau:.3f} | {r.in_aligned_cv:.1%} | {r.off_rejected_cv:.1%} |"
         )
     lines += ["", f"Run manifest: `{manifest_path}`", ""]

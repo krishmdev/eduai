@@ -24,7 +24,9 @@ class SciqItem:
     tags: dict = field(default_factory=dict)
 
     def qa_text(self) -> str:
-        return f"{self.question} Answer: {self.correct}"
+        from eduai.curriculum.tagger import tag_text
+
+        return tag_text(self.question, self.correct)
 
     def to_dict(self) -> dict:
         return asdict(self)
