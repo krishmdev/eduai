@@ -84,7 +84,16 @@ def stratified_sample(pool: list[int], strata: list[tuple], n: int, rng: random.
 
 
 class Builder:
-    def __init__(self, taxonomy: Taxonomy, tagger, embedder, seed: int = 7, quotas: Quotas | None = None):
+    def __init__(
+        self,
+        taxonomy: Taxonomy,
+        tagger,
+        embedder,
+        seed: int = 7,
+        quotas: Quotas | None = None,
+        containment: float | None = None,
+    ):
+        self.containment = containment
         self.tax = taxonomy
         self.tagger = tagger
         self.embedder = embedder
@@ -110,7 +119,7 @@ class Builder:
 
     def group(self, items: list[SciqItem]) -> dict:
         vecs = self.embedder.encode([it.qa_text() for it in items])
-        roots, (p, q, c, n_groups, largest) = splits.group_items(items, vecs)
+        roots, (p, q, c, n_groups, largest) = splits.group_items(items, vecs, containment=self.containment)
         final, moved = splits.assign_splits(items, roots)
         for it, r, s in zip(items, roots, final, strict=True):
             it.tags["group"] = int(r)
@@ -330,6 +339,7 @@ class Builder:
         write_jsonl(sft_dir / "test.jsonl", test_rows)
         write_jsonl(out_dir / "sft_meta.jsonl", train_meta + valid_meta + test_meta)
         write_jsonl(out_dir / "eval" / "prompts.jsonl", eval_rows)
+        write_jsonl(out_dir / "items_tagged.jsonl", [it.to_dict() for it in items])
         bank = self.bank_rows(items, rng)
         write_jsonl(out_dir / "bank" / "sciq_items.jsonl", bank)
         # Train-set stems are needed later to measure memorization of generated items.

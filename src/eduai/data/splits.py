@@ -70,7 +70,15 @@ def near_duplicate_pairs(
     return pairs
 
 
-def group_items(items: list[SciqItem], qa_vecs: np.ndarray | None, threshold: float = NEAR_DUP_COSINE):
+def group_items(
+    items: list[SciqItem],
+    qa_vecs: np.ndarray | None,
+    threshold: float = NEAR_DUP_COSINE,
+    containment: float | None = None,
+):
+    """containment: if set, also link grounded items whose passages share >= this fraction of
+    8-grams. Off by default because the released v1 adapter was trained on splits built without it;
+    `eduai data build --containment-link` produces the v2 grouping."""
     uf = UnionFind(len(items))
     passage_links = qa_links = cos_links = 0
     first_by_passage: dict[str, int] = {}
@@ -90,6 +98,12 @@ def group_items(items: list[SciqItem], qa_vecs: np.ndarray | None, threshold: fl
     if qa_vecs is not None:
         for a, b in near_duplicate_pairs(qa_vecs, threshold):
             cos_links += uf.union(a, b)
+    if containment is not None:
+        from eduai.data.leakage import containment_pairs
+
+        grounded = [i for i, it in enumerate(items) if it.grounded]
+        for a, b in containment_pairs([items[i].support for i in grounded], containment):
+            passage_links += uf.union(grounded[a], grounded[b])
     roots = [uf.find(i) for i in range(len(items))]
     sizes = Counter(roots)
     return roots, (passage_links, qa_links, cos_links, len(sizes), max(sizes.values()))
