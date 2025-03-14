@@ -75,6 +75,10 @@ def data_build(
     out: Path = typer.Option(Path("data")),
     reports: Path = typer.Option(Path("reports")),
     seed: int = 7,
+    containment_link: bool = typer.Option(
+        False, help="v2 grouping: also link passages with >=50% 8-gram overlap"
+    ),
+    samples: bool = True,
 ) -> None:
     import time
 
@@ -91,9 +95,12 @@ def data_build(
     if tagger.tau is None:
         raise typer.BadParameter("no tau calibration; run `eduai tagger eval` first")
     items = load_sciq(sciq)
-    result = Builder(tax, tagger, tagger.embedder, seed=seed).run(items, out)
+    result = Builder(
+        tax, tagger, tagger.embedder, seed=seed, containment=0.5 if containment_link else None
+    ).run(items, out)
     save_card(result.card, reports)
-    write_samples(out)
+    if samples:
+        write_samples(out)
     write_manifest(
         reports / "data_card_manifest.json",
         {
@@ -106,6 +113,38 @@ def data_build(
         },
     )
     console.print((reports / "data_card.md").read_text())
+
+
+@data_app.command("eval-candidates")
+def data_eval_candidates(data: Path = typer.Option(Path("data")), n: int = 230) -> None:
+    from eduai.curriculum.embedder import get_embedder
+    from eduai.data.eval_prompts import candidates
+    from eduai.data.sciq import write_jsonl
+
+    kept, stats = candidates(data, get_embedder("bge-small"), n)
+    write_jsonl(data / "eval" / "candidates.jsonl", kept)
+    (data / "eval" / "candidates_stats.json").write_text(json.dumps(stats, indent=2) + "\n")
+    console.print(stats)
+
+
+@data_app.command("eval-prompts")
+def data_eval_prompts(
+    data: Path = typer.Option(Path("data")),
+    labels: Path = typer.Option(...),
+    n: int = 150,
+    seed: int = 20260924,
+) -> None:
+    from eduai.curriculum.taxonomy import default_taxonomy
+    from eduai.data.eval_prompts import build_prompts, write
+    from eduai.data.sciq import read_jsonl
+
+    cands = read_jsonl(data / "eval" / "candidates.jsonl")
+    lab = {r["id"]: r["lo_id"] for r in read_jsonl(labels)}
+    rows, stats = build_prompts(cands, lab, default_taxonomy(), n, seed)
+    stats["leakage_filter"] = json.loads((data / "eval" / "candidates_stats.json").read_text())
+    write(rows, data / "eval" / "prompts.jsonl")
+    Path("reports/eval_prompts_card.json").write_text(json.dumps(stats, indent=2) + "\n")
+    console.print(stats)
 
 
 @tagger_app.command("sample-gold")
