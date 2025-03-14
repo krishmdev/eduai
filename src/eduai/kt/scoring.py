@@ -15,20 +15,26 @@ def simulated_score(theta: float) -> int:
 
 
 def unit_mastery(state: SessionState, unit_names: dict[str, str]) -> list[dict]:
-    by_unit: dict[str, list[str]] = defaultdict(list)
+    """BKT mastery per unit, averaged over the LOs the student was actually asked about.
+
+    A unit with no observed LO reports mastery None instead of the prior.
+    """
+    units: dict[str, list[str]] = defaultdict(list)
     for lo, unit in state.los:
-        by_unit[unit].append(lo)
+        units[unit].append(lo)
     rows = []
-    for unit, los in by_unit.items():
+    for unit, los in units.items():
         answered = [r for r in state.responses if r.unit_id == unit]
+        observed = sorted({r.lo_id for r in answered})
         rows.append(
             {
                 "unit_id": unit,
                 "name": unit_names.get(unit, unit),
-                "mastery": sum(state.bkt.get(lo) for lo in los) / len(los),
+                "mastery": (sum(state.bkt.get(lo) for lo in observed) / len(observed)) if observed else None,
+                "los_observed": len(observed),
+                "los_total": len(los),
                 "answered": len(answered),
                 "correct": sum(r.correct for r in answered),
-                "theta": state.elo.theta.get(unit),
             }
         )
     return sorted(rows, key=lambda r: r["unit_id"])

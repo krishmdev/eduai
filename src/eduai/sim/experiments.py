@@ -20,7 +20,7 @@ from eduai.curriculum.neighbors import load_graph
 from eduai.curriculum.taxonomy import Taxonomy
 from eduai.kt import irt
 from eduai.kt.bkt import BKTParams, BKTTracker, fit_em
-from eduai.kt.elo import EloModel
+from eduai.kt.elo import DEFAULT_CALIBRATION, InMemoryItemStore, ItemCalibration
 from eduai.kt.state import new_session
 from eduai.sim.students import SimItem, Student, make_pool, make_student
 
@@ -125,7 +125,7 @@ def run_assessment(
                 raise ValueError(policy)
             item = next(i for i in by_lo[cand.lo_id] if i.item_id == cand.item_id)
             y = stu.answer(item, rng)
-            st.record(cand, y, calibrate_items=False)
+            st.record(cand, y)
             seen.add(cand.item_id)
             bs_used.append(cand.b)
             post = st.posterior()
@@ -257,7 +257,7 @@ def run_practice(
             item = next(i for i in by_lo[cand.lo_id] if i.item_id == cand.item_id)
             p = stu.p_correct(item)
             y = bool(rng.random() < p)
-            st.record(cand, y, calibrate_items=False)
+            st.record(cand, y)
             stu.maybe_learn(item, p, rng)
             frac = stu.mastery_fraction()
             mastery_curve[t + 1] += frac
@@ -288,41 +288,69 @@ def experiment_d(tax: Taxonomy, cfg: SimConfig, params: BKTParams) -> dict:
 
 
 # -- C: item calibration -------------------------------------------------------------------------
-def experiment_c(tax: Taxonomy, cfg: SimConfig) -> dict:
+def run_calibration(tax: Taxonomy, cfg: SimConfig, cal: ItemCalibration) -> dict:
+    """Students answer random items; each response calibrates b using the student's pre-response
+    EAP mean (computed with the effective b the store serves). Students' theta is unknown."""
     rng = np.random.default_rng(cfg.seed + 3000)
     pool = make_pool(tax, cfg.subject, cfg.per_lo, np.random.default_rng(cfg.seed))
     idx = rng.permutation(len(pool))[: cfg.c_pool]
     items = [pool[i] for i in idx]
-    elo = EloModel()
-    for it in items:
-        elo.ensure_item(it.item_id, it.b_label)
+    store = InMemoryItemStore({it.item_id: it.b_label for it in items}, cal)
     checkpoints = [0, 5, 10, 20, 40, 80, 160]
-    rmse_at: dict[int, float] = {}
-    counts = dict.fromkeys((it.item_id for it in items), 0)
 
-    def rmse() -> float:
-        return float(np.sqrt(np.mean([(elo.b[it.item_id] - it.b_true) ** 2 for it in items])))
+    def rmse(effective: bool) -> float:
+        get = store.effective_b if effective else (lambda i: store.b[i])
+        return float(np.sqrt(np.mean([(get(it.item_id) - it.b_true) ** 2 for it in items])))
 
-    rmse_at[0] = rmse()
+    raw_at = {0: rmse(False)}
+    eff_at = {0: rmse(True)}
     next_cp = 1
-    for s in range(cfg.c_students):
+    for _ in range(cfg.c_students):
         theta = float(rng.normal(0, 1))
-        key = f"s{s}"
+        eap = irt.EAPGrid()
         for j in rng.permutation(len(items))[: cfg.c_items_per_student]:
             it = items[j]
-            p = float(irt.p_correct(theta, it.b_true))
-            elo.update(key, it.item_id, bool(rng.random() < p))
-            counts[it.item_id] += 1
-        mean_n = float(np.mean(list(counts.values())))
+            b_served = store.effective_b(it.item_id)
+            theta_pre = eap.posterior().mean
+            y = bool(rng.random() < float(irt.p_correct(theta, it.b_true)))
+            store.calibrate(it.item_id, theta_pre, y)
+            eap.update(b_served, y)
+        mean_n = float(np.mean(list(store.n.values())))
         while next_cp < len(checkpoints) and mean_n >= checkpoints[next_cp]:
-            rmse_at[checkpoints[next_cp]] = rmse()
+            raw_at[checkpoints[next_cp]] = rmse(False)
+            eff_at[checkpoints[next_cp]] = rmse(True)
             next_cp += 1
-    label_rmse = float(np.sqrt(np.mean([(it.b_label - it.b_true) ** 2 for it in items])))
     return {
-        "rmse_by_responses": rmse_at,
+        "k0": cal.k0,
+        "a": cal.a,
+        "min_n": cal.min_n,
+        "rmse_raw": raw_at,
+        "rmse_effective": eff_at,
+        "responses_per_item_final": float(np.mean(list(store.n.values()))),
+    }
+
+
+def experiment_c(tax: Taxonomy, cfg: SimConfig) -> dict:
+    main = run_calibration(tax, cfg, DEFAULT_CALIBRATION)
+    sweep = [
+        run_calibration(tax, cfg, ItemCalibration(k0=k, a=DEFAULT_CALIBRATION.a, min_n=0))
+        for k in (0.1, 0.15, 0.3, 0.6)
+    ]
+    pool = make_pool(tax, cfg.subject, cfg.per_lo, np.random.default_rng(cfg.seed))
+    idx = np.random.default_rng(cfg.seed + 3000).permutation(len(pool))[: cfg.c_pool]
+    label_rmse = float(np.sqrt(np.mean([(pool[i].b_label - pool[i].b_true) ** 2 for i in idx])))
+    return {
+        "rmse_by_responses": main["rmse_effective"],
+        "raw_rmse_by_responses": main["rmse_raw"],
+        "config": {
+            "k0": DEFAULT_CALIBRATION.k0,
+            "a": DEFAULT_CALIBRATION.a,
+            "min_n": DEFAULT_CALIBRATION.min_n,
+        },
+        "k0_sweep": [{"k0": r["k0"], "rmse_raw": r["rmse_raw"]} for r in sweep],
         "label_only_rmse": label_rmse,
-        "items": len(items),
-        "responses_per_item_final": float(np.mean(list(counts.values()))),
+        "items": cfg.c_pool,
+        "responses_per_item_final": main["responses_per_item_final"],
     }
 
 

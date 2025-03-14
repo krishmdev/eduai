@@ -1,54 +1,69 @@
-"""Online Elo-style calibration on the shared response model.
+"""Online item difficulty calibration on the shared response model.
 
-theta <- theta + K_u (y - p),  b <- b - K_i (y - p),  K = K0 / (1 + a n)
-where p is `irt.p_correct`, i.e. the same guessing-floor likelihood the assessment uses.
+After a response y to item i by a student whose pre-response EAP estimate is theta:
+    p = c + (1 - c) sigmoid(theta - b_i),   b_i <- b_i - K(n_i) (y - p),   K(n) = K0 / (1 + a n)
+The estimate lives in the item store (SQLite in the app); sessions only read it. Until an item has
+`min_n` responses the label difficulty (easy/medium/hard -> -1/0/+1) is used for selection and
+scoring, because a handful of Elo steps is noisier than the label.
 """
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass
+from typing import Protocol
 
 from eduai.kt.irt import GUESS, p_correct
 
 
-@dataclass
-class EloConfig:
-    k0_user: float = 0.8
-    a_user: float = 0.05
-    k0_item: float = 0.6
-    a_item: float = 0.02
+@dataclass(frozen=True)
+class ItemCalibration:
+    k0: float = 0.15
+    a: float = 0.02
+    min_n: int = 5
     c: float = GUESS
 
+    def gain(self, n: int) -> float:
+        return self.k0 / (1.0 + self.a * n)
 
-@dataclass
-class EloModel:
-    cfg: EloConfig = field(default_factory=EloConfig)
-    theta: dict[str, float] = field(default_factory=dict)
-    b: dict[str, float] = field(default_factory=dict)
-    n_user: dict[str, int] = field(default_factory=dict)
-    n_item: dict[str, int] = field(default_factory=dict)
+    def step(self, b: float, n: int, theta_pre: float, correct: bool) -> float:
+        p = float(p_correct(theta_pre, b, self.c))
+        return b - self.gain(n) * ((1.0 if correct else 0.0) - p)
 
-    def k_user(self, key: str) -> float:
-        return self.cfg.k0_user / (1.0 + self.cfg.a_user * self.n_user.get(key, 0))
+    def effective_b(self, b_hat: float, n: int, b_label: float) -> float:
+        return b_label if n < self.min_n else b_hat
 
-    def k_item(self, item: str) -> float:
-        return self.cfg.k0_item / (1.0 + self.cfg.a_item * self.n_item.get(item, 0))
 
-    def ensure_item(self, item: str, b0: float) -> None:
-        self.b.setdefault(item, b0)
+DEFAULT_CALIBRATION = ItemCalibration()
 
-    def predict(self, user_key: str, item: str) -> float:
-        return float(p_correct(self.theta.get(user_key, 0.0), self.b.get(item, 0.0), self.cfg.c))
 
-    def update(
-        self, user_key: str, item: str, correct: bool, *, update_user: bool = True, update_item: bool = True
+class ItemStore(Protocol):
+    def item_b(self, item_id: str) -> tuple[float, int, float]:
+        """(b_hat, n_responses, b_label)"""
+        ...
+
+    def calibrate(
+        self, item_id: str, theta_pre: float, correct: bool, cal: ItemCalibration = ...
+    ) -> float: ...
+
+
+class InMemoryItemStore:
+    def __init__(self, labels: dict[str, float], cal: ItemCalibration = DEFAULT_CALIBRATION):
+        self.cal = cal
+        self.b = dict(labels)
+        self.label = dict(labels)
+        self.n = dict.fromkeys(labels, 0)
+
+    def item_b(self, item_id: str) -> tuple[float, int, float]:
+        return self.b[item_id], self.n[item_id], self.label[item_id]
+
+    def effective_b(self, item_id: str) -> float:
+        b, n, lab = self.item_b(item_id)
+        return self.cal.effective_b(b, n, lab)
+
+    def calibrate(
+        self, item_id: str, theta_pre: float, correct: bool, cal: ItemCalibration | None = None
     ) -> float:
-        p = self.predict(user_key, item)
-        err = (1.0 if correct else 0.0) - p
-        if update_user:
-            self.theta[user_key] = self.theta.get(user_key, 0.0) + self.k_user(user_key) * err
-            self.n_user[user_key] = self.n_user.get(user_key, 0) + 1
-        if update_item:
-            self.b[item] = self.b.get(item, 0.0) - self.k_item(item) * err
-            self.n_item[item] = self.n_item.get(item, 0) + 1
-        return p
+        cal = cal or self.cal
+        self.b[item_id] = cal.step(self.b[item_id], self.n[item_id], theta_pre, correct)
+        self.n[item_id] += 1
+        return self.b[item_id]

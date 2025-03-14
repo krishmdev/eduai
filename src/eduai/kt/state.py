@@ -8,7 +8,7 @@ import numpy as np
 
 from eduai.kt import irt, policy
 from eduai.kt.bkt import BKTTracker, NeighborGraph
-from eduai.kt.elo import EloModel
+from eduai.kt.elo import ItemStore
 from eduai.kt.policy import Blueprint, Candidate
 
 MODES = ("practice", "assessment")
@@ -34,7 +34,6 @@ class SessionState:
     max_items: int
     blueprint: Blueprint
     los: list[tuple[str, str]]
-    elo: EloModel = field(default_factory=EloModel)
     bkt: BKTTracker = field(default_factory=BKTTracker)
     eap: irt.EAPGrid = field(default_factory=irt.EAPGrid)
     responses: list[Response] = field(default_factory=list)
@@ -50,10 +49,10 @@ class SessionState:
             raise ValueError(f"mode must be one of {MODES}")
 
     # -- estimates --------------------------------------------------------------------------------
-    def theta_for(self, unit_id: str) -> float:
-        if self.mode == "assessment":
-            return self.eap.posterior().mean
-        return self.elo.theta.get(unit_id, self.elo.theta.get(self.subject, 0.0))
+    def theta_for(self, unit_id: str | None = None) -> float:
+        # EAP is the only ability estimate (both modes). In practice mode ability drifts as the
+        # student learns, so the static-ability posterior is only used to target difficulty.
+        return self.eap.posterior().mean
 
     def posterior(self) -> irt.Posterior:
         return self.eap.posterior()
@@ -100,14 +99,19 @@ class SessionState:
         correct: bool,
         choice: str | None = None,
         wrong_text: str | None = None,
-        calibrate_items: bool = True,
+        store: ItemStore | None = None,
     ) -> Response:
+        """cand.b is the difficulty the caller read from the item store for this response.
+
+        The session never owns item difficulty. If a store is given, it calibrates the item with
+        the pre-response EAP mean.
+        """
         learning = self.mode == "practice"
-        self.elo.ensure_item(cand.item_id, cand.b)
-        b_now = self.elo.b.get(cand.item_id, cand.b)
-        p_pred = float(irt.p_correct(self.theta_for(cand.unit_id), b_now))
-        self.elo.update(cand.unit_id, cand.item_id, correct, update_item=calibrate_items)
-        self.elo.update(self.subject, cand.item_id, correct, update_item=False)
+        b_now = cand.b
+        theta_pre = self.theta_for(cand.unit_id)
+        p_pred = float(irt.p_correct(theta_pre, b_now))
+        if store is not None:
+            store.calibrate(cand.item_id, theta_pre, correct)
         self.eap.update(b_now, correct)
         self.bkt.update(cand.lo_id, correct, b=b_now, learning=learning)
         self.lo_counts[cand.lo_id] = self.lo_counts.get(cand.lo_id, 0) + 1
