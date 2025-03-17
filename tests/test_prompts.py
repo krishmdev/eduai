@@ -50,10 +50,8 @@ def test_training_and_inference_messages_match():
 
 
 def test_sft_builder_uses_shared_prompt():
-    rows = [
-        json.loads(line)
-        for line in open(Path(__file__).resolve().parents[1] / "data/samples/sft_sample.jsonl")
-    ]
+    sample = Path(__file__).resolve().parents[1] / "data/samples/sft_sample.jsonl"
+    rows = [json.loads(line) for line in sample.read_text().splitlines()]
     assert rows
     for row in rows:
         assert row["messages"][0]["content"] == prompts.SYSTEM_PROMPT
