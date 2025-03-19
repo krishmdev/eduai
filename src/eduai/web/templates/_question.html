@@ -1,0 +1,30 @@
+{% set item = q.item %}
+{% include "_progress.html" %}
+<article class="card question" id="question">
+  <div class="q-number" aria-hidden="true">{{ "%02d"|format(q.number) }}</div>
+  <div class="q-body">
+    <p class="q-meta"><span>{{ q.unit_name }}</span><span class="dot" aria-hidden="true">·</span><span class="difficulty difficulty-{{ item.difficulty }}">{{ item.difficulty }}</span></p>
+    {% if item.stimulus %}<blockquote class="stimulus">{{ item.stimulus }}</blockquote>{% endif %}
+    <h2 class="stem" id="stem-{{ item.id }}">{{ item.stem }}</h2>
+    <form class="choices" hx-post="/sessions/{{ progress.id }}/answer" hx-target="#stage" hx-swap="innerHTML" hx-disabled-elt="button">
+      <fieldset aria-labelledby="stem-{{ item.id }}">
+        <legend class="sr-only">Choose one answer</legend>
+        {% for letter, text in item.choices|dictsort %}
+        <label class="choice">
+          <input type="radio" name="choice" value="{{ letter }}" required>
+          <span class="bubble" aria-hidden="true">{{ letter }}</span>
+          <span class="choice-text"><span class="sr-only">{{ letter }}. </span>{{ text }}</span>
+        </label>
+        {% endfor %}
+      </fieldset>
+      <div class="actions">
+        <button class="btn btn-primary" type="submit">{{ "Check answer" if progress.mode == "practice" else "Submit answer" }}</button>
+        <span class="hint">Keys A–D to choose, Enter to submit</span>
+      </div>
+    </form>
+    <details class="objective">
+      <summary>Learning objective</summary>
+      <p><span class="lo-id">{{ item.lo_id }}</span> {{ q.lo_text }}</p>
+    </details>
+  </div>
+</article>

@@ -1,0 +1,17 @@
+{% extends "base.html" %}
+{% block title %}EduAI · {{ progress.subject_name }}{% endblock %}
+{% block body_class %}page-session{% endblock %}
+{% block masthead %}
+  <span class="session-label">{{ progress.subject_name }} · {{ progress.mode|capitalize }}</span>
+  <a class="link-quiet" href="/sessions/{{ progress.id }}/report">End and see report</a>
+{% endblock %}
+{% block main %}
+<div class="session-layout">
+  <section class="stage" aria-live="polite" id="stage">
+    {% if q %}{% include "_question.html" %}{% else %}
+    <div class="empty"><h2>Out of questions</h2><p>The bank has no unseen questions left for this subject. <a href="/sessions/{{ progress.id }}/report">See your report</a>.</p></div>
+    {% endif %}
+  </section>
+  {% include "_sidebar.html" %}
+</div>
+{% endblock %}

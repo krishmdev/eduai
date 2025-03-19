@@ -1,0 +1,47 @@
+{% set item = res.item %}
+{% set answered = true %}
+{% include "_progress.html" %}
+<article class="card question answered {{ 'is-correct' if res.correct else 'is-wrong' }}" id="question">
+  <div class="q-number" aria-hidden="true">{{ "%02d"|format(progress.answered) }}</div>
+  <div class="q-body">
+    {% if progress.mode == "practice" %}
+    <p class="verdict" role="status">{{ "Correct." if res.correct else "Not quite. The answer is " ~ res.answer ~ "." }}</p>
+    {% else %}
+    <p class="verdict verdict-neutral" role="status">Answer recorded.</p>
+    {% endif %}
+    {% if item.stimulus %}<blockquote class="stimulus">{{ item.stimulus }}</blockquote>{% endif %}
+    <h2 class="stem">{{ item.stem }}</h2>
+    <ul class="choices choices-review">
+      {% for letter, text in item.choices|dictsort %}
+      {% set chosen = letter == res.choice %}
+      {% set key = letter == res.answer and progress.mode == "practice" %}
+      <li class="choice {{ 'chosen' if chosen }} {{ 'key' if key }} {{ 'wrong' if chosen and not res.correct and progress.mode == 'practice' }}">
+        <span class="bubble" aria-hidden="true">{{ letter }}</span>
+        <span class="choice-text">{{ text }}{% if chosen %}<span class="tag">your answer</span>{% endif %}{% if key and not chosen %}<span class="tag tag-key">correct answer</span>{% endif %}</span>
+      </li>
+      {% endfor %}
+    </ul>
+    {% if progress.mode == "practice" %}
+      {% if res.explanation %}
+      <section class="explanation">
+        <h3>Why</h3>
+        <p>{{ res.explanation }}</p>
+        <p class="source-note">Explanation sentences are taken from the item's source passage.</p>
+      </section>
+      {% else %}
+      <section class="explanation explanation-missing">
+        <p>This question came without a source passage, so there's no grounded explanation for it.</p>
+      </section>
+      {% endif %}
+    {% endif %}
+    <div class="actions">
+      {% if res.done %}
+      <a class="btn btn-primary" href="/sessions/{{ progress.id }}/report">See report</a>
+      {% else %}
+      <button class="btn btn-primary" hx-get="/sessions/{{ progress.id }}/next" hx-target="#stage" hx-swap="innerHTML" autofocus>Next question</button>
+      {% endif %}
+    </div>
+  </div>
+</article>
+{% set oob = true %}
+{% include "_sidebar.html" %}

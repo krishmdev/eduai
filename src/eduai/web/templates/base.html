@@ -1,0 +1,22 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>{% block title %}EduAI{% endblock %}</title>
+  <link rel="stylesheet" href="/static/app.css">
+  <script src="/static/htmx.min.js" defer></script>
+  <script src="/static/app.js" defer></script>
+</head>
+<body class="{% block body_class %}{% endblock %}">
+  <a class="skip" href="#main">Skip to content</a>
+  <header class="masthead">
+    <a class="wordmark" href="/">Edu<span>AI</span></a>
+    <div class="masthead-meta">{% block masthead %}<span class="backend-tag" title="Item source">{{ backend_name }}</span>{% endblock %}</div>
+  </header>
+  <main id="main">{% block main %}{% endblock %}</main>
+  <footer class="colophon">
+    <p>Practice items derived from SciQ (CC BY-NC 3.0). Not affiliated with or endorsed by the College Board; AP is a registered trademark of the College Board. Scores are simulated.</p>
+  </footer>
+</body>
+</html>

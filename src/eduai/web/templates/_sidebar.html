@@ -1,0 +1,25 @@
+<aside class="sidebar" id="sidebar" aria-label="Mastery by unit" {% if oob %}hx-swap-oob="true"{% endif %}>
+  {% if progress.mode == "assessment" %}
+  <section class="estimate">
+    <h2>Ability estimate</h2>
+    <p class="estimate-value">{{ "%+.2f"|format(progress.theta) }}</p>
+    <p class="estimate-sd">± {{ "%.2f"|format(progress.sd) }} SD · stops below {{ progress.sd_stop }}</p>
+    <div class="sd-track" aria-hidden="true"><div class="sd-fill" style="width: {{ ([progress.sd, 1.0]|min * 100)|round }}%"></div><div class="sd-goal" style="left: {{ (progress.sd_stop * 100)|round }}%"></div></div>
+  </section>
+  {% endif %}
+  <section class="mastery">
+    <h2>Mastery by unit</h2>
+    <p class="mastery-note">Estimated from the objectives you've been asked about.</p>
+    <ol class="unit-list">
+      {% for u in progress.units %}
+      <li class="unit {{ 'unseen' if u.mastery is none }}">
+        <div class="unit-head"><span class="unit-name">{{ u.name }}</span><span class="unit-value">{{ u.mastery|pct }}</span></div>
+        <div class="meter" role="meter" aria-label="{{ u.name }} mastery" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ ((u.mastery or 0) * 100)|round }}" {% if u.mastery is none %}aria-valuetext="not yet assessed"{% endif %}>
+          <div class="meter-fill" style="width: {{ ((u.mastery or 0) * 100)|round(1) }}%"></div>
+        </div>
+        <div class="unit-sub">{% if u.mastery is none %}Not asked yet{% else %}{{ u.correct }}/{{ u.answered }} correct · {{ u.los_observed }} of {{ u.los_total }} objectives{% endif %}</div>
+      </li>
+      {% endfor %}
+    </ol>
+  </section>
+</aside>

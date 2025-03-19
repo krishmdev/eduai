@@ -270,6 +270,13 @@ def eval_score(
     console.print((out / "eval_report.md").read_text())
 
 
+@app.command("serve")
+def serve(port: int = 8001, host: str = "127.0.0.1") -> None:
+    from eduai.web.app import serve as run
+
+    run(port=port, host=host)
+
+
 @app.command("fetch-adapter")
 def fetch_adapter(
     source: str = typer.Option(None, help="Local tarball path or URL instead of the release"),

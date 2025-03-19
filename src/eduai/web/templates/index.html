@@ -1,0 +1,55 @@
+{% extends "base.html" %}
+{% block title %}EduAI · Start a session{% endblock %}
+{% block body_class %}page-index{% endblock %}
+{% block main %}
+<section class="intro">
+  <p class="eyebrow">Adaptive practice for AP sciences</p>
+  <h1>Pick a subject.<br>The questions adjust to you.</h1>
+  <p class="lede">Practice mode picks questions you'll get right about 70% of the time and explains each answer from its source passage. Assessment mode picks the most informative question for your current estimate and stops once the estimate is precise enough.</p>
+</section>
+
+{% if error %}<div class="notice notice-error" role="alert">{{ error }}</div>{% endif %}
+
+{% if not subjects %}
+<div class="empty">
+  <h2>No items loaded</h2>
+  <p>The item bank is empty. Run <code>make data</code> to build it from SciQ, or check that <code>data/samples/bank_sample.jsonl</code> exists.</p>
+</div>
+{% else %}
+<form class="start" method="post" action="/sessions">
+  <fieldset class="subject-grid">
+    <legend>Subject</legend>
+    {% for s in subjects %}
+    <label class="subject-card">
+      <input type="radio" name="subject" value="{{ s.id }}" {% if loop.first %}checked{% endif %}>
+      <span class="subject-name">{{ s.name }}</span>
+      <span class="subject-count">{{ "{:,}".format(s['items']) }} questions</span>
+    </label>
+    {% endfor %}
+  </fieldset>
+
+  <fieldset class="mode-row">
+    <legend>Mode</legend>
+    <label class="mode-card">
+      <input type="radio" name="mode" value="practice" checked>
+      <span class="mode-title">Practice</span>
+      <span class="mode-desc">Feedback and an explanation after every question.</span>
+    </label>
+    <label class="mode-card">
+      <input type="radio" name="mode" value="assessment">
+      <span class="mode-title">Assessment</span>
+      <span class="mode-desc">No feedback until the end. Up to {{ assessment_max }} questions, fewer if the estimate settles.</span>
+    </label>
+  </fieldset>
+
+  <div class="length-row" data-show-for="practice">
+    <label for="length">Practice length</label>
+    <select id="length" name="length">
+      {% for n in practice_lengths %}<option value="{{ n }}">{{ n }} questions</option>{% endfor %}
+    </select>
+  </div>
+
+  <button class="btn btn-primary" type="submit">Start</button>
+</form>
+{% endif %}
+{% endblock %}
