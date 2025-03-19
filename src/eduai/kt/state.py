@@ -68,12 +68,19 @@ class SessionState:
     ) -> str | None:
         los = [(lo, u) for lo, u in self.los if available is None or lo in available]
         pick = policy.choose_lo(
-            los, self.bkt.get, self.lo_counts, self.unit_counts, self.blueprint, len(self.responses), rng
+            los,
+            self.bkt.get,
+            self.lo_counts,
+            self.unit_counts,
+            self.blueprint,
+            len(self.responses),
+            rng,
+            self.mode,
         )
         if pick is None and los:
             # Every unit hit its cap (possible when the test runs past the blueprint length).
             pick = policy.choose_lo(
-                los, self.bkt.get, self.lo_counts, {}, self.blueprint, len(self.responses), rng
+                los, self.bkt.get, self.lo_counts, {}, self.blueprint, len(self.responses), rng, self.mode
             )
         return pick
 

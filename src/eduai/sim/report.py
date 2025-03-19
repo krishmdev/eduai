@@ -78,17 +78,41 @@ def render(res: dict, manifest_name: str) -> str:
         f"BKT parameters were fit by EM on a separate cohort of random-practice sequences: "
         f"p_init {em['p_init']:.3f}, p_learn {em['p_learn']:.3f}, guess {em['guess']:.3f}, slip {em['slip']:.3f} "
         f"(log-likelihood {res['bkt_em']['loglik_trace'][0]:.1f} to {res['bkt_em']['loglik_trace'][-1]:.1f} "
-        f"over {len(res['bkt_em']['loglik_trace'])} iterations).",
+        f"over {len(res['bkt_em']['loglik_trace'])} iterations)."
+        + (
+            " The guess estimate sits on its 0.49 upper bound: the simulated responses include ability-driven "
+            "correct answers that a two-state BKT model can only explain as guessing, so this is a model-mismatch "
+            "signal rather than a real guess rate. The app uses difficulty-adjusted defaults instead."
+            if em["guess"] >= 0.489
+            else ""
+        ),
         "",
         "## C. Item calibration",
         "",
         "![C](figures/sim_c_calibration.png)",
         "",
+        f"Each response moves b by K(n) (y - p), K(n) = {res['C']['config']['k0']} / (1 + {res['C']['config']['a']} n), "
+        "with p computed from the student's pre-response EAP estimate (true ability is never used). The app "
+        f"serves the label difficulty until an item has {res['C']['config']['min_n']} responses.",
+        "",
         "| Responses per item | " + " | ".join(str(k) for k in res["C"]["rmse_by_responses"]) + " |",
         "|---|" + "---|" * len(res["C"]["rmse_by_responses"]),
-        "| RMSE of b-hat | " + " | ".join(f"{v:.3f}" for v in res["C"]["rmse_by_responses"].values()) + " |",
+        "| RMSE of served b | "
+        + " | ".join(f"{v:.3f}" for v in res["C"]["rmse_by_responses"].values())
+        + " |",
+        "| RMSE of raw b-hat | "
+        + " | ".join(f"{v:.3f}" for v in res["C"]["raw_rmse_by_responses"].values())
+        + " |",
         "",
-        f"Label-only baseline (easy/medium/hard mapped to -1/0/+1): RMSE {res['C']['label_only_rmse']:.3f}.",
+        f"Label-only baseline (easy/medium/hard mapped to -1/0/+1): RMSE {res['C']['label_only_rmse']:.3f}. "
+        "Gain sensitivity (raw b-hat, no label hold):",
+        "",
+        "| K0 | " + " | ".join(str(k) for k in res["C"]["k0_sweep"][0]["rmse_raw"]) + " |",
+        "|---|" + "---|" * len(res["C"]["k0_sweep"][0]["rmse_raw"]),
+        *[
+            f"| {r['k0']} | " + " | ".join(f"{v:.3f}" for v in r["rmse_raw"].values()) + " |"
+            for r in res["C"]["k0_sweep"]
+        ],
         "",
         "## D. Evidence sharing",
         "",

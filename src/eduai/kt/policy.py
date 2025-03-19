@@ -50,12 +50,19 @@ def choose_lo(
     blueprint: Blueprint,
     t: int,
     rng: np.random.Generator | None = None,
+    mode: str = "practice",
 ) -> str | None:
+    """Practice: UCB-weighted need. Assessment: the unit furthest behind its blueprint share,
+    then the least-asked LO in it (mastery doesn't steer measurement)."""
     best, best_score = None, -math.inf
     for lo, unit in los:
         if unit_counts.get(unit, 0) >= blueprint.cap(unit):
             continue
-        s = lo_score(blueprint.weights.get(unit, 0.0), mastery(lo), lo_counts.get(lo, 0), t)
+        w = blueprint.weights.get(unit, 0.0)
+        if mode == "assessment":
+            s = w * (t + 1) - unit_counts.get(unit, 0) - 0.01 * lo_counts.get(lo, 0)
+        else:
+            s = lo_score(w, mastery(lo), lo_counts.get(lo, 0), t)
         if rng is not None:
             s += 1e-6 * rng.random()
         if s > best_score:

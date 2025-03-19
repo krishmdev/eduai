@@ -12,13 +12,17 @@
     <p class="mastery-note">Estimated from the objectives you've been asked about.</p>
     <ol class="unit-list">
       {% for u in progress.units %}
-      <li class="unit {{ 'unseen' if u.mastery is none }}">
+      {% if u.mastery is none %}
+      <li class="unit unseen"><div class="unit-head"><span class="unit-name">{{ u.name }}</span><span class="unit-value">not asked yet</span></div></li>
+      {% else %}
+      <li class="unit">
         <div class="unit-head"><span class="unit-name">{{ u.name }}</span><span class="unit-value">{{ u.mastery|pct }}</span></div>
-        <div class="meter" role="meter" aria-label="{{ u.name }} mastery" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ ((u.mastery or 0) * 100)|round }}" {% if u.mastery is none %}aria-valuetext="not yet assessed"{% endif %}>
-          <div class="meter-fill" style="width: {{ ((u.mastery or 0) * 100)|round(1) }}%"></div>
+        <div class="meter" role="meter" aria-label="{{ u.name }} mastery" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ (u.mastery * 100)|round }}">
+          <div class="meter-fill" style="width: {{ (u.mastery * 100)|round(1) }}%"></div>
         </div>
-        <div class="unit-sub">{% if u.mastery is none %}Not asked yet{% else %}{{ u.correct }}/{{ u.answered }} correct · {{ u.los_observed }} of {{ u.los_total }} objectives{% endif %}</div>
+        <div class="unit-sub">{{ u.correct }}/{{ u.answered }} correct · {{ u.los_observed }} of {{ u.los_total }} objectives</div>
       </li>
+      {% endif %}
       {% endfor %}
     </ol>
   </section>

@@ -17,7 +17,7 @@
       {% set key = letter == res.answer and progress.mode == "practice" %}
       <li class="choice {{ 'chosen' if chosen }} {{ 'key' if key }} {{ 'wrong' if chosen and not res.correct and progress.mode == 'practice' }}">
         <span class="bubble" aria-hidden="true">{{ letter }}</span>
-        <span class="choice-text">{{ text }}{% if chosen %}<span class="tag">your answer</span>{% endif %}{% if key and not chosen %}<span class="tag tag-key">correct answer</span>{% endif %}</span>
+        <span class="choice-text"><span class="choice-label">{{ text }}</span>{% if chosen %}<span class="tag">your answer</span>{% endif %}{% if key and not chosen %}<span class="tag tag-key">correct answer</span>{% endif %}</span>
       </li>
       {% endfor %}
     </ul>
