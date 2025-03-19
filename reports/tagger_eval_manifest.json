@@ -1,23 +1,23 @@
 {
-  "recorded_at": "2026-09-23T02:23:16-0400",
+  "recorded_at": "2026-09-23T17:13:15-0400",
   "host": {
     "chip": "Apple M1 Pro",
     "ram_gb": 16.0,
     "os": "Darwin 26.5.1",
     "python": "3.11.13",
-    "power": "Now drawing from 'AC Power'"
+    "power": "Now drawing from 'Battery Power'"
   },
   "compute_lease": {
-    "held": false,
-    "holder": null
+    "held": true,
+    "holder": "planetary-fabric"
   },
   "extra": {
     "task": "tagger-eval",
     "gold": "data/gold/tagging_gold.jsonl"
   },
   "repo": {
-    "commit": "ab322ff9ff637129a45316d804cc125632de72ab",
-    "dirty": true
+    "commit": "2474271e0b3140881bda3546e69b07f913416bb0",
+    "dirty": false
   },
   "packages": {
     "numpy": "2.4.6",
