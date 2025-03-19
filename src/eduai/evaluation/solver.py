@@ -1,14 +1,14 @@
-"""Answer-key self-consistency: a solver answers the item without seeing the key.
+"""Answer-key check with a fixed judge that is not any arm's generator.
 
-With the MLX backend the solver reads the next-token log-probabilities of A-D once, takes the
-argmax as the greedy answer and draws two more answers at T = 0.7 from the same distribution.
-Other backends generate a short answer three times. The majority of the three must match the key.
+The judge reads next-token log-probabilities for A-D. Letter-position bias is averaged out by
+scoring the item under cyclic rotations of its options and mapping the scores back to the
+original options. The key "agrees" when the option with the highest mean log-probability is the
+keyed one.
 """
 
 from __future__ import annotations
 
 import re
-from collections import Counter
 
 import numpy as np
 
@@ -23,35 +23,53 @@ def parse_letter(text: str) -> str | None:
     return m.group(1) if m else None
 
 
-class Solver:
-    def __init__(self, backend, samples: int = 2, temperature: float = 0.7, seed: int = 0):
+def rotate(choices: dict[str, str], k: int) -> tuple[dict[str, str], dict[str, str]]:
+    """Returns rotated choices and a map new_letter -> original_letter."""
+    order = list(LETTERS)
+    new_to_old = {order[i]: order[(i + k) % 4] for i in range(4)}
+    return {new: choices[old] for new, old in new_to_old.items()}, new_to_old
+
+
+class Judge:
+    def __init__(self, backend, rotations: tuple[int, ...] = (0, 2), open_book: bool = True):
+        if not hasattr(backend, "choice_logprobs"):
+            raise TypeError("judge backend must expose choice_logprobs")
         self.backend = backend
-        self.samples = samples
-        self.temperature = temperature
-        self.rng = np.random.default_rng(seed)
+        self.rotations = rotations
+        self.open_book = open_book
 
-    def answers(self, item: dict) -> list[str | None]:
-        msgs = build_solver_messages(item["stem"], item["choices"], item.get("stimulus"))
-        if hasattr(self.backend, "choice_logprobs"):
+    def option_scores(self, item: dict, passage: str | None = None) -> dict[str, float]:
+        totals = dict.fromkeys(LETTERS, 0.0)
+        for k in self.rotations:
+            rot, new_to_old = rotate(item["choices"], k)
+            msgs = build_solver_messages(
+                item["stem"], rot, item.get("stimulus"), passage if self.open_book else None
+            )
             lp = self.backend.choice_logprobs(msgs)
-            vals = np.array([lp[k] for k in LETTERS])
-            greedy = LETTERS[int(np.argmax(vals))]
-            z = vals / self.temperature
-            probs = np.exp(z - z.max())
-            probs /= probs.sum()
-            draws = [LETTERS[i] for i in self.rng.choice(4, size=self.samples, p=probs)]
-            return [greedy, *draws]
-        out = [parse_letter(self.backend.generate(msgs, 4, 0.0))]
-        out += [parse_letter(self.backend.generate(msgs, 4, self.temperature)) for _ in range(self.samples)]
-        return out
+            for new, old in new_to_old.items():
+                totals[old] += lp[new] / len(self.rotations)
+        return totals
 
-    def __call__(self, item: dict) -> dict:
-        ans = self.answers(item)
-        counts = Counter(a for a in ans if a)
-        majority = counts.most_common(1)[0][0] if counts else None
+    def __call__(self, item: dict, passage: str | None = None) -> dict:
+        scores = self.option_scores(item, passage)
+        vals = np.array([scores[k] for k in LETTERS])
+        probs = np.exp(vals - vals.max())
+        probs /= probs.sum()
+        choice = LETTERS[int(np.argmax(vals))]
         return {
-            "answers": ans,
-            "majority": majority,
-            "agrees": majority == item["answer"],
-            "greedy_correct": float(ans[0] == item["answer"]),
+            "majority": choice,
+            "agrees": choice == item["answer"],
+            "p_key": float(probs[LETTERS.index(item["answer"])]),
         }
+
+
+class GenerativeSolver:
+    """Fallback for backends without logprobs (e.g. Ollama): greedy letter only."""
+
+    def __init__(self, backend):
+        self.backend = backend
+
+    def __call__(self, item: dict, passage: str | None = None) -> dict:
+        msgs = build_solver_messages(item["stem"], item["choices"], item.get("stimulus"), passage)
+        ans = parse_letter(self.backend.generate(msgs, 4, 0.0))
+        return {"majority": ans, "agrees": ans == item["answer"]}

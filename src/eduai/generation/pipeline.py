@@ -6,7 +6,7 @@ import hashlib
 from collections import Counter
 from dataclasses import dataclass, field
 
-from eduai.curriculum.tagger import Tagger
+from eduai.curriculum.tagger import Tagger, tag_text
 from eduai.curriculum.taxonomy import Taxonomy
 from eduai.generation.dedup import NoveltyIndex
 from eduai.generation.generator import Generator
@@ -16,14 +16,12 @@ from eduai.prompts import GenerationRequest
 
 def make_aligner(tagger: Tagger):
     def aligner(item: dict, req: GenerationRequest) -> tuple[bool, dict]:
-        text = f"{item['stem']} Answer: {item['choices'][item['answer']]}"
-        res = tagger.tag_texts([text])[0]
-        in_top3 = req.lo_id in res.top3
-        ok = in_top3 and tagger.tau is not None and res.score >= tagger.tau
-        return ok, {
-            "tag_score": res.score,
-            "target_in_top3": float(in_top3),
-            "tag_top1_match": float(res.lo_id == req.lo_id),
+        text = tag_text(item["stem"], item["choices"][item["answer"]])
+        res = tagger.is_aligned([text], [req.lo_id])[0]
+        return res["aligned"], {
+            "target_score": res["target_score"],
+            "target_in_top3": float(res["target_in_top3"]),
+            "tag_top1_match": float(res["top1"] == req.lo_id),
         }
 
     return aligner
@@ -61,7 +59,7 @@ class Pipeline:
         res = validate_item(
             gen.text,
             req,
-            solver=self.solver,
+            solver=(lambda it: self.solver(it, req.passage)) if self.solver else None,
             aligner=self.aligner,
             novelty=self.novelty.check if self.novelty else None,
         )

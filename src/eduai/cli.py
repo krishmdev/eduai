@@ -17,6 +17,8 @@ app.add_typer(curriculum_app, name="curriculum", help="Inspect and validate the 
 app.add_typer(data_app, name="data", help="Build the SciQ-derived datasets.")
 app.add_typer(tagger_app, name="tagger", help="Curriculum tagger evaluation.")
 app.add_typer(bank_app, name="bank", help="Item bank maintenance and generation.")
+eval_app = typer.Typer(no_args_is_help=True)
+app.add_typer(eval_app, name="eval", help="Base vs few-shot vs fine-tuned comparison.")
 console = Console()
 
 
@@ -211,6 +213,61 @@ def simulate(students: int = 500, out: Path = typer.Option(Path("reports")), see
     )
     (out / "sim_report.md").write_text(report.render(res, "sim_manifest.json"))
     console.print(f"wrote {out / 'sim_report.md'} in {res['seconds']} s")
+
+
+def _novelty_index():
+    from eduai.curriculum.embedder import get_embedder
+    from eduai.data.sciq import read_jsonl
+    from eduai.generation.dedup import NoveltyIndex
+
+    bank = read_jsonl(Path("data/bank/sciq_items.jsonl"))
+    groups = {d["id"]: d["tags"]["group"] for d in read_jsonl(Path("data/items_tagged.jsonl"))}
+    train = [r["stem"] for r in read_jsonl(Path("data/sft/train_stems.jsonl"))]
+    return NoveltyIndex(
+        get_embedder("bge-small"),
+        [b["stem"] for b in bank],
+        [b["id"] for b in bank],
+        [groups[b["id"].removeprefix("sciq-")] for b in bank],
+        train,
+    )
+
+
+@eval_app.command("generate")
+def eval_generate(
+    arm: str, prompts: Path = typer.Option(Path("data/eval/prompts.jsonl")), limit: int = None
+) -> None:
+    from eduai.evaluation.compare import generate_arm, load_prompts
+
+    out = generate_arm(arm, load_prompts(prompts), limit=limit)
+    console.print(f"wrote {out}")
+
+
+@eval_app.command("judge")
+def eval_judge(
+    judge: str = "llama-1b", prompts: Path = typer.Option(Path("data/eval/prompts.jsonl"))
+) -> None:
+    from eduai.evaluation.compare import judge_all, load_prompts
+
+    console.print(f"wrote {judge_all(load_prompts(prompts), judge)}")
+
+
+@eval_app.command("score")
+def eval_score(
+    prompts: Path = typer.Option(Path("data/eval/prompts.jsonl")), out: Path = typer.Option(Path("reports"))
+) -> None:
+    from eduai.curriculum.tagger import build_tagger
+    from eduai.curriculum.taxonomy import default_taxonomy
+    from eduai.evaluation import compare, report
+    from eduai.manifest import write_manifest
+
+    res = compare.score(compare.load_prompts(prompts), build_tagger(default_taxonomy()), _novelty_index())
+    (out / "eval.json").write_text(json.dumps(res, indent=2) + "\n")
+    manifest = out / "eval_manifest.json"
+    if not manifest.exists():
+        write_manifest(manifest, {"task": "eval-score"})
+    card = json.loads((out / "eval_prompts_card.json").read_text())
+    (out / "eval_report.md").write_text(report.render(res, manifest.name, card))
+    console.print((out / "eval_report.md").read_text())
 
 
 @app.command("fetch-adapter")

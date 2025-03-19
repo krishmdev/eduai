@@ -97,12 +97,54 @@ def render_completion(item: dict) -> str:
 
 
 SOLVER_SYSTEM = (
-    "You are taking a science test. Read the question and reply with only the letter of the best answer."
+    "You are taking a science test. Use the passage if one is given. "
+    "Reply with only the letter of the best answer."
 )
 
 
-def build_solver_messages(stem: str, choices: dict[str, str], stimulus: str | None = None) -> list[dict]:
-    body = (f"{stimulus.strip()}\n\n" if stimulus else "") + stem.strip() + "\n"
-    body += "\n".join(f"{k}. {v}" for k, v in sorted(choices.items()))
-    body += "\nAnswer:"
-    return [{"role": "system", "content": SOLVER_SYSTEM}, {"role": "user", "content": body}]
+def build_solver_messages(
+    stem: str, choices: dict[str, str], stimulus: str | None = None, passage: str | None = None
+) -> list[dict]:
+    """Open-book when `passage` is given: the judge sees the same source passage the generator saw."""
+    parts = []
+    if passage:
+        parts.append(f"Passage: {passage.strip()}")
+    if stimulus:
+        parts.append(stimulus.strip())
+    parts.append(stem.strip())
+    body = "\n\n".join(parts) + "\n" + "\n".join(f"{k}. {v}" for k, v in sorted(choices.items()))
+    return [{"role": "system", "content": SOLVER_SYSTEM}, {"role": "user", "content": body + "\nAnswer:"}]
+
+
+def parse_user(text: str) -> GenerationRequest:
+    """Inverse of render_user (used to rebuild few-shot requests from SFT rows)."""
+    head, rest = text.split("\n\nSource passage:\n", 1)
+    passage = rest.rsplit("\n\nReturn JSON", 1)[0]
+    fields: dict[str, str] = {}
+    avoid: list[str] = []
+    lo_id = lo_text = ""
+    mis = None
+    for line in head.splitlines():
+        if line.startswith("- "):
+            avoid.append(line[2:])
+        elif line.startswith("Learning objective ("):
+            lo_id, lo_text = line[len("Learning objective (") :].split("): ", 1)
+        elif line.startswith("Target misconception: include '"):
+            mis = line[len("Target misconception: include '") :].rsplit("' as one of the wrong options.", 1)[
+                0
+            ]
+        elif ": " in line:
+            k, v = line.split(": ", 1)
+            fields[k] = v
+    return GenerationRequest(
+        subject=fields["Subject"],
+        unit=fields["Unit"],
+        topic=fields["Topic"],
+        lo_id=lo_id,
+        lo_text=lo_text,
+        difficulty=fields["Difficulty"],
+        format=fields["Format"],
+        passage=passage,
+        target_misconception=mis,
+        avoid=avoid,
+    )

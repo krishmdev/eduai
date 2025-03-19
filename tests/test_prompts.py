@@ -86,3 +86,12 @@ def test_request_validation():
         _req(difficulty="impossible")
     with pytest.raises(ValueError):
         _req(format="essay")
+
+
+def test_parse_user_round_trips_sft_rows():
+    from eduai.prompts import parse_user, render_user
+
+    sample = Path(__file__).resolve().parents[1] / "data/samples/sft_sample.jsonl"
+    for line in sample.read_text().splitlines():
+        user = json.loads(line)["messages"][1]["content"]
+        assert render_user(parse_user(user)) == user
