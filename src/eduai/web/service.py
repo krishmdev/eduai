@@ -131,6 +131,8 @@ class Service:
             weights,
             los,
             graph=self.graph,
+            # Evidence sharing is off: in simulation D it did not improve mastery estimates.
+            share=False,
             sd_stop=row["sd_stop"] if row["mode"] == "assessment" else irt.SD_STOP,
         )
         for r in self.conn.execute("SELECT * FROM responses WHERE session_id = ? ORDER BY seq", (sid,)):

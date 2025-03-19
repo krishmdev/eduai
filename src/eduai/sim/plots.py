@@ -142,13 +142,15 @@ def sim_figures(res: dict, out: Path) -> list[Path]:
     p = out / "sim_c_calibration.png"
     line_chart(
         p,
-        [("Elo b-hat", xs, [c[k] for k in c])],
+        [
+            ("Served b (label until min responses)", xs, [c[k] for k in c]),
+            ("Raw Elo b-hat", xs, list(res["C"]["raw_rmse_by_responses"].values())),
+        ],
         "C. Item difficulty calibration",
         "Responses per item",
         "RMSE of b-hat vs true b",
         f"{res['C']['items']} items; start from the easy/medium/hard label",
         reference=("label-only RMSE", res["C"]["label_only_rmse"]),
-        end_labels=True,
     )
     paths.append(p)
 
