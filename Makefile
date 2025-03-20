@@ -1,4 +1,6 @@
 PY := uv run
+# Offline targets must not let uv touch the network (no sync, no index lookups).
+PYOFF := uv run --frozen --offline
 SCIQ_DIR ?= $(HOME)/Downloads/SciQ dataset-2 3
 EMBED_MODELS := bge-small minilm rerank
 LEASE := <local> run eduai-train --
@@ -8,7 +10,7 @@ PORT ?= 8001
 export HF_HOME := $(CURDIR)/.models
 export TOKENIZERS_PARALLELISM := false
 
-.PHONY: setup models models-llm lint test data sft tagger-eval pilot train sim bank eval report demo e2e-offline serve clean
+.PHONY: setup models models-llm lint test data tagger-eval pilot train sim eval eval-score demo e2e-offline egress-open-check serve clean
 
 setup:
 	uv sync --all-extras --frozen
@@ -45,16 +47,21 @@ sim:
 	$(PY) eduai simulate --students 500 --out reports
 
 eval:
-	$(LEASE) $(PY) eduai eval --n 150 --out reports
+	$(LEASE) scripts/run_eval.sh
+	$(MAKE) eval-score
 
-report:
-	$(PY) eduai report --out reports
+eval-score:
+	$(PY) eduai eval score
 
 demo:
-	EDUAI_BACKEND=bank $(PY) eduai serve --port $(PORT)
+	EDUAI_BACKEND=bank $(PYOFF) eduai serve --port $(PORT)
 
 e2e-offline:
-	$(PY) python scripts/e2e_offline.py --port $(PORT)
+	$(PYOFF) python scripts/e2e_offline.py --port $(PORT)
+
+# Companion to e2e-offline: the same canary must connect when not sandboxed, or the check is vacuous.
+egress-open-check:
+	$(PYOFF) python -m eduai.egress open
 
 serve:
 	$(PY) eduai serve --port $(PORT)
