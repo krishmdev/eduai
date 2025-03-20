@@ -1,0 +1,35 @@
+name: ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+        with:
+          version: "0.9.28"
+      - run: uv sync --frozen --extra dev --python 3.11
+      - run: uv run ruff check .
+      - run: uv run pytest -q
+
+  # Bank-only runtime with no network at all: dependencies are installed in one container, then the
+  # e2e runs in a second container started with --network none (loopback still works).
+  offline-e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: install deps (network allowed)
+        run: >
+          docker run --rm -v "$PWD:/w" -w /w -e UV_PROJECT_ENVIRONMENT=/w/.venv-ci
+          ghcr.io/astral-sh/uv:0.9.28-python3.11-bookworm-slim
+          uv sync --frozen --extra dev
+      - name: e2e with --network none
+        run: >
+          docker run --rm --network none -v "$PWD:/w" -w /w -e UV_PROJECT_ENVIRONMENT=/w/.venv-ci
+          -e HF_HUB_OFFLINE=1 -e TRANSFORMERS_OFFLINE=1
+          ghcr.io/astral-sh/uv:0.9.28-python3.11-bookworm-slim
+          uv run --frozen --offline python scripts/e2e_offline.py --port 8001
