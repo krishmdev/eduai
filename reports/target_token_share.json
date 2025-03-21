@@ -1,0 +1,17 @@
+{
+  "rows": 300,
+  "completion_tokens": 42590,
+  "tokens_per_row": 142.0,
+  "field_share": {
+    "json_syntax": 0.369,
+    "explanation": 0.2492,
+    "stimulus": 0.1266,
+    "stem": 0.1214,
+    "choices": 0.069,
+    "lo_id": 0.0506,
+    "answer": 0.007,
+    "difficulty": 0.007
+  },
+  "copied_from_prompt_share": 0.4056,
+  "note": "copied = token inside a >=4-word span that appears verbatim in the prompt"
+}
