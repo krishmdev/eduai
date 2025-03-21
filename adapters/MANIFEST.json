@@ -7,15 +7,15 @@
   },
   "asset": {
     "filename": "llama-3.2-3b-eduai-lora-v1.tar.gz",
-    "sha256": "3c96427b0653cffc5c39b2b562a2ea55dc966d768c8896163520209750911a4b",
-    "size_bytes": 25741621,
+    "sha256": "02ce7a34a1602349516d097116b1860ab4883e9f44e89cfda1bfd6ead8912b5f",
+    "size_bytes": 25741938,
     "url": "https://github.com/krishmdev/eduai/releases/download/adapter-v1/llama-3.2-3b-eduai-lora-v1.tar.gz",
     "url_status": "release not published yet; the coordinator attaches this asset"
   },
   "files": {
     "TRAINING_CARD.md": {
-      "sha256": "f9f81be4d35b8d6d3ccdf35c40f2f030017d8973ae5c940504061677d91aa4cd",
-      "size_bytes": 726
+      "sha256": "d93fa1ea8c7f36e27ee963a6978b31be6f199a05619a493baa8ad854525fc91d",
+      "size_bytes": 1235
     },
     "adapter_config.json": {
       "sha256": "91dd6e1f7f4554b62fc85dc656e8a72594cd59d48e300b9b033589c8812a3b12",
@@ -27,5 +27,11 @@
     }
   },
   "install_to": "adapters/llama32-3b-eduai",
-  "license": "Llama 3.2 Community License (Built with Llama); training data CC BY-NC 3.0 (SciQ)"
+  "license": "Llama 3.2 Community License (Built with Llama); training data CC BY-NC 3.0 (SciQ)",
+  "training": {
+    "iters": 600,
+    "wall_seconds": 6995,
+    "peak_mem_gb": 7.653,
+    "source": "reports/training.json"
+  }
 }
