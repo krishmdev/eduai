@@ -196,6 +196,54 @@ def tagger_eval(
     console.print(out.read_text())
 
 
+@bank_app.command("add-generated")
+def bank_add_generated(
+    arm: str = "finetuned", out: Path = typer.Option(Path("data/samples/generated_items.jsonl"))
+) -> None:
+    """Promote eval outputs that passed every check (and aren't a copy of their source) into the bank."""
+    from eduai.curriculum.taxonomy import default_taxonomy
+    from eduai.data.difficulty import LABEL_B
+    from eduai.data.sciq import read_jsonl, write_jsonl
+    from eduai.generation.validate import parse
+
+    tax = default_taxonomy()
+    prompts = {p["id"]: p for p in read_jsonl(Path("data/eval/prompts.jsonl"))}
+    passed = {
+        r["id"]
+        for r in read_jsonl(Path("reports/eval/per_item.jsonl"))
+        if r["arm"] == arm and r.get("all_checks") and not r.get("source_copy")
+    }
+    rows = []
+    for g in read_jsonl(Path(f"reports/eval/gen_{arm}.jsonl")):
+        if g["id"] not in passed:
+            continue
+        item, _ = parse(g["text"])
+        req = prompts[g["id"]]["request"]
+        lo = tax.lo(req["lo_id"])
+        rows.append(
+            {
+                "id": f"gen-{g['id']}",
+                "stem": item["stem"],
+                "stimulus": item.get("stimulus"),
+                "choices": item["choices"],
+                "answer": item["answer"],
+                "explanation": item["explanation"],
+                "lo_id": lo.id,
+                "subject": lo.subject,
+                "unit_id": lo.unit_id,
+                "difficulty": req["difficulty"],
+                "b": LABEL_B[req["difficulty"]],
+                "source": f"generated:{arm}",
+                "source_item": g["id"],
+                "grounded": True,
+                "ungrounded": False,
+                "aligned": True,
+            }
+        )
+    write_jsonl(out, rows)
+    console.print(f"wrote {len(rows)} generated items to {out}")
+
+
 @app.command("simulate")
 def simulate(students: int = 500, out: Path = typer.Option(Path("reports")), seed: int = 20260923) -> None:
     from eduai.curriculum.taxonomy import default_taxonomy
