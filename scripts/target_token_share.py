@@ -21,7 +21,7 @@ def main(path: str, out: str) -> None:
     tok = Tokenizer.from_file(str(TOK))
     fields: Counter = Counter()
     copied = total = 0
-    rows = [json.loads(line) for line in open(path)]
+    rows = [json.loads(line) for line in Path(path).read_text().splitlines()]
     for r in rows:
         user, comp = r["messages"][1]["content"], r["messages"][2]["content"]
         d = json.loads(comp)
