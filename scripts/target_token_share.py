@@ -13,7 +13,10 @@ from pathlib import Path
 from tokenizers import Tokenizer
 
 ROOT = Path(__file__).resolve().parents[1]
-TOK = ROOT / ".models/hub/models--mlx-community--Llama-3.2-3B-Instruct-4bit/snapshots/7f0dc925e0d0afb0322d96f9255cfddf2ba5636e/tokenizer.json"
+TOK = (
+    ROOT
+    / ".models/hub/models--mlx-community--Llama-3.2-3B-Instruct-4bit/snapshots/7f0dc925e0d0afb0322d96f9255cfddf2ba5636e/tokenizer.json"
+)
 _W = re.compile(r"\S+")
 
 
@@ -26,8 +29,14 @@ def main(path: str, out: str) -> None:
         user, comp = r["messages"][1]["content"], r["messages"][2]["content"]
         d = json.loads(comp)
         cat = ["json_syntax"] * len(comp)
-        values = {"stem": d["stem"], "stimulus": d.get("stimulus"), "explanation": d["explanation"],
-                  "lo_id": d["lo_id"], "difficulty": d["difficulty"], "answer": d["answer"]}
+        values = {
+            "stem": d["stem"],
+            "stimulus": d.get("stimulus"),
+            "explanation": d["explanation"],
+            "lo_id": d["lo_id"],
+            "difficulty": d["difficulty"],
+            "answer": d["answer"],
+        }
         for name, val in [*values.items(), *(("choices", v) for v in d["choices"].values())]:
             if not val:
                 continue
@@ -50,10 +59,14 @@ def main(path: str, out: str) -> None:
             fields[Counter(cat[a:b]).most_common(1)[0][0]] += 1
             copied += any(in_copy[a:b])
             total += 1
-    res = {"rows": len(rows), "completion_tokens": total, "tokens_per_row": round(total / len(rows), 1),
-           "field_share": {k: round(v / total, 4) for k, v in fields.most_common()},
-           "copied_from_prompt_share": round(copied / total, 4),
-           "note": "copied = token inside a >=4-word span that appears verbatim in the prompt"}
+    res = {
+        "rows": len(rows),
+        "completion_tokens": total,
+        "tokens_per_row": round(total / len(rows), 1),
+        "field_share": {k: round(v / total, 4) for k, v in fields.most_common()},
+        "copied_from_prompt_share": round(copied / total, 4),
+        "note": "copied = token inside a >=4-word span that appears verbatim in the prompt",
+    }
     Path(out).write_text(json.dumps(res, indent=2) + "\n")
     print(json.dumps(res, indent=2))
 

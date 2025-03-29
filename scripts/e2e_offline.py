@@ -50,8 +50,12 @@ def run_session(base: str, subject: str, mode: str) -> dict:
     rep = httpx.get(f"{base}/api/sessions/{sid}/report").json()
     html = httpx.get(f"{base}/sessions/{sid}/report")
     assert html.status_code == 200 and "Simulated score" in html.text
-    return {"mode": mode, "answered": rep["summary"]["answered"], "theta": round(rep["theta"], 3),
-            "sd": round(rep["sd"], 3)}
+    return {
+        "mode": mode,
+        "answered": rep["summary"]["answered"],
+        "theta": round(rep["theta"], 3),
+        "sd": round(rep["sd"], 3),
+    }
 
 
 def main() -> int:
@@ -60,17 +64,30 @@ def main() -> int:
     args = ap.parse_args()
     base = f"http://127.0.0.1:{args.port}"
     with tempfile.TemporaryDirectory() as tmp:
-        env = dict(os.environ, EDUAI_BACKEND="bank", EDUAI_EGRESS_CANARY="1", EDUAI_DB_PATH=f"{tmp}/e2e.db",
-                   EDUAI_DATA_DIR=f"{tmp}/nodata")
-        proc = subprocess.Popen([sys.executable, "-m", "eduai.cli", "serve", "--port", str(args.port)], cwd=ROOT,
-                                env=env, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True)
+        env = dict(
+            os.environ,
+            EDUAI_BACKEND="bank",
+            EDUAI_EGRESS_CANARY="1",
+            EDUAI_DB_PATH=f"{tmp}/e2e.db",
+            EDUAI_DATA_DIR=f"{tmp}/nodata",
+        )
+        proc = subprocess.Popen(
+            [sys.executable, "-m", "eduai.cli", "serve", "--port", str(args.port)],
+            cwd=ROOT,
+            env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+        )
         try:
             wait(f"{base}/api/health")
             health = httpx.get(f"{base}/api/health").json()
             print("health:", {k: health[k] for k in ("backend", "items")})
             print("server egress canary:", health["egress_canary"])
             assert health["backend"] == "bank-only"
-            assert health["egress_canary"] and health["egress_canary"]["blocked"], "server process reached the internet"
+            assert health["egress_canary"] and health["egress_canary"]["blocked"], (
+                "server process reached the internet"
+            )
             assert httpx.get(f"{base}/").status_code == 200
             for mode in ("practice", "assessment"):
                 print("session:", run_session(base, "BIO", mode))
