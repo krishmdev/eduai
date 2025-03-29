@@ -30,9 +30,9 @@ class MLXBackend:
         self.last_stats: dict = {}
 
     def _prompt(self, messages: list[dict]) -> list[int]:
-        return self.tokenizer.apply_chat_template(
-            messages, add_generation_prompt=True, tokenize=True, return_dict=True
-        )["input_ids"]
+        out = self.tokenizer.apply_chat_template(messages, add_generation_prompt=True, tokenize=True)
+        # mlx-lm's TokenizerWrapper returns a list of ids; a raw HF tokenizer may return a mapping.
+        return list(out["input_ids"] if hasattr(out, "keys") else out)
 
     def generate(self, messages: list[dict], max_tokens: int = 512, temperature: float = 0.0) -> str:
         from mlx_lm import stream_generate
