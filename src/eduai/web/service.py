@@ -63,6 +63,10 @@ class SessionFinished(RuntimeError):
     pass
 
 
+class AnswerConflict(RuntimeError):
+    """The pending question was already answered by a concurrent request."""
+
+
 @dataclass
 class Question:
     item: dict
@@ -189,15 +193,25 @@ class Service:
         item = self.bank.get(item_id)
         correct = choice == item["answer"]
         cand = Candidate(item["id"], item["lo_id"], item["unit_id"], item["b"])
-        # Record replays the session and calibrates the item in the bank with the pre-response EAP.
-        st.record(cand, correct, choice, None if correct else item["choices"][choice], store=self.bank)
+        theta_pre = st.theta_for(cand.unit_id)
+        # Claim the pending question and store the response in one transaction. A second submit
+        # for the same question (double click, retry) finds current_item already cleared and loses.
         with self.lock, self.conn:
+            claimed = self.conn.execute(
+                "UPDATE sessions SET current_item = NULL WHERE id = ? AND current_item = ?", (sid, item_id)
+            ).rowcount
+            if claimed != 1:
+                raise AnswerConflict(sid)
+            seq = (
+                self.conn.execute("SELECT COUNT(*) FROM responses WHERE session_id = ?", (sid,)).fetchone()[0]
+                + 1
+            )
             self.conn.execute(
                 "INSERT INTO responses (session_id, seq, item_id, lo_id, unit_id, b, choice, correct, created)"
                 " VALUES (?,?,?,?,?,?,?,?,?)",
                 (
                     sid,
-                    len(st.responses),
+                    seq,
                     item["id"],
                     item["lo_id"],
                     item["unit_id"],
@@ -207,7 +221,9 @@ class Service:
                     time.time(),
                 ),
             )
-            self.conn.execute("UPDATE sessions SET current_item = NULL WHERE id = ?", (sid,))
+        # Item calibration runs only after the response is committed, with the pre-response EAP mean.
+        self.bank.calibrate(item["id"], theta_pre, correct)
+        st.record(cand, correct, choice, None if correct else item["choices"][choice])
         return {
             "correct": correct,
             "answer": item["answer"],

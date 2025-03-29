@@ -12,7 +12,14 @@ from eduai.config import ROOT, Settings, get_settings
 from eduai.curriculum.taxonomy import default_taxonomy
 from eduai.data.samples import DEMO_BANK
 from eduai.generation.bank import ItemBank
-from eduai.web.service import ASSESSMENT_MAX, PRACTICE_LENGTHS, Service, SessionFinished, SessionNotFound
+from eduai.web.service import (
+    ASSESSMENT_MAX,
+    PRACTICE_LENGTHS,
+    AnswerConflict,
+    Service,
+    SessionFinished,
+    SessionNotFound,
+)
 
 HERE = Path(__file__).parent
 log = logging.getLogger("eduai.web")
@@ -128,6 +135,10 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             resp = HTMLResponse("")
             resp.headers["HX-Redirect"] = f"/sessions/{sid}/report"
             return resp
+        except AnswerConflict:
+            resp = HTMLResponse("")
+            resp.headers["HX-Redirect"] = f"/sessions/{sid}"
+            return resp
         except ValueError as exc:
             return render(request, "_error.html", 400, message=str(exc))
         return render(request, "_feedback.html", progress=service.progress(sid), res=res)
@@ -182,6 +193,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             res = service.answer(sid, body.get("choice", ""))
         except SessionFinished as exc:
             raise HTTPException(409, "session is finished") from exc
+        except AnswerConflict as exc:
+            raise HTTPException(409, "this question was already answered") from exc
         except ValueError as exc:
             raise HTTPException(400, str(exc)) from exc
         res.pop("item")

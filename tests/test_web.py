@@ -83,3 +83,30 @@ def test_bad_input(client):
     client.get(f"/api/sessions/{sid}/next")
     assert client.post(f"/api/sessions/{sid}/answer", json={"choice": "Z"}).status_code == 400
     assert client.post("/api/generate", json={"lo_id": "BIO.2.1.a", "passage": "x"}).status_code == 503
+
+
+def test_concurrent_submits_record_one_response(client):
+    import sqlite3
+    import threading
+
+    sid = client.post("/api/sessions", json={"subject": "BIO", "mode": "practice", "length": 10}).json()["id"]
+    item = client.get(f"/api/sessions/{sid}/next").json()["item"]["id"]
+    bank = client.app.state.service.bank
+    _, n0, _ = bank.item_b(item)
+    codes = []
+    barrier = threading.Barrier(4)
+
+    def go():
+        barrier.wait()
+        codes.append(client.post(f"/api/sessions/{sid}/answer", json={"choice": "A"}).status_code)
+
+    threads = [threading.Thread(target=go) for _ in range(4)]
+    for t in threads:
+        t.start()
+    for t in threads:
+        t.join()
+    assert sorted(codes) == [200, 409, 409, 409]
+    _, n1, _ = bank.item_b(item)
+    con = sqlite3.connect(bank.path)
+    rows = con.execute("SELECT COUNT(*) FROM responses WHERE session_id = ?", (sid,)).fetchone()[0]
+    assert rows == 1 and n1 - n0 == 1
