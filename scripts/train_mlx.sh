@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run an MLX LoRA fine-tune and record the log, a run manifest, and parsed metrics.
 # Usage: scripts/train_mlx.sh <config.yaml> [--pilot] [extra mlx_lm.lora args...]
-# Wrap it with the compute lease (see `make pilot` / `make train`).
+# On a shared machine wrap it in a compute lease (see `make pilot` / `make train`).
 set -euo pipefail
 cd "$(dirname "$0")/.."
 config="$1"; shift
@@ -15,8 +15,8 @@ if [[ "${1:-}" == "--pilot" ]]; then
 fi
 mkdir -p reports adapters
 log="reports/${name}_log.txt"
-manifest_tool=<local>
-if [[ -x "$manifest_tool" ]]; then
+manifest_tool=${RUN_MANIFEST_TOOL:-}
+if [[ -n "$manifest_tool" && -x "$manifest_tool" ]]; then
   python3 "$manifest_tool" --out "reports/${name}_manifest_start.json" config="$config" phase="$name" \
     device=mps dtype=4bit-base+lora-fp16 model="$(grep '^model:' "$config" | awk '{print $2}')"
 fi
@@ -27,7 +27,7 @@ status=${PIPESTATUS[0]}
 set -e
 end=$(date +%s)
 echo "wall_seconds=$((end - start)) exit=$status" | tee -a "$log"
-if [[ -x "$manifest_tool" ]]; then
+if [[ -n "$manifest_tool" && -x "$manifest_tool" ]]; then
   python3 "$manifest_tool" --out "reports/${name}_manifest_end.json" config="$config" phase="$name" \
     wall_seconds="$((end - start))" exit="$status"
 fi

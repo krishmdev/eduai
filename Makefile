@@ -3,8 +3,10 @@ PY := uv run
 PYOFF := uv run --frozen --offline
 SCIQ_DIR ?= $(HOME)/Downloads/SciQ dataset-2 3
 EMBED_MODELS := bge-small minilm rerank
-LEASE := <local> run eduai-train --
-OFFLINE ?= $(firstword $(wildcard ../.tools/offline-run))
+# Optional wrappers. COMPUTE_LEASE serializes heavy runs on a shared machine, e.g.
+#   make train COMPUTE_LEASE="/path/to/compute_lease.py run eduai-train --"
+COMPUTE_LEASE ?=
+LEASE := $(COMPUTE_LEASE)
 PORT ?= 8001
 
 export HF_HOME := $(CURDIR)/.models

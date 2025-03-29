@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import json
+import os
 import subprocess
 import sys
 from pathlib import Path
 
 from eduai.config import ROOT
 
-SHARED_TOOL = Path("<local>")
+SHARED_TOOL = Path(os.environ["RUN_MANIFEST_TOOL"]) if os.environ.get("RUN_MANIFEST_TOOL") else None
 
 
 def _git(*args: str) -> str:
@@ -23,7 +24,7 @@ def _git(*args: str) -> str:
 
 def build_manifest(extra: dict) -> dict:
     data: dict = {}
-    if SHARED_TOOL.exists():
+    if SHARED_TOOL is not None and SHARED_TOOL.exists():
         args = [sys.executable, str(SHARED_TOOL), *(f"{k}={v}" for k, v in extra.items())]
         out = subprocess.run(args, capture_output=True, text=True, timeout=60).stdout
         try:

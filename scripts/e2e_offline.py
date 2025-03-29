@@ -5,7 +5,7 @@ practice session and an assessment over localhost HTTP, and checks that the cana
 process could not reach any external host. Run it under the sandbox so the whole process tree is
 covered:
 
-    <local> make e2e-offline
+    offline-run make e2e-offline   # any wrapper that denies outbound network, e.g. sandbox-exec
 """
 
 from __future__ import annotations
