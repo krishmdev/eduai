@@ -33,7 +33,7 @@ make setup    # uv sync + pinned embedding models into .models/ (network allowed
 make demo     # bank-only app on http://127.0.0.1:8001
 ```
 
-The demo serves a committed sample of 634 SciQ-derived items (`data/samples/bank_sample.jsonl`), so it
+The demo serves a committed sample of 634 SciQ-derived items (`data/samples/bank_sample.jsonl`) plus 34 validated generated items, so it
 needs neither the raw dataset nor any model. To confirm the whole process tree runs without
 network access:
 
@@ -155,7 +155,34 @@ labeling pass that never saw tagger output. They still need a human spot-check.
 
 ## Generation eval
 
-EVAL_SECTION
+There are 150 held-out prompts from the SciQ test split, and all three arms get the same 150 ([reports/eval_report.md](reports/eval_report.md), generations in `reports/eval/`).
+
+- **Target LOs are independent.** Each prompt's target objective comes from an independent labeling pass, not from the tagger. Off-curriculum candidates were dropped.
+- **Leaky prompts are filtered out.** A prompt was dropped if its passage shares 50% or more of its 8-grams with a training passage, or if a training item has the same answer and a question-plus-answer cosine of 0.88 or more. The filter dropped 14 of the 244 candidates screened.
+- **The judge is fixed, open-book, and not one of the generators.** Llama 3.2 1B sees the passage and scores the options by log-probability, averaged over two option rotations.
+- **Novelty excludes the prompt's own source item and its group.** Copying the source question is counted separately, as source copy.
+
+| Arm | Schema valid | Structure | Key agreement (1B judge) | Aligned | Novel | All checks | Source copy | Gen tok/s |
+|---|---|---|---|---|---|---|---|---|
+| SciQ reference item (ceiling) | | | 92.7% | 70.7% | | | | |
+| Base 3B, 0-shot | 93.3% | 40.7% | 70.7% | 74.7% | 92.7% | 25.3% | 4.7% | 80.3 |
+| Base 3B, 2-shot | 80.7% | 60.7% | 56.7% | 64.0% | 80.0% | 33.3% | 2.7% | 76.1 |
+| Base 3B + EduAI LoRA | 100.0% | 54.0% | 74.7% | 72.0% | 96.0% | 32.7% | 25.3% | 48.0 |
+
+These are the paired bootstrap results. The fine-tuned model is not clearly better overall.
+
+- **All checks:** +7.3 points (95% CI -2.7 to +17.3) vs 0-shot, and -0.7 points (95% CI -10.7 to +10.0) vs 2-shot. Both intervals include zero.
+- **Where fine-tuning helps:**
+  - It produced schema-valid JSON on all 150 prompts, against 80.7% for 2-shot.
+  - It missed the requested misconception only once (target misconception missing on 1 item, vs 32 for 0-shot).
+  - Its keys agree with the judge more often than 2-shot's do: +18.0 points (95% CI +8.0 to +28.0).
+- **Where it hurts:**
+  - It copies the source SciQ question 25.3% of the time. The SFT targets were the source questions, so that's what it learned.
+  - It writes near-identical options on 63 of 150 items, including 9 where all four options are the same string.
+- **Alignment for 0-shot (74.7%) and fine-tuned (72.0%) is at the reference ceiling (70.7%).** 2-shot is lower, at 64.0%. The tagger can't separate these arms.
+- **Serving the adapter is slower:** generation drops from 80 to 48 tok/s, probably because the adapter is applied unfused at inference (not measured separately).
+
+Only items that pass every check, and aren't copies of their source, go into the bank. The fine-tuned run added 34 of them (`data/samples/generated_items.jsonl`).
 
 ## Adaptive testing and feedback
 
