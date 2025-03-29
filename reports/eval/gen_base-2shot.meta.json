@@ -1,0 +1,7 @@
+{
+  "arm": "base-2shot",
+  "n": 150,
+  "wall_seconds": 573.9,
+  "shots": 2,
+  "backend": "mlx-base"
+}

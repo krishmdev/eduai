@@ -286,9 +286,37 @@ def score(
         }
 
     summary = summarize(per_item)
+    structure = {}
+    for arm in ARMS:
+        path = out_dir / f"gen_{arm}.jsonl"
+        if not path.exists():
+            continue
+        c: dict[str, int] = {}
+        for g in read_jsonl(path):
+            item, _ = parse(g["text"])
+            if item is None or schema_errors(item):
+                continue
+            req = request_of(by_id[g["id"]])
+            kinds = set()
+            for pr in structure_problems(item, req):
+                kinds.add(
+                    "near-identical options"
+                    if "near-identical" in pr
+                    else "wrong lo_id"
+                    if pr.startswith("lo_id")
+                    else pr
+                )
+            if not misconception_present(item, req.target_misconception):
+                kinds.add("target misconception missing")
+            if len({v.strip().lower() for v in item["choices"].values()}) == 1:
+                kinds.add("all four options identical")
+            for k in kinds:
+                c[k] = c.get(k, 0) + 1
+        structure[arm] = dict(sorted(c.items(), key=lambda kv: -kv[1]))
     result = {
         "n_prompts": len(ids),
         "summary": summary,
+        "structure_problems": structure,
         "timing": timing,
         "rejections": reasons,
         "bootstrap": bootstrap_diffs(per_item),

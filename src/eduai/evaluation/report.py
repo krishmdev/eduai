@@ -91,6 +91,17 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
     L.append("|---|" + "---|" * len(cols))
     for arm, hist in res["rejections"].items():
         L.append(f"| {LABELS[arm]} | " + " | ".join(str(hist.get(c, 0)) for c in cols) + " |")
+    if res.get("structure_problems"):
+        kinds = sorted({k for v in res["structure_problems"].values() for k in v})
+        L += [
+            "",
+            "Structure problems among schema-valid items (an item can have several):",
+            "",
+            "| Arm | " + " | ".join(kinds) + " |",
+            "|---|" + "---|" * len(kinds),
+        ]
+        for arm, c in res["structure_problems"].items():
+            L.append(f"| {LABELS[arm]} | " + " | ".join(str(c.get(k, 0)) for k in kinds) + " |")
     L += [
         "",
         "Generation speed (greedy, one request at a time, MLX on the M1 Pro, under the compute lease):",

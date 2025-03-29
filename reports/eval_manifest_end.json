@@ -1,0 +1,28 @@
+{
+  "recorded_at": "2026-09-24T05:20:47-0400",
+  "host": {
+    "chip": "Apple M1 Pro",
+    "ram_gb": 16.0,
+    "os": "Darwin 26.5.1",
+    "python": "3.14.6",
+    "power": "Now drawing from 'AC Power'"
+  },
+  "exclusive_compute": {
+    "held": true,
+    "holder": "eduai-train"
+  },
+  "load": {
+    "loadavg": [
+      "7.03",
+      "8.21",
+      "7.30"
+    ],
+    "cpu_usage": "CPU usage: 13.22% user, 15.16% sys, 71.61% idle",
+    "docker_containers_running": 6,
+    "swap": "total = 18432.00M  used = 12297.38M  free = 6134.62M  (encrypted)"
+  },
+  "extra": {
+    "task": "eval",
+    "wall_seconds": "2755"
+  }
+}

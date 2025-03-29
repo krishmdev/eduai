@@ -1,0 +1,7 @@
+{
+  "arm": "finetuned",
+  "n": 150,
+  "wall_seconds": 539.6,
+  "shots": 0,
+  "backend": "mlx+adapter"
+}
