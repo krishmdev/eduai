@@ -14,7 +14,8 @@ manifest next to it.
 | 2026-09-23 | SFT rebuild determinism | `eduai data build` into a scratch dir, sha256 compared | train/valid/test identical to the files the adapter was trained on (`configs/sft_v1.sha256`) |
 | 2026-09-23 | Offline e2e (macOS) | `offline-run make e2e-offline` | server and driver canaries blocked (EPERM) for 1.1.1.1, api.openai.com, huggingface.co; practice and assessment sessions completed |
 | 2026-09-23 | Canary companion | `make egress-open-check`, unsandboxed | all three targets connect |
-| 2026-09-23 | Linux, no network | CI steps run locally: `uv sync` in `ghcr.io/astral-sh/uv:0.9.28-python3.11-bookworm-slim`, then `--network none` for ruff, `e2e_offline.py` and pytest | ruff clean, e2e OK (canary: network unreachable), 51 tests pass |
+| 2026-09-23 | Linux, no network | CI steps run locally: `uv sync` in `ghcr.io/astral-sh/uv:0.9.28-python3.11-bookworm-slim`, then `--network none` for ruff, `e2e_offline.py` and pytest | ruff clean, e2e OK (canary: network unreachable), 51 tests pass (52 after test_compare.py was added) |
+| 2026-09-24 | Generation eval, 3 arms x 150 prompts | `scripts/run_eval.sh` under the lease, then `eduai eval score` | 2,755 s for generation and judging; results in `reports/eval_report.md` |
 | 2026-09-23 | UI | Playwright screenshots at 1360x900 and 390x844 | fixed the missing sidebar (animation fill), the strike-through on the answer tag, and wrapping in unit rows; screenshots in `docs/screenshots/` |
 
 Not verified here:
