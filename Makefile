@@ -3,10 +3,8 @@ PY := uv run
 PYOFF := uv run --frozen --offline
 SCIQ_DIR ?= $(HOME)/Downloads/SciQ dataset-2 3
 EMBED_MODELS := bge-small minilm rerank
-# Optional wrappers. COMPUTE_LEASE serializes heavy runs on a shared machine, e.g.
-#   make train COMPUTE_LEASE="/path/to/compute_lease.py run eduai-train --"
-COMPUTE_LEASE ?=
-LEASE := $(COMPUTE_LEASE)
+# Optional command prefix for heavy runs (training, eval), e.g. a job queue. Empty by default.
+RUN_WRAPPER ?=
 PORT ?= 8001
 
 export HF_HOME := $(CURDIR)/.models
@@ -23,8 +21,8 @@ models:
 	$(PY) eduai models verify $(EMBED_MODELS)
 
 models-llm:
-	$(PY) eduai models fetch llama-3b
-	$(PY) eduai models verify llama-3b
+	$(PY) eduai models fetch llama-3b llama-1b
+	$(PY) eduai models verify llama-3b llama-1b
 
 lint:
 	$(PY) ruff check .
@@ -40,16 +38,16 @@ tagger-eval:
 	$(PY) eduai tagger eval --gold data/gold/tagging_gold.jsonl --out reports/tagger_eval.md
 
 pilot:
-	$(LEASE) scripts/train_mlx.sh configs/lora_llama32_3b.yaml --pilot
+	$(RUN_WRAPPER) scripts/train_mlx.sh configs/lora_llama32_3b.yaml --pilot
 
 train:
-	$(LEASE) scripts/train_mlx.sh configs/lora_llama32_3b.yaml
+	$(RUN_WRAPPER) scripts/train_mlx.sh configs/lora_llama32_3b.yaml
 
 sim:
 	$(PY) eduai simulate --students 500 --out reports
 
 eval:
-	$(LEASE) scripts/run_eval.sh
+	$(RUN_WRAPPER) scripts/run_eval.sh
 	$(MAKE) eval-score
 
 eval-score:

@@ -7,10 +7,6 @@
     "python": "3.11.13",
     "power": "Now drawing from 'AC Power'"
   },
-  "compute_lease": {
-    "held": false,
-    "holder": null
-  },
   "extra": {
     "task": "data-build",
     "seed": "7",

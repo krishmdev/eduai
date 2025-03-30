@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
-# Generation + judging for the eval, one model per process. On a shared machine wrap it in a
-# compute lease (make eval COMPUTE_LEASE=...). RUN_MANIFEST_TOOL optionally points at a script
+# Generation + judging for the eval, one model per process. Run it on an otherwise idle machine
+# (timings are recorded); `make eval RUN_WRAPPER=...` can prefix a job queue. RUN_MANIFEST_TOOL optionally points at a script
 # that records host state as JSON.
 set -euo pipefail
 cd "$(dirname "$0")/.."

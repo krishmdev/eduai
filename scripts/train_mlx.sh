@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # Run an MLX LoRA fine-tune and record the log, a run manifest, and parsed metrics.
 # Usage: scripts/train_mlx.sh <config.yaml> [--pilot] [extra mlx_lm.lora args...]
-# On a shared machine wrap it in a compute lease (see `make pilot` / `make train`).
+# Run it on an otherwise idle machine; timing and peak memory are recorded.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 config="$1"; shift

@@ -7,10 +7,6 @@
     "python": "3.11.13",
     "power": "Now drawing from 'Battery Power'"
   },
-  "compute_lease": {
-    "held": true,
-    "holder": "planetary-fabric"
-  },
   "extra": {
     "task": "tagger-eval",
     "gold": "data/gold/tagging_gold.jsonl"
