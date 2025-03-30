@@ -187,7 +187,8 @@ class Service:
             raise SessionFinished(sid)
         item_id = row["current_item"]
         if not item_id:
-            raise ValueError("no question pending")
+            # Either nothing was served yet or a concurrent submit already took it.
+            raise AnswerConflict(sid)
         if choice not in ("A", "B", "C", "D"):
             raise ValueError("choice must be A-D")
         item = self.bank.get(item_id)
