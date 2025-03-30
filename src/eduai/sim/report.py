@@ -38,6 +38,21 @@ def render(res: dict, manifest_name: str) -> str:
     L.append("|---|" + "---|" * len(lengths))
     for name, curve in curves.items():
         L.append(f"| {name} | " + " | ".join(f"{curve[n]:.3f}" for n in lengths) + " |")
+    pdiff = a.get("paired_mse_diff_vs_adaptive", {})
+    if pdiff:
+        L += [
+            "",
+            "Paired difference in squared error, adaptive minus the other policy, over the same students "
+            "(negative favors adaptive), mean with a 95% bootstrap CI:",
+            "",
+            "| vs | " + " | ".join(f"{n} items" for n in lengths) + " |",
+            "|---|" + "---|" * len(lengths),
+        ]
+        for other, byn in pdiff.items():
+            cells = [
+                f"{byn[n]['diff']:+.3f} [{byn[n]['ci95'][0]:+.3f}, {byn[n]['ci95'][1]:+.3f}]" for n in lengths
+            ]
+            L.append(f"| {other} | " + " | ".join(cells) + " |")
     L += [
         "",
         "Calibration under the stopping rule (stop when the EAP posterior SD drops below the threshold, "
@@ -64,14 +79,25 @@ def render(res: dict, manifest_name: str) -> str:
         "",
         "![B](figures/sim_b_mastery.png)",
         "",
+        "Learning assumption: an attempt teaches an unmastered objective with probability peaking at p = 0.7, "
+        "which is also the practice-mode target. The adaptive arm is therefore built to benefit from the "
+        "assumption; the random-LO + targeting arm keeps the item targeting and randomizes only the objective, "
+        "which separates the two effects.",
+        "",
         f"| Policy | Mean true mastery after {cfg['b_steps']} questions | Reached 80% mastery | "
-        "Median questions to 80% |",
-        "|---|---|---|---|",
+        "Median questions to 80% | Adaptive minus this (final mastery, 95% CI) |",
+        "|---|---|---|---|---|",
     ]
     for name, r in res["B"].items():
         med = r["median_steps_to_80"]
         med_s = f"{med:.0f}" if med <= cfg["b_steps"] else f"> {cfg['b_steps']}"
-        L.append(f"| {name} | {_pct(r['mean_final_mastery'])} | {_pct(r['reached_80'])} | {med_s} |")
+        ci = r.get("adaptive_minus_this")
+        ci_s = (
+            ""
+            if not ci
+            else f"{ci['diff'] * 100:+.1f} pts [{ci['ci95'][0] * 100:+.1f}, {ci['ci95'][1] * 100:+.1f}]"
+        )
+        L.append(f"| {name} | {_pct(r['mean_final_mastery'])} | {_pct(r['reached_80'])} | {med_s} | {ci_s} |")
     em = res["bkt_em"]["params"]
     L += [
         "",

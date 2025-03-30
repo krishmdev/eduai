@@ -212,25 +212,41 @@ These numbers are from 500 simulated students per condition ([reports/sim_report
 
 | Stop when SD < | Coverage of true θ by θ̂ ± 1.96 SD | RMSE | Mean length | Stopped by precision (cap 80) |
 |---|---|---|---|---|
-| 0.3 | 95.2% | 0.302 | 72.2 | 91.2% |
-| 0.4 | 94.6% | 0.386 | 38.6 | 100% |
-| 0.5 | 95.8% | 0.476 | 23.2 | 100% |
+| 0.3 | 95.8% | 0.292 | 71.6 | 93.2% |
+| 0.4 | 95.0% | 0.377 | 38.7 | 99.8% |
+| 0.5 | 95.2% | 0.495 | 22.9 | 100% |
 
-- **Posterior SD is well calibrated at every threshold.** An SD of 0.3 takes about 72 items even
-  when every item is well targeted, so the web assessment stops at SD < 0.5 or 30 items.
-- **Adaptive assessment has the lowest error at every length from 10 items on.**
-  - At 40 items its RMSE is 0.379, against 0.425 for random items and 0.463 for a fixed form.
-  - Early on the gap is small. At 5 items random selection is slightly better (0.760 vs 0.782).
-- **Adaptive practice leaves students with more mastery.** After 300 questions the mean true
-  mastery is 83.5%, against 76.9% for random objectives. 75% of students reach 80% mastery,
-  against 55%.
-- **Elo calibration beats the label once responses accumulate.** RMSE of b drops from 0.514
-  with labels alone to 0.407 after 20 responses and 0.246 after 160. A gain of 0.6 made things
-  worse (0.582 at 5 responses), so the gain is 0.15.
-- **Evidence sharing between neighboring objectives didn't help.** The Brier score was 0.2021
-  with sharing and 0.1946 without, so it is off in the app.
-- **The EM guess estimate hit its 0.49 bound.** That is model mismatch: correct answers driven
-  by ability look like guessing to two-state BKT. It is reported, not tuned away.
+The posterior SD is well calibrated at every threshold. Getting SD down to 0.3 takes about 72 items
+even when every item is well targeted, so the web assessment stops at SD < 0.5 or 30 items.
+
+Adaptive item selection gives lower RMSE than random items at every test length. At 30 items it is
+0.444 against 0.476, and at 60 items 0.318 against 0.366. The gap is modest, though. Every policy
+sees the same simulated students, and on paired squared error the 95% bootstrap interval excludes
+zero only at 60 items; up to 40 items it includes zero. A fixed form does worse, with intervals
+excluding zero at 20, 40 and 60 items.
+
+In the practice simulation, a student learns with the highest probability when p is close to 0.7.
+Practice mode targets exactly that value, so the adaptive arm is built to benefit from the
+assumption. To separate the two effects, one arm keeps the p = 0.7 item targeting but picks the
+objective at random:
+
+| Practice policy, 300 questions | Mean true mastery | Reached 80% | Adaptive minus this (95% CI) |
+|---|---|---|---|
+| Adaptive (UCB objective + p = 0.7 items) | 82.9% | 74.6% | |
+| Random objective + p = 0.7 items | 79.5% | 61.6% | +3.3 pts [+2.6, +4.0] |
+| Random objective and item | 75.5% | 53.8% | +7.4 pts [+6.6, +8.2] |
+| Round-robin objective | 76.7% | 56.8% | +6.1 pts [+5.3, +6.9] |
+
+Other simulation results:
+
+- Item calibration beats the label difficulty once responses come in. The RMSE of b is 0.514 from
+  labels alone, 0.407 after 20 responses, and 0.246 after 160. A step size of 0.6 made b worse
+  (0.582 at 5 responses), so the step size is 0.15.
+- Evidence sharing between neighboring objectives didn't help. The Brier score was 0.2062 with it
+  and 0.2038 without, so it is off in the app.
+- The EM fit's guess parameter hit its 0.49 bound. This is model mismatch: two-state BKT can only
+  explain correct answers that come from ability as guessing. It is reported rather than tuned
+  away.
 
 All of this is simulation, and the responses come from the same model the system assumes.
 The results show the estimators behave as designed. They say nothing about real students.

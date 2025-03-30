@@ -76,8 +76,9 @@ def run_assessment(
     fixed_rng = np.random.default_rng(cfg.seed + 99)
     fixed_form = [pool[i] for i in fixed_rng.permutation(len(pool))[:max_items]]
     results = []
-    for _ in range(cfg.students):
-        stu = make_student(tax, cfg.subject, rng)
+    for i in range(cfg.students):
+        # Students come from their own seeded stream so every policy sees the same cohort.
+        stu = make_student(tax, cfg.subject, np.random.default_rng([cfg.seed, 11, i]))
         # Assessment measures the unidimensional theta; mastery bonus is off so theta* is well defined.
         stu.mastered = dict.fromkeys(stu.mastered, False)
         stu.unit_offset = dict.fromkeys(stu.unit_offset, 0.0)
@@ -144,16 +145,35 @@ def run_assessment(
     return results
 
 
+def paired_ci(d: np.ndarray, n_boot: int = 2000, seed: int = 0) -> dict:
+    """Mean of paired differences with a 95% bootstrap CI (resampling students)."""
+    rng = np.random.default_rng(seed)
+    idx = rng.integers(0, len(d), size=(n_boot, len(d)))
+    boots = d[idx].mean(axis=1)
+    return {
+        "diff": float(d.mean()),
+        "ci95": [float(np.percentile(boots, 2.5)), float(np.percentile(boots, 97.5))],
+    }
+
+
 def experiment_a(tax: Taxonomy, cfg: SimConfig) -> dict:
     max_len = max(cfg.a_lengths)
     curves = {}
+    sq_err: dict[str, dict[int, np.ndarray]] = {}
     for policy in ("adaptive", "adaptive-free", "random", "fixed"):
         res = run_assessment(tax, cfg, policy, max_len, None, rng_seed=1)
         curve = {}
+        sq_err[policy] = {}
         for n in cfg.a_lengths:
-            err = [r["trajectory"][n - 1][0] - r["theta"] for r in res]
+            err = np.array([r["trajectory"][n - 1][0] - r["theta"] for r in res])
             curve[n] = float(np.sqrt(np.mean(np.square(err))))
+            sq_err[policy][n] = err**2
         curves[policy] = curve
+    # Same students in every policy, so squared errors can be compared pairwise.
+    paired = {
+        other: {n: paired_ci(sq_err["adaptive"][n] - sq_err[other][n], seed=cfg.seed) for n in cfg.a_lengths}
+        for other in ("random", "fixed")
+    }
     label_b = run_assessment(tax, cfg, "adaptive", max_len, None, b_known="label", rng_seed=1)
     curves["adaptive (label b, uncalibrated)"] = {
         n: float(np.sqrt(np.mean([(r["trajectory"][n - 1][0] - r["theta"]) ** 2 for r in label_b])))
@@ -188,6 +208,7 @@ def experiment_a(tax: Taxonomy, cfg: SimConfig) -> dict:
     }
     return {
         "rmse_by_length": curves,
+        "paired_mse_diff_vs_adaptive": paired,
         "stopping": stopping,
         "at_20": at20,
         "max_item_information": float(irt.fisher_information(irt.optimal_offset(), 0.0)),
@@ -235,8 +256,9 @@ def run_practice(
     mastery_curve = np.zeros(cfg.b_steps + 1)
     brier_curve = np.zeros(cfg.b_steps + 1)
     steps_to_80 = []
-    for _ in range(n_students):
-        stu: Student = make_student(tax, cfg.subject, rng)
+    finals = []
+    for i in range(n_students):
+        stu: Student = make_student(tax, cfg.subject, np.random.default_rng([cfg.seed, 12, i]))
         st = new_session("practice", cfg.subject, cfg.b_steps, weights, los, graph=graph, share=share)
         st.bkt = BKTTracker(default=params, graph=graph, share=share)
         st.blueprint.length = cfg.b_steps
@@ -246,6 +268,13 @@ def run_practice(
         for t in range(cfg.b_steps):
             if policy == "adaptive":
                 lo = st.choose_lo(rng)
+                cand = st.choose_item([it.candidate() for it in by_lo[lo]])
+                if cand is None:
+                    st.seen -= {it.item_id for it in by_lo[lo]}
+                    cand = st.choose_item([it.candidate() for it in by_lo[lo]])
+            elif policy == "random-lo-targeted":
+                # Random objective, but the item is still picked for p ~ 0.7 (isolates LO choice).
+                lo = lo_ids[int(rng.integers(len(lo_ids)))]
                 cand = st.choose_item([it.candidate() for it in by_lo[lo]])
                 if cand is None:
                     st.seen -= {it.item_id for it in by_lo[lo]}
@@ -265,8 +294,10 @@ def run_practice(
             if reached is None and frac >= 0.8:
                 reached = t + 1
         steps_to_80.append(reached if reached is not None else cfg.b_steps + 1)
+        finals.append(stu.mastery_fraction())
     steps = np.array(steps_to_80)
     return {
+        "final_mastery_per_student": finals,
         "mastery_curve": (mastery_curve / n_students).tolist(),
         "brier_curve": (brier_curve / n_students).tolist(),
         "reached_80": float(np.mean(steps <= cfg.b_steps)),
@@ -277,14 +308,25 @@ def run_practice(
 
 
 def experiment_b(tax: Taxonomy, cfg: SimConfig, params: BKTParams) -> dict:
-    return {p: run_practice(tax, cfg, p, params, rng_seed=7) for p in ("adaptive", "random", "round-robin")}
+    out = {
+        p: run_practice(tax, cfg, p, params, rng_seed=7)
+        for p in ("adaptive", "random-lo-targeted", "random", "round-robin")
+    }
+    base = np.array(out["adaptive"].pop("final_mastery_per_student"))
+    for name in ("random-lo-targeted", "random", "round-robin"):
+        other = np.array(out[name].pop("final_mastery_per_student"))
+        out[name]["adaptive_minus_this"] = paired_ci(base - other, seed=cfg.seed)
+    return out
 
 
 def experiment_d(tax: Taxonomy, cfg: SimConfig, params: BKTParams) -> dict:
-    return {
+    out = {
         "sharing_on": run_practice(tax, cfg, "adaptive", params, share=True, rng_seed=9),
         "sharing_off": run_practice(tax, cfg, "adaptive", params, share=False, rng_seed=9),
     }
+    for v in out.values():
+        v.pop("final_mastery_per_student")
+    return out
 
 
 # -- C: item calibration -------------------------------------------------------------------------

@@ -121,7 +121,8 @@ def sim_figures(res: dict, out: Path) -> list[Path]:
         (lbl, steps[::stride], b[key]["mastery_curve"][::stride])
         for key, lbl in (
             ("adaptive", "Adaptive practice"),
-            ("random", "Random LO"),
+            ("random-lo-targeted", "Random LO, p = 0.7 items"),
+            ("random", "Random LO and item"),
             ("round-robin", "Round-robin LO"),
         )
     ]

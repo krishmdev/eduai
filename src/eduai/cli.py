@@ -201,12 +201,16 @@ def bank_add_generated(
     arm: str = "finetuned", out: Path = typer.Option(Path("data/samples/generated_items.jsonl"))
 ) -> None:
     """Promote eval outputs that passed every check (and aren't a copy of their source) into the bank."""
+    import random
+    import re
+
     from eduai.curriculum.taxonomy import default_taxonomy
     from eduai.data.difficulty import LABEL_B
     from eduai.data.sciq import read_jsonl, write_jsonl
     from eduai.generation.validate import parse
 
     tax = default_taxonomy()
+    rng = random.Random(0)
     prompts = {p["id"]: p for p in read_jsonl(Path("data/eval/prompts.jsonl"))}
     passed = {
         r["id"]
@@ -218,6 +222,15 @@ def bank_add_generated(
         if g["id"] not in passed:
             continue
         item, _ = parse(g["text"])
+        # The fine-tuned model puts the key at A far more often than 25%; reshuffle before banking.
+        old = list(item["choices"].items())
+        rng.shuffle(old)
+        new_choices = {"ABCD"[i]: text for i, (_, text) in enumerate(old)}
+        new_answer = "ABCD"[[k for k, _ in old].index(item["answer"])]
+        item["explanation"] = re.sub(
+            r"^[ABCD] is correct\.", f"{new_answer} is correct.", item["explanation"]
+        )
+        item["choices"], item["answer"] = new_choices, new_answer
         req = prompts[g["id"]]["request"]
         lo = tax.lo(req["lo_id"])
         rows.append(

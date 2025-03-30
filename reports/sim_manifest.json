@@ -1,24 +1,16 @@
 {
-  "recorded_at": "2026-09-23T12:28:15-0400",
+  "recorded_at": "2026-09-24T14:50:53-0400",
   "host": {
-    "chip": "Apple M1 Pro",
-    "ram_gb": 16.0,
-    "os": "Darwin 26.5.1",
-    "python": "3.11.13",
-    "power": "Now drawing from 'AC Power'"
-  },
-  "compute_lease": {
-    "held": true,
-    "holder": "localhost-ai-bench"
+    "platform": "macOS-26.5.1-arm64-arm-64bit"
   },
   "extra": {
     "task": "simulate",
-    "students": "500",
-    "seed": "20260923",
-    "seconds": "107.3"
+    "students": 500,
+    "seed": 20260923,
+    "seconds": 110.1
   },
   "repo": {
-    "commit": "a5080f6e064afa1b50c63ceaa943322f7918f03f",
+    "commit": "0747337946118c4e717c12cbaa4c714f81bb688f",
     "dirty": true
   },
   "packages": {
