@@ -31,7 +31,7 @@ def rotate(choices: dict[str, str], k: int) -> tuple[dict[str, str], dict[str, s
 
 
 class Judge:
-    def __init__(self, backend, rotations: tuple[int, ...] = (0, 2), open_book: bool = True):
+    def __init__(self, backend, rotations: tuple[int, ...] = (0, 1, 2, 3), open_book: bool = True):
         if not hasattr(backend, "choice_logprobs"):
             raise TypeError("judge backend must expose choice_logprobs")
         self.backend = backend

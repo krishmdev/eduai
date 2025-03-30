@@ -41,12 +41,20 @@ class ItemBank:
         self.path = str(path)
         if self.path != ":memory:":
             Path(self.path).parent.mkdir(parents=True, exist_ok=True)
-        # isolation_level=None: transactions are explicit (BEGIN IMMEDIATE in calibrate).
-        self.conn = sqlite3.connect(self.path, check_same_thread=False, timeout=10, isolation_level=None)
-        self.conn.row_factory = sqlite3.Row
+        self._local = threading.local()
         self.lock = threading.Lock()
         with self.lock:
             self.conn.executescript(SCHEMA)
+
+    @property
+    def conn(self) -> sqlite3.Connection:
+        """Per-thread connection. isolation_level=None: transactions are explicit (BEGIN IMMEDIATE)."""
+        c = getattr(self._local, "conn", None)
+        if c is None:
+            c = sqlite3.connect(self.path, timeout=10, isolation_level=None)
+            c.row_factory = sqlite3.Row
+            self._local.conn = c
+        return c
 
     def add(self, rows: Iterable[dict], replace: bool = False) -> int:
         verb = "INSERT OR REPLACE" if replace else "INSERT OR IGNORE"

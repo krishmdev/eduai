@@ -81,12 +81,22 @@ class Service:
         self.tax = taxonomy
         self.pipeline = generator_pipeline
         self.graph = load_graph()
-        self.conn = sqlite3.connect(str(db_path), check_same_thread=False, timeout=10)
-        self.conn.row_factory = sqlite3.Row
+        self.db_path = str(db_path)
+        self._local = threading.local()
         self.lock = threading.Lock()
         with self.lock, self.conn:
             self.conn.executescript(SCHEMA)
         self.unit_names = {u.id: u.name for s in taxonomy.subjects.values() for u in s.units}
+
+    @property
+    def conn(self) -> sqlite3.Connection:
+        # One connection per thread: sqlite3 connections must not be used from two threads at once.
+        c = getattr(self._local, "conn", None)
+        if c is None:
+            c = sqlite3.connect(self.db_path, timeout=10)
+            c.row_factory = sqlite3.Row
+            self._local.conn = c
+        return c
 
     # -- sessions ---------------------------------------------------------------------------------
     def subjects(self) -> list[dict]:

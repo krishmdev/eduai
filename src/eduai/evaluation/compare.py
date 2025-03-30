@@ -188,6 +188,7 @@ def score(
             "aligned": a["aligned"],
             "key": judge[("reference", i)]["agrees"],
             "key_secondary": secondary.get(("reference", i), {}).get("agrees"),
+            "key_letter": refs[i]["answer"],
         }
         for i, a in zip(ids, ref_align, strict=True)
     ]
@@ -272,6 +273,9 @@ def score(
                             }[name]
                             break
             r["all_checks"] = all(r[c] for c in CHECKS)
+            # Bank-promotion criterion: passes everything and isn't a copy of its source question.
+            r["usable"] = r["all_checks"] and not r["source_copy"]
+            r["key_letter"] = parsed[pid]["answer"] if parsed.get(pid) else None
             hist[first_fail or "accepted"] = hist.get(first_fail or "accepted", 0) + 1
             rows.append(r)
         per_item[arm] = rows
@@ -343,11 +347,22 @@ def summarize(per_item: dict[str, list[dict]]) -> dict:
             "source_copy",
             "memorized",
             "all_checks",
+            "usable",
         ):
             if rows and k in rows[0]:
                 s[k] = sum(bool(r[k]) for r in rows) / n
         sec = [r["key_secondary"] for r in rows if r.get("key_secondary") is not None]
         s["key_secondary"] = sum(sec) / n if sec else None
+        letters = [r.get("key_letter") for r in rows if r.get("key_letter")]
+        s["key_letters"] = {x: letters.count(x) for x in "ABCD"}
+        s["key_agreement_by_letter"] = {
+            x: (
+                sum(bool(r["key"]) for r in rows if r.get("key_letter") == x) / letters.count(x)
+                if letters.count(x)
+                else None
+            )
+            for x in "ABCD"
+        }
         out[arm] = s
     return out
 
@@ -365,7 +380,7 @@ def bootstrap_diffs(per_item: dict[str, list[dict]], n_boot: int = 5000, seed: i
     for a, b in pairs:
         if a not in per_item or b not in per_item:
             continue
-        for metric in ("all_checks", "aligned", "key", "json"):
+        for metric in ("usable", "all_checks", "aligned", "key", "json"):
             if metric not in per_item[a][0] or metric not in per_item[b][0]:
                 continue
             xa = np.array([bool(r[metric]) for r in per_item[a]], float)

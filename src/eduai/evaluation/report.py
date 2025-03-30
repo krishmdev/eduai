@@ -36,19 +36,21 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
         "- Structure: four distinct options, no all/none of the above, key not in the stem, the requested LO id "
         "and format, and the target misconception present as a wrong option when one was requested.",
         f"- Key agreement: a fixed open-book judge ({res['judge']}, Llama 3.2 1B 4-bit, not any arm's generator) "
-        "picks the keyed option from A-D log-probabilities averaged over two cyclic rotations of the options, "
+        "picks the keyed option from A-D log-probabilities averaged over all four cyclic rotations of the options "
+        "(so every option is scored in every position), "
         "with the source passage in its prompt.",
         "- Aligned: the target LO is in the tagger's top 3 and its own score is at least tau. The tagger is a "
         "noisy filter (about 70% of in-curriculum gold items pass), so the reference row is the ceiling.",
         "- Novel: stem cosine < 0.92 against the whole SciQ bank, excluding the prompt's own source item and "
         "its near-duplicate group. Closeness to the source is reported separately as source copy.",
+        "- Usable: all checks and not a copy of the source question. This is the bank-promotion criterion.",
         "",
         "| | JSON | First-try JSON | Schema | Structure | Key agreement | Aligned | Novel | All checks | "
-        "Source copy | Memorized (train) |",
-        "|---|---|---|---|---|---|---|---|---|---|---|",
+        "Source copy | Usable | Memorized (train) |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     ref = s["reference"]
-    L.append(f"| {LABELS['reference']} | | | | | {_p(ref['key'])} | {_p(ref['aligned'])} | | | | |")
+    L.append(f"| {LABELS['reference']} | | | | | {_p(ref['key'])} | {_p(ref['aligned'])} | | | | | |")
     for arm in ("base-0shot", "base-2shot", "finetuned"):
         if arm not in s:
             continue
@@ -56,7 +58,7 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
         L.append(
             f"| {LABELS[arm]} | {_p(r['json'])} | {_p(r['first_try_json'])} | {_p(r['schema'])} | "
             f"{_p(r['structure'])} | {_p(r['key'])} | {_p(r['aligned'])} | {_p(r['novel'])} | "
-            f"{_p(r['all_checks'])} | {_p(r['source_copy'])} | {_p(r['memorized'])} |"
+            f"{_p(r['all_checks'])} | {_p(r['source_copy'])} | {_p(r['usable'])} | {_p(r['memorized'])} |"
         )
     L += [
         "",
@@ -91,6 +93,26 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
     L.append("|---|" + "---|" * len(cols))
     for arm, hist in res["rejections"].items():
         L.append(f"| {LABELS[arm]} | " + " | ".join(str(hist.get(c, 0)) for c in cols) + " |")
+    L += [
+        "",
+        "Answer-key letter distribution (schema-valid items) and judge key agreement by keyed letter. A "
+        "skewed key position is a generation defect in its own right; four-rotation judging removes the "
+        "judge's own position bias from the comparison.",
+        "",
+        "| Arm | A | B | C | D | Agree when key=A | B | C | D |",
+        "|---|---|---|---|---|---|---|---|---|",
+    ]
+    for arm in ("reference", "base-0shot", "base-2shot", "finetuned"):
+        if arm not in s:
+            continue
+        kl, ka = s[arm]["key_letters"], s[arm]["key_agreement_by_letter"]
+        L.append(
+            f"| {LABELS[arm]} | "
+            + " | ".join(str(kl[x]) for x in "ABCD")
+            + " | "
+            + " | ".join(_p(ka[x]) for x in "ABCD")
+            + " |"
+        )
     if res.get("structure_problems"):
         kinds = sorted({k for v in res["structure_problems"].values() for k in v})
         L += [
