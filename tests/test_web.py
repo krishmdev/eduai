@@ -43,7 +43,7 @@ def test_assessment_stops_by_precision_or_cap(client):
     n = 0
     while not client.get(f"/api/sessions/{sid}/next").json()["done"]:
         res = client.post(f"/api/sessions/{sid}/answer", json={"choice": "B"}).json()
-        assert res["explanation"] is None  # no feedback in assessment mode
+        assert set(res) == {"choice", "done", "progress"}  # no key or feedback during an assessment
         n += 1
         assert n <= 30
     rep = client.get(f"/api/sessions/{sid}/report").json()
@@ -83,6 +83,11 @@ def test_bad_input(client):
     client.get(f"/api/sessions/{sid}/next")
     assert client.post(f"/api/sessions/{sid}/answer", json={"choice": "Z"}).status_code == 400
     assert client.post("/api/generate", json={"lo_id": "BIO.2.1.a", "passage": "x"}).status_code == 503
+    assert client.post("/api/generate", json={"passage": "x"}).status_code == 400
+    assert client.post("/api/generate", json={"lo_id": "NOPE", "passage": "x"}).status_code == 400
+    for bad in (-5, 0, 61, "abc"):
+        r = client.post("/api/sessions", json={"subject": "BIO", "mode": "assessment", "length": bad})
+        assert r.status_code == 400, bad
 
 
 def test_concurrent_submits_record_one_response(client):

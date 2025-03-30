@@ -198,7 +198,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         except ValueError as exc:
             raise HTTPException(400, str(exc)) from exc
         res.pop("item")
-        return {**res, "progress": service.progress(sid)}
+        prog = service.progress(sid)
+        if prog["mode"] == "assessment":
+            # No feedback during an assessment; the key is revealed in the report.
+            res = {"choice": res["choice"], "done": res["done"]}
+        return {**res, "progress": prog}
 
     @app.get("/api/sessions/{sid}/report")
     def api_report(sid: str):
@@ -207,6 +211,8 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/api/generate")
     def api_generate(body: dict):
+        if not isinstance(body.get("passage"), str) or body.get("lo_id") not in tax.objectives:
+            raise HTTPException(400, "lo_id (a known objective id) and passage are required")
         if backend.name == "bank-only":
             return JSONResponse({"error": "bank-only mode: no generator available", "skipped": skipped}, 503)
         from eduai.generation.generator import Generator

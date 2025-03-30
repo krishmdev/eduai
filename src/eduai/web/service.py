@@ -112,12 +112,16 @@ class Service:
             raise ValueError(f"unknown subject {subject}")
         if mode not in ("practice", "assessment"):
             raise ValueError("mode must be practice or assessment")
+        try:
+            n = int(length) if length is not None else None
+        except (TypeError, ValueError) as exc:
+            raise ValueError("length must be an integer") from exc
+        if n is not None and not 1 <= n <= 60:
+            raise ValueError("length must be 1-60")
         if mode == "assessment":
-            max_items, sd = min(length or ASSESSMENT_MAX, 60), ASSESSMENT_SD_STOP
+            max_items, sd = n or ASSESSMENT_MAX, ASSESSMENT_SD_STOP
         else:
-            max_items, sd = int(length or PRACTICE_LENGTHS[0]), -1.0
-            if not 1 <= max_items <= 60:
-                raise ValueError("length must be 1-60")
+            max_items, sd = n or PRACTICE_LENGTHS[0], -1.0
         sid = uuid.uuid4().hex[:12]
         with self.lock, self.conn:
             self.conn.execute(
