@@ -21,6 +21,10 @@ The raw dataset is not committed. `make data` builds everything from a local cop
 The base model is `mlx-community/Llama-3.2-3B-Instruct-4bit`, a 4-bit MLX conversion of Meta's
 Llama 3.2 3B Instruct. The judge is the 1B variant. Both are under the Llama 3.2 Community License.
 
+License text: https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/LICENSE
+Acceptable Use Policy: https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/USE_POLICY.md
+Both files are included in the adapter release tarball.
+
 Built with Llama. The adapter distributed as a release asset (`Llama-3.2-3B-EduAI-AP-LoRA`) is a
 derivative of Llama 3.2 and is subject to the Llama 3.2 Community License and Acceptable Use
 Policy. Because of its training data it is also limited to non-commercial use.
