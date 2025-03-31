@@ -63,6 +63,11 @@ def main() -> int:
     ap.add_argument("--port", type=int, default=8001)
     args = ap.parse_args()
     base = f"http://127.0.0.1:{args.port}"
+    import socket
+
+    with socket.socket() as probe_sock:
+        if probe_sock.connect_ex(("127.0.0.1", args.port)) == 0:
+            raise SystemExit(f"port {args.port} is already in use; pass PORT=<free port>")
     with tempfile.TemporaryDirectory() as tmp:
         env = dict(
             os.environ,
