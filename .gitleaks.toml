@@ -1,0 +1,10 @@
+# The only allowlisted strings are the sha256 digests of pinned model files.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "sha256 digests in models.lock and adapters/MANIFEST.json"
+paths = ['''^models\.lock$''', '''^adapters/MANIFEST\.json$''']
+regexTarget = "match"
+condition = "AND"
+regexes = ['''[0-9a-f]{64}''']
