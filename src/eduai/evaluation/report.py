@@ -44,6 +44,7 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
         "- Novel: stem cosine < 0.92 against the whole SciQ bank, excluding the prompt's own source item and "
         "its near-duplicate group. Closeness to the source is reported separately as source copy.",
         "- Usable: all checks and not a copy of the source question. This is the bank-promotion criterion.",
+        "- Memorized: stem cosine >= 0.92 with an SFT training stem. Reported only; it doesn't reject items.",
         "",
         "| | JSON | First-try JSON | Schema | Structure | Key agreement | Aligned | Novel | All checks | "
         "Source copy | Usable | Memorized (train) |",
@@ -126,7 +127,7 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
             L.append(f"| {LABELS[arm]} | " + " | ".join(str(c.get(k, 0)) for k in kinds) + " |")
     L += [
         "",
-        "Generation speed (greedy, one request at a time, MLX on the M1 Pro, under the compute lease):",
+        "Generation speed (greedy, one request at a time, MLX on the M1 Pro, nothing else heavy running):",
         "",
         "| Arm | Mean generation tok/s | Mean seconds per item | Peak memory (GB) |",
         "|---|---|---|---|",

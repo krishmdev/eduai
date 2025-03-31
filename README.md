@@ -33,12 +33,12 @@ make setup    # uv sync + pinned embedding models into .models/ (network allowed
 make demo     # bank-only app on http://127.0.0.1:8001
 ```
 
-The demo serves a committed sample of 634 SciQ-derived items (`data/samples/bank_sample.jsonl`) plus 34 validated generated items, so it
+The demo serves a committed sample of 634 SciQ-derived items (`data/samples/bank_sample.jsonl`) plus 32 validated generated items, so it
 needs neither the raw dataset nor any model. To confirm the whole process tree runs without
 network access:
 
 ```bash
-offline-run make e2e-offline   # offline-run: sandbox-exec wrapper that denies outbound network
+tools/offline-run make e2e-offline   # sandbox-exec profile that denies outbound network (macOS)
 make egress-open-check                                                   # the same canary connects when unsandboxed
 ```
 
@@ -51,8 +51,9 @@ started with `--network none`.
 
 ```bash
 make data SCIQ_DIR=~/Downloads/SciQ\ dataset-2\ 3   # SciQ JSON -> tagged items, splits, SFT data, data card
-make models-llm                                      # Llama 3.2 3B 4-bit (1.8 GB), pinned revision
+make models-llm                                      # Llama 3.2 3B 4-bit (1.8 GB) + 1B judge, pinned revisions
 uv run eduai fetch-adapter                           # or: make train (about 2 hours)
+make eval                                            # 3 arms x 150 prompts, then judge and score (about 45 min)
 make serve                                           # full app; backend auto-selects MLX+adapter
 make test
 ```
@@ -84,7 +85,7 @@ the pipeline applies them:
 3. **Split grouping.** Union-find links items that share a passage, have the same normalized
    question and answer, or have a bge cosine above 0.92 on question plus answer.
    - Each group goes to one split, with test taking priority, then valid, then train.
-   - 813 items moved, and no group spans two splits.
+   - 813 items moved. A post-assignment check (`splits.leakage`) confirms no group spans two splits.
 4. **Quotas.** SFT is 3,000 / 300 / 200. The answer letter is exactly 25% each of A–D, 40% of
    items are stimulus style, and 30% carry a target misconception. All quotas were met.
 
@@ -107,7 +108,7 @@ assistant: {"stem": "Based on the excerpt, the process by which leaves collect s
 The fine-tune is mlx-lm 0.31.3 LoRA on `mlx-community/Llama-3.2-3B-Instruct-4bit`
 ([configs/lora_llama32_3b.yaml](configs/lora_llama32_3b.yaml)). Settings: rank 8, the last 16
 layers, lr 2e-5, 600 iterations at batch 4, prompt masked, and gradient checkpointing. Both runs
-held the shared compute lease.
+ran exclusively on the machine.
 
 | Run | Iterations | Wall time | Peak memory | Train tokens/s | Source |
 |---|---|---|---|---|---|
@@ -125,8 +126,10 @@ completion tokens are JSON syntax, and 41% sit inside spans copied verbatim from
 ([reports/target_token_share.json](reports/target_token_share.json)). The training
 explanations are extracted passage sentences, so the model learns to extract, not to explain.
 
-The adapter is not committed. It ships as a release asset whose sha256 and size are listed in
-[adapters/MANIFEST.json](adapters/MANIFEST.json). The CUDA route is
+The adapter is not committed. It ships as the GitHub Release asset `adapter-v1`
+(`llama-3.2-3b-eduai-lora-v1.tar.gz`, with the Llama 3.2 license and use policy inside), and its
+sha256 and size are listed in [adapters/MANIFEST.json](adapters/MANIFEST.json).
+`eduai fetch-adapter` downloads and verifies it once the release is published. The CUDA route is
 [notebooks/colab_qlora_peft.ipynb](notebooks/colab_qlora_peft.ipynb) (QLoRA with PEFT and TRL).
 That notebook is a reference and hasn't been run.
 
@@ -155,34 +158,44 @@ labeling pass that never saw tagger output. They still need a human spot-check.
 
 ## Generation eval
 
-There are 150 held-out prompts from the SciQ test split, and all three arms get the same 150 ([reports/eval_report.md](reports/eval_report.md), generations in `reports/eval/`).
+<!-- eval:start -->
+There are 150 held-out prompts from the SciQ test split, and all three arms get the same prompts ([reports/eval_report.md](reports/eval_report.md), raw generations in `reports/eval/`). This section is written by `scripts/readme_eval.py`.
 
-- **Target LOs are independent.** Each prompt's target objective comes from an independent labeling pass, not from the tagger. Off-curriculum candidates were dropped.
-- **Leaky prompts are filtered out.** A prompt was dropped if its passage shares 50% or more of its 8-grams with a training passage, or if a training item has the same answer and a question-plus-answer cosine of 0.88 or more. The filter dropped 14 of the 244 candidates screened.
-- **The judge is fixed, open-book, and not one of the generators.** Llama 3.2 1B sees the passage and scores the options by log-probability, averaged over two option rotations.
-- **Novelty excludes the prompt's own source item and its group.** Copying the source question is counted separately, as source copy.
+- **Target objectives are independent.** Each prompt's target LO comes from an independent labeling pass, not from the tagger. 59 off-curriculum candidates were dropped.
+- **Leaky prompts are filtered out.** A prompt was dropped if its passage shares 50% or more of its 8-grams with a training passage, or if a training item has the same answer and a question-plus-answer cosine of 0.88 or more. That removed 14 of 244 screened candidates.
+- **The judge is fixed, open-book, and not one of the generators.** Llama 3.2 1B sees the passage and scores the options by log-probability, averaged over all four rotations of the options.
+- **Novelty excludes the prompt's own source item and its group.** Copies of the source question are counted separately. **Usable** means passing all checks and not being a source copy; it is the criterion for promoting an item into the bank.
+- **Memorization is reported only.** It counts items within 0.92 cosine of an SFT training stem, and it does not reject anything.
 
-| Arm | Schema valid | Structure | Key agreement (1B judge) | Aligned | Novel | All checks | Source copy | Gen tok/s |
-|---|---|---|---|---|---|---|---|---|
-| SciQ reference item (ceiling) | | | 92.7% | 70.7% | | | | |
-| Base 3B, 0-shot | 93.3% | 40.7% | 70.7% | 74.7% | 92.7% | 25.3% | 4.7% | 80.3 |
-| Base 3B, 2-shot | 80.7% | 60.7% | 56.7% | 64.0% | 80.0% | 33.3% | 2.7% | 76.1 |
-| Base 3B + EduAI LoRA | 100.0% | 54.0% | 74.7% | 72.0% | 96.0% | 32.7% | 25.3% | 48.0 |
+| Arm | Schema valid | Structure | Key agreement | Aligned | Novel | All checks | Source copy | Usable | Gen tok/s |
+|---|---|---|---|---|---|---|---|---|---|
+| SciQ reference item (ceiling) | | | 93.3% | 70.7% | | | | | |
+| Base 3B, 0-shot | 93.3% | 40.7% | 70.7% | 74.7% | 92.7% | 26.7% | 4.7% | 23.3% | 80.3 |
+| Base 3B, 2-shot | 80.7% | 60.7% | 60.7% | 64.0% | 80.0% | 36.7% | 2.7% | 34.7% | 76.1 |
+| Base 3B + EduAI LoRA | 100.0% | 54.0% | 77.3% | 72.0% | 96.0% | 30.7% | 25.3% | 21.3% | 48.0 |
 
-These are the paired bootstrap results. The fine-tuned model is not clearly better overall.
+The fine-tuned model does not generate better questions overall. The paired bootstrap over prompts gives these differences:
 
-- **All checks:** +7.3 points (95% CI -2.7 to +17.3) vs 0-shot, and -0.7 points (95% CI -10.7 to +10.0) vs 2-shot. Both intervals include zero.
-- **Where fine-tuning helps:**
-  - It produced schema-valid JSON on all 150 prompts, against 80.7% for 2-shot.
-  - It missed the requested misconception only once (target misconception missing on 1 item, vs 32 for 0-shot).
-  - Its keys agree with the judge more often than 2-shot's do: +18.0 points (95% CI +8.0 to +28.0).
-- **Where it hurts:**
-  - It copies the source SciQ question 25.3% of the time. The SFT targets were the source questions, so that's what it learned.
-  - It writes near-identical options on 63 of 150 items, including 9 where all four options are the same string.
-- **Alignment for 0-shot (74.7%) and fine-tuned (72.0%) is at the reference ceiling (70.7%).** 2-shot is lower, at 64.0%. The tagger can't separate these arms.
-- **Serving the adapter is slower:** generation drops from 80 to 48 tok/s, probably because the adapter is applied unfused at inference (not measured separately).
+- Fine-tuned vs 2-shot on usable items: -13.3 points (95% CI -23.3 to -3.3).
+- Fine-tuned vs 0-shot on usable items: -2.0 points (95% CI -12.0 to +7.3).
+- 2-shot vs 0-shot on usable items: +11.3 points (95% CI +1.3 to +20.7).
 
-Only items that pass every check, and aren't copies of their source, go into the bank. The fine-tuned run added 34 of them (`data/samples/generated_items.jsonl`).
+Fine-tuning fixed the output format:
+
+- It produced schema-valid JSON on 100.0% of prompts, against 80.7% for 2-shot.
+- It almost never drops the requested misconception.
+- Its keys agree with the judge more often: +16.7 points (95% CI +6.7 to +26.7) vs 2-shot.
+
+It also learned the wrong things from its targets, which were the SciQ source questions:
+
+- It copies the source question 25.3% of the time.
+- It writes near-identical options on 63 of 150 items, including 9 where all four options are the same string.
+- It puts the key at A on 104 of 150 valid items, even though the SFT answer letters were exactly 25% each.
+
+Before items enter the bank, their options are reshuffled and the key is remapped. Alignment is at the reference ceiling (70.7%) for 0-shot and fine-tuned; 2-shot is lower at 64.0%. Generation with the unfused adapter ran at 48 tok/s, against 80 for the base model.
+
+In short, the LoRA fine-tune taught format reliability, but the 3,000 SciQ-derived targets also taught copying and a key-position bias. With these data, 2-shot prompting of the base model produces the most usable items.
+<!-- eval:end -->
 
 ## Adaptive testing and feedback
 
@@ -255,37 +268,33 @@ The results show the estimators behave as designed. They say nothing about real 
 
 The app is FastAPI with Jinja and htmx, plus a JSON API under `/api/` and SQLite storage.
 
-- **Practice mode** gives feedback and the source-passage explanation after each answer.
-- **Assessment mode** shows no feedback. It shows a live ability estimate with its SD and the
-  stopping target.
-- **The report** shows a θ trajectory with its SD band, unit mastery with counts, wrong answers
-  worth revisiting, and a full response log.
-- **The 1–5 score is illustrative**, and the page labels it as simulated.
+Practice mode gives feedback and the source-passage explanation after each answer. Assessment
+mode gives no feedback (the JSON API doesn't return the key either) and shows a live ability
+estimate with its SD and the stopping target. The report page has the θ trajectory with its SD
+band, unit mastery with counts, wrong answers worth revisiting, and the full response log. The
+1–5 score on it is illustrative and labeled as simulated.
 
 <img src="docs/screenshots/desktop_report.png" alt="Report page with the simulated score, ability trajectory, unit mastery table, and answer log" width="70%">
 
 ## Limitations
 
-- **The data is narrow.**
-  - SciQ questions are short recall items written by crowdworkers.
-  - Physics 1 and APES coverage is thin, and many SciQ items are off-curriculum (astronomy,
-    anatomy trivia).
-  - The "AP-style" framing comes from the prompt and format. The source material is not AP level.
-- **Explanations are extracted, not reasoned.** Stimulus items reuse passage sentences.
-- **All judges are small.**
-  - The key check uses Llama 3.2 1B as an open-book judge.
-  - The alignment check is the noisy tagger above.
-  - Neither replaces human review.
-- **Both gold sets need review.** They were labeled by an AI pass and are waiting for a human
-  spot-check.
-- **Adaptive-testing results come from simulated students only.**
-- **Some paths weren't verified here.** The CUDA/Colab notebook and `HFBackend` never ran on
-  this machine (no NVIDIA GPU), and the Ollama backend was not tested with a pulled model.
-- **SFT v1 splits predate two fixes.** They were built before the passage-containment link
-  (`eduai data build --containment-link`) was added, and before the alignment rule compared the
-  target objective's own score.
-  - The eval prompts are filtered against the training rows the adapter actually saw.
-  - `configs/sft_v1.sha256` pins the files the adapter was trained on.
+- The data is narrow. SciQ questions are short crowdworker recall items, Physics 1 and APES
+  coverage is thin, and many items are off-curriculum (astronomy, anatomy trivia). "AP-style"
+  describes the prompt and format; the source material isn't at AP level.
+- The fine-tune didn't beat 2-shot prompting on usable items (see the eval). It copies source
+  questions, often repeats options, and favors key A. More varied targets than the SciQ source
+  questions would be the next thing to try.
+- Explanations are extracted passage sentences, not reasoning.
+- All judges are small: Llama 3.2 1B for the key check and the noisy tagger for alignment.
+  Neither replaces human review.
+- Both gold label sets came from an AI labeling pass and are waiting for a human spot-check.
+- The adaptive-testing results come from simulated students only.
+- Not verified on this machine: the CUDA/Colab notebook and `HFBackend` (no NVIDIA GPU), and the
+  Ollama backend with a pulled model.
+- The v1 SFT splits were built before the passage-containment link
+  (`eduai data build --containment-link`) and before the alignment rule compared the target
+  objective's own score. The eval prompts are filtered against the training rows the adapter
+  actually saw, and `configs/sft_v1.sha256` pins those files.
 
 ## Credits and licenses
 

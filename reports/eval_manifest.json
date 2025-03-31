@@ -7,10 +7,6 @@
     "python": "3.14.6",
     "power": "Now drawing from 'AC Power'"
   },
-  "exclusive_compute": {
-    "held": true,
-    "holder": "eduai-train"
-  },
   "load": {
     "loadavg": [
       "9.48",
