@@ -10,7 +10,11 @@ PORT ?= 8001
 export HF_HOME := $(CURDIR)/.models
 export TOKENIZERS_PARALLELISM := false
 
-.PHONY: setup models models-llm lint test data tagger-eval pilot train sim eval eval-score demo e2e-offline egress-open-check serve clean
+.PHONY: setup-demo setup models models-llm lint test data tagger-eval pilot train sim eval eval-score eval-check demo e2e-offline egress-open-check serve clean
+
+# Bank-only demo needs the core application dependencies, not embedding or LLM extras.
+setup-demo:
+	uv sync --frozen --no-default-groups
 
 setup:
 	uv sync --all-extras --frozen
@@ -52,6 +56,9 @@ eval:
 
 eval-score:
 	$(PY) eduai eval score
+
+eval-check:
+	$(PYOFF) python scripts/check_eval_snapshot.py
 
 demo:
 	EDUAI_BACKEND=bank $(PYOFF) eduai serve --port $(PORT)
