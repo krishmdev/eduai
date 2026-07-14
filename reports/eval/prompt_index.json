@@ -1,0 +1,923 @@
+{
+  "description": "Selection/membership index for the historical 150-prompt evaluation. It contains no source passages or questions and cannot replay model scoring.",
+  "source_sha256": {
+    "data/eval/prompts.jsonl": "e85dc575d453dbfd4bed67d38ee3d800339960117b689fe137fa75aa1616084b",
+    "data/items_tagged.jsonl": "3b8c0ebdfcbb0f2a2653a3584f151a36611b452d26db75ea3dcc4fdb79e8cd10",
+    "data/sft_meta.jsonl": "b22c70ef4c309b3ff06b09e909803ab8a9850e117c71cd6d5d751dbdf99bdcb4"
+  },
+  "sft_train_valid_group_overlap": 0,
+  "source_split_counts": {
+    "test": 103,
+    "train": 42,
+    "valid": 5
+  },
+  "rows": [
+    {
+      "id": "test-00182",
+      "group": 2385,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00258",
+      "group": 12937,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00021",
+      "group": 4179,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-06123",
+      "group": 1373,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "valid-00795",
+      "group": 4179,
+      "source_split": "valid",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00065",
+      "group": 12744,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00406",
+      "group": 13085,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00541",
+      "group": 6234,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00196",
+      "group": 12875,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-03140",
+      "group": 3140,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00897",
+      "group": 13576,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00277",
+      "group": 12377,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00550",
+      "group": 13229,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00909",
+      "group": 13588,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00097",
+      "group": 12776,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-06903",
+      "group": 6903,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00796",
+      "group": 32,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00245",
+      "group": 832,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00566",
+      "group": 13245,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00315",
+      "group": 12994,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00739",
+      "group": 3096,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00162",
+      "group": 12841,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00999",
+      "group": 13678,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-02953",
+      "group": 2953,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00508",
+      "group": 12981,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00397",
+      "group": 13076,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00913",
+      "group": 13592,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-11239",
+      "group": 465,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00540",
+      "group": 2946,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00484",
+      "group": 13163,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00633",
+      "group": 13312,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00654",
+      "group": 13333,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00610",
+      "group": 13289,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00683",
+      "group": 13362,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00572",
+      "group": 13251,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00655",
+      "group": 6010,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-07539",
+      "group": 2442,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00881",
+      "group": 13560,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-02955",
+      "group": 1497,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-04101",
+      "group": 4101,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-06497",
+      "group": 1375,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00532",
+      "group": 13211,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00203",
+      "group": 11751,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00602",
+      "group": 13281,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00778",
+      "group": 13457,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00465",
+      "group": 13144,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00993",
+      "group": 13672,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-09236",
+      "group": 7406,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-07507",
+      "group": 7507,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-05107",
+      "group": 2211,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00436",
+      "group": 13115,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-07003",
+      "group": 1674,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-02183",
+      "group": 1674,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00391",
+      "group": 13070,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00367",
+      "group": 13046,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00447",
+      "group": 5808,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00455",
+      "group": 247,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00528",
+      "group": 11383,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-04063",
+      "group": 4063,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-11383",
+      "group": 11383,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00145",
+      "group": 12824,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00496",
+      "group": 13175,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00715",
+      "group": 13394,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-09786",
+      "group": 6531,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00364",
+      "group": 13043,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00703",
+      "group": 4909,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00737",
+      "group": 13416,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00627",
+      "group": 13306,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00555",
+      "group": 13234,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00933",
+      "group": 13612,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "valid-00876",
+      "group": 247,
+      "source_split": "valid",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00725",
+      "group": 13404,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00944",
+      "group": 13623,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00469",
+      "group": 13148,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00624",
+      "group": 12787,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00312",
+      "group": 12286,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-06169",
+      "group": 4187,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00444",
+      "group": 13123,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00307",
+      "group": 12986,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00031",
+      "group": 434,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-00176",
+      "group": 955,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00412",
+      "group": 13091,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00381",
+      "group": 13060,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00510",
+      "group": 13189,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-04426",
+      "group": 4426,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00584",
+      "group": 13263,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-01766",
+      "group": 1766,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-09147",
+      "group": 9147,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00849",
+      "group": 13528,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-11503",
+      "group": 11503,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00213",
+      "group": 12892,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00564",
+      "group": 13243,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "valid-00922",
+      "group": 1102,
+      "source_split": "valid",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00716",
+      "group": 13395,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00319",
+      "group": 12998,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00207",
+      "group": 12886,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00772",
+      "group": 3348,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00959",
+      "group": 13638,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-03448",
+      "group": 360,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "valid-00072",
+      "group": 11751,
+      "source_split": "valid",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-03251",
+      "group": 3207,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00986",
+      "group": 13665,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00433",
+      "group": 13112,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00744",
+      "group": 13423,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00284",
+      "group": 12963,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00609",
+      "group": 13288,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00232",
+      "group": 8611,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00068",
+      "group": 12747,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-02385",
+      "group": 2385,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-04775",
+      "group": 1674,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-03382",
+      "group": 3140,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00736",
+      "group": 1272,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00280",
+      "group": 12959,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00751",
+      "group": 13430,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00007",
+      "group": 12686,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00914",
+      "group": 13593,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00759",
+      "group": 2149,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00988",
+      "group": 13667,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00974",
+      "group": 13653,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00380",
+      "group": 13059,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00086",
+      "group": 12765,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-02442",
+      "group": 2442,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "valid-00766",
+      "group": 465,
+      "source_split": "valid",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-01371",
+      "group": 1371,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-03252",
+      "group": 1124,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00420",
+      "group": 13099,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-02271",
+      "group": 955,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-11442",
+      "group": 11442,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00124",
+      "group": 12803,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-01055",
+      "group": 1055,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-00181",
+      "group": 181,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00781",
+      "group": 13460,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00256",
+      "group": 3079,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00355",
+      "group": 13034,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00463",
+      "group": 13142,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00211",
+      "group": 12890,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-01408",
+      "group": 1408,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00074",
+      "group": 12753,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-08894",
+      "group": 5508,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00698",
+      "group": 13377,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-05660",
+      "group": 1375,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-07732",
+      "group": 4187,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00968",
+      "group": 13647,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-09567",
+      "group": 2552,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-06844",
+      "group": 6844,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "train-03412",
+      "group": 3412,
+      "source_split": "train",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00916",
+      "group": 13595,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00190",
+      "group": 12869,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00646",
+      "group": 13325,
+      "source_split": "test",
+      "assigned_split": "test"
+    },
+    {
+      "id": "test-00573",
+      "group": 13252,
+      "source_split": "test",
+      "assigned_split": "test"
+    }
+  ],
+  "raw_sha256": {
+    "reports/eval/gen_base-0shot.jsonl": "f4f7a2c51a8ac370dd176aca1a6af5889f6487735e545d0e35e088b0b11bb1ab",
+    "reports/eval/gen_base-2shot.jsonl": "9121bee470fca9a347ddcbd27d03f4ded914f0f05d27cff8067074bda641046c",
+    "reports/eval/gen_finetuned.jsonl": "e8361fac96773e819de10f99fd39ee0de639e6d7a28a7f50f1747c827cd63a81",
+    "reports/eval/judge_llama-1b.jsonl": "6a4c670f566bb30486e25363874bf0ce0e18f4c282e7a03af444ac0b3b944da1",
+    "reports/eval/judge_llama-3b.jsonl": "cc269eb930f9db2e0cfa64f03084e43506e9296b05e16e7ce257e58896887021"
+  }
+}
