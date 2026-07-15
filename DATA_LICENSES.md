@@ -1,14 +1,14 @@
 # Data and model licenses
 
-The code in this repository is MIT licensed (see `LICENSE`). The data and model artifacts it uses
-or produces carry their own terms.
+The code in this repository is MIT licensed (see `LICENSE`). Data and model artifacts have their
+own terms.
 
 ## SciQ
 
 Welbl, Liu and Gardner, "Crowdsourcing Multiple Choice Science Questions", W-NUT 2017.
 Licensed under Creative Commons Attribution-NonCommercial 3.0 (CC BY-NC 3.0).
 
-Everything derived from SciQ is non-commercial and must keep this attribution:
+SciQ-derived material is for non-commercial use and must keep this attribution:
 - the committed samples in `data/samples/`, the gold sets in `data/gold/` (question and answer text),
   and the eval outputs in `reports/eval/`;
 - the SFT data built locally by `eduai data build`;
@@ -25,9 +25,9 @@ License text: https://github.com/meta-llama/llama-models/blob/main/models/llama3
 Acceptable Use Policy: https://github.com/meta-llama/llama-models/blob/main/models/llama3_2/USE_POLICY.md
 Both files are included in the adapter release tarball.
 
-Built with Llama. The adapter distributed as a release asset (`Llama-3.2-3B-EduAI-AP-LoRA`) is a
-derivative of Llama 3.2 and is subject to the Llama 3.2 Community License and Acceptable Use
-Policy. Because of its training data it is also limited to non-commercial use.
+Built with Llama. The adapter distributed as a release asset (`Llama-3.2-3B-EduAI-AP-LoRA`) is a derivative of
+Llama 3.2. It is subject to the Llama 3.2 Community License and Acceptable Use Policy. Its
+training data also limits it to non-commercial use.
 
 ## Embedding and reranking models
 
@@ -42,6 +42,6 @@ Policy. Because of its training data it is also limited to non-commercial use.
 ## AP and the College Board
 
 AP and Advanced Placement are registered trademarks of the College Board. This project isn't
-affiliated with or endorsed by the College Board. The curriculum files in `curriculum/` use short
+affiliated with or endorsed by the College Board. The curriculum files in `curriculum/` use short,
 generic unit titles and objective sentences written for this project; they aren't copied from
 any College Board course framework. Unit weights are our own rough numbers.

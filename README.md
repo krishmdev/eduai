@@ -1,10 +1,10 @@
 # EduAI
 
-EduAI generates AP-style multiple-choice science questions with a LoRA-tuned Llama 3.2 3B. It
-tags every question against a curriculum of learning objectives using embeddings, and it runs an
-adaptive test that picks each next question from the student's responses so far. It covers four
-AP sciences: Biology, Chemistry, Physics 1 and Environmental Science. The source material is
-SciQ, and everything runs on one M1 Pro laptop.
+EduAI generates AP-style multiple-choice science questions with a LoRA-tuned Llama 3.2 3B.
+An embedding-based tagger maps questions to learning objectives, and an adaptive test chooses
+each next question from the student's earlier responses. It covers Biology, Chemistry,
+Physics 1 and Environmental Science using SciQ source material. The pipeline runs on one
+M1 Pro laptop.
 
 <p>
 <img src="docs/screenshots/desktop_feedback.png" alt="A practice question after answering: the wrong choice struck through, the correct one highlighted, an explanation from the source passage, and mastery by unit in a sidebar" width="68%">
@@ -26,15 +26,23 @@ flowchart LR
   A -- responses --> B
 ```
 
-## Quickstart (no model, no network)
+## Quickstart (no model or API key)
 
 ```bash
-make setup    # uv sync + pinned embedding models into .models/ (network allowed)
-make demo     # bank-only app on http://127.0.0.1:8001
+make setup-demo   # installs only core app dependencies; package download may need network
+make demo         # bank-only app on http://127.0.0.1:8001
 ```
 
-The demo serves a committed sample of 634 SciQ-derived items (`data/samples/bank_sample.jsonl`) plus 32 validated generated items, so it
-needs neither the raw dataset nor any model. To confirm the whole process tree runs without
+The demo serves a committed sample of 634 SciQ-derived items (`data/samples/bank_sample.jsonl`)
+and 32 validated generated items. It needs neither the raw dataset nor a model. In the browser,
+choose Biology, start a 10-question
+practice session, answer a few questions to see source-passage feedback and unit progress, then
+open the report. Assessment mode withholds the answer until the session ends and shows an
+illustrative ability estimate. The sample questions and AI-derived labels await human review;
+the session does not measure learning in real students.
+
+`make setup` is for the full training/evaluation workflow and fetches pinned embedding models.
+Once dependencies are installed, confirm the whole demo process tree runs without
 network access:
 
 ```bash
@@ -58,7 +66,7 @@ make serve                                           # full app; backend auto-se
 make test
 ```
 
-The backend is picked in this order: MLX with the adapter, then MLX base, then Ollama
+The app tries backends in this order: MLX with the adapter, MLX base, then Ollama
 (`llama3.2:3b`, base only; Ollama can't load the MLX adapter), then bank-only. You can force one
 with `EDUAI_BACKEND=mlx|ollama|bank`.
 
@@ -72,8 +80,7 @@ with the College Board.
 
 ## Data
 
-The data card is [reports/data_card.md](reports/data_card.md). Its sections appear in the order
-the pipeline applies them:
+The [data card](reports/data_card.md) follows the pipeline in order:
 
 1. **Eligibility gate.** 1,427 SciQ records have a blank `support` passage: 1,198 train, 113
    valid and 116 test.
@@ -86,7 +93,7 @@ the pipeline applies them:
    question and answer, or have a bge cosine above 0.92 on question plus answer.
    - Each group goes to one split, with test taking priority, then valid, then train.
    - 813 items moved. A post-assignment check (`splits.leakage`) confirms no group spans two splits.
-4. **Quotas.** SFT is 3,000 / 300 / 200. The answer letter is exactly 25% each of A–D, 40% of
+4. **Quotas.** SFT is 3,000 / 300 / 200. The answer letter is exactly 25% each of A through D, 40% of
    items are stimulus style, and 30% carry a target misconception. All quotas were met.
 
 The prompt lives in `prompts.py` and is shared by training and inference.
@@ -115,8 +122,8 @@ ran exclusively on the machine.
 | Pilot | 20 | 240 s | 6.60 GB | 56.2 | `reports/pilot.json` |
 | Full | 600 | 6,995 s (1.94 h) | 7.65 GB | 56.7 | `reports/training.json` |
 
-The pilot projected 1.68 h, which was under the 2.5 h fallback threshold, so the 3B model with 16
-layers ran as planned. The run trained 6.95M parameters on 348K target tokens.
+The pilot projected 1.68 h, below the 2.5 h fallback threshold. The full run used the 3B model
+with 16 layers and trained 6.95M parameters on 348K target tokens.
 
 ![loss](reports/figures/training_loss.png)
 
@@ -146,7 +153,7 @@ results on the 150-item gold set ([reports/tagger_eval.md](reports/tagger_eval.m
 | bge-small-en-v1.5 | 36.8% | 71.9% | 64.0% | 84.2% | 65.8% | 52.8% |
 | bge-small + rerank | 50.9% | 77.2% | 66.7% | 87.7% | 68.4% | 55.6% |
 
-Treat the tagger as a noisy filter.
+The tagger is a noisy filter.
 - It wrongly rejects about 30% of in-curriculum items, and it passes about 44% of off-curriculum
   ones.
 - The reranker adds little over plain MiniLM.
@@ -159,7 +166,7 @@ labeling pass that never saw tagger output. They still need a human spot-check.
 ## Generation eval
 
 <!-- eval:start -->
-There are 150 held-out prompts from the SciQ test split, and all three arms get the same prompts ([reports/eval_report.md](reports/eval_report.md), raw generations in `reports/eval/`). This section is written by `scripts/readme_eval.py`.
+There are 150 prompts from groups assigned to the held-out test split (including SciQ rows originally labeled train or valid), and all three arms get the same prompts ([reports/eval_report.md](reports/eval_report.md), raw generations in `reports/eval/`). This section is written by `scripts/readme_eval.py`.
 
 - **Target objectives are independent.** Each prompt's target LO comes from an independent labeling pass, not from the tagger. 59 off-curriculum candidates were dropped.
 - **Leaky prompts are filtered out.** A prompt was dropped if its passage shares 50% or more of its 8-grams with a training passage, or if a training item has the same answer and a question-plus-answer cosine of 0.88 or more. That removed 14 of 244 screened candidates.
@@ -197,6 +204,16 @@ Before items enter the bank, their options are reshuffled and the key is remappe
 In short, the LoRA fine-tune taught format reliability, but the 3,000 SciQ-derived targets also taught copying and a key-position bias. With these data, 2-shot prompting of the base model produces the most usable items.
 <!-- eval:end -->
 
+`make eval-check` audits the committed evaluation snapshot without models: it checks the 150
+paired prompt IDs, generation and judge hashes, per-item rates, paired bootstrap, and rendered
+report. The [prompt index](reports/eval/prompt_index.json) records original SciQ split IDs,
+assigned held-out groups, and hashes of the local selection inputs without publishing their
+passages. It was checked against the local SFT train/valid groups (zero group overlap); a fresh
+clone can verify the committed snapshot but cannot independently repeat that source-data check.
+Full `make eval-score` recomputation requires the ignored SciQ-derived data and pinned embedding
+models described in the full pipeline. Neither audit validates the AI-generated gold labels;
+they still need human review.
+
 ## Adaptive testing and feedback
 
 The whole system uses one response model, p = c + (1 − c)·σ(θ − b) with c = 0.25 for four
@@ -229,8 +246,8 @@ These numbers are from 500 simulated students per condition ([reports/sim_report
 | 0.4 | 95.0% | 0.377 | 38.7 | 99.8% |
 | 0.5 | 95.2% | 0.495 | 22.9 | 100% |
 
-The posterior SD is well calibrated at every threshold. Getting SD down to 0.3 takes about 72 items
-even when every item is well targeted, so the web assessment stops at SD < 0.5 or 30 items.
+Posterior SD is well calibrated at every threshold. Reaching SD < 0.3 takes about 72 items even
+when items are well targeted, so the web assessment stops at SD < 0.5 or 30 items.
 
 Adaptive item selection gives lower RMSE than random items at every test length. At 30 items it is
 0.444 against 0.476, and at 60 items 0.318 against 0.366. The gap is modest, though. Every policy
@@ -262,7 +279,7 @@ Other simulation results:
   away.
 
 All of this is simulation, and the responses come from the same model the system assumes.
-The results show the estimators behave as designed. They say nothing about real students.
+The estimators behave as designed in this simulation. These results say nothing about real students.
 
 ## App
 
@@ -272,7 +289,7 @@ Practice mode gives feedback and the source-passage explanation after each answe
 mode gives no feedback (the JSON API doesn't return the key either) and shows a live ability
 estimate with its SD and the stopping target. The report page has the θ trajectory with its SD
 band, unit mastery with counts, wrong answers worth revisiting, and the full response log. The
-1–5 score on it is illustrative and labeled as simulated.
+1 to 5 score on it is illustrative and labeled as simulated.
 
 <img src="docs/screenshots/desktop_report.png" alt="Report page with the simulated score, ability trajectory, unit mastery table, and answer log" width="70%">
 
