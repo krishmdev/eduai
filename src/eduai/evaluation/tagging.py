@@ -131,12 +131,12 @@ def render_markdown(results: list[ModeResult], gold: list[dict], manifest_path: 
         f"{n_off} marked off-curriculum. Labels were written by an AI labeling pass that did not see "
         f"the tagger's output ({low} flagged low-confidence); they still need a human spot-check.",
         "",
-        "Text tagged: question plus correct answer. Top-1 strict counts only the primary gold LO; "
-        "lenient also accepts the listed alternates. Aligned means the gold LO is in the top 3 and "
-        f"its own score is at least tau (the {TAU_PERCENTILE}th percentile of gold-LO scores); that is "
-        "the rule the generation validator applies to a requested LO. Off-curriculum rejected means "
-        "the top-1 score of an off-curriculum item falls below tau. The CV columns fit tau on one half "
-        "of the gold set and score the other half.",
+        "The tagger uses each question and its correct answer. Top-1 strict counts only the primary "
+        "gold LO; lenient also accepts listed alternates. An item is aligned when the gold LO is in "
+        "the top 3 and its score is at least tau (the "
+        f"{TAU_PERCENTILE}th percentile of gold-LO scores), matching the generation validator's rule "
+        "for a requested LO. An off-curriculum item is rejected when its top-1 score falls below tau. "
+        "For the CV columns, tau is fit on one half of the gold set and scored on the other half.",
         "",
         "| Mode | Top-1 strict | Top-1 lenient | Top-3 | Unit | Subject gate | tau | Aligned (CV) | "
         "Off-curriculum rejected (CV) |",

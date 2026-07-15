@@ -472,7 +472,7 @@ def render_data_card(card: dict) -> str:
         "## 6. Quotas (applied last)",
         "",
         "Targets: SFT 3,000/300/200, answer letters 25% each, 40% stimulus-style, 30% with a target "
-        "misconception. Anything that could not be met is shrunk and reported here, not padded.",
+        "misconception. When the available data cannot meet a target, the achieved count is reported as-is.",
         "",
         "| Split | Target | Achieved | A | B | C | D | Stimulus | Misconception |",
         "|---|---|---|---|---|---|---|---|---|",

@@ -17,10 +17,9 @@ def render(res: dict, manifest_name: str) -> str:
         f"subject {cfg['subject']}, {cfg['per_lo']} items per LO). Run time {res['seconds']} s. "
         f"Manifest: `{manifest_name}`.",
         "",
-        "Everything here is a simulation under stated assumptions (see `src/eduai/sim/students.py`). "
-        "Responses are drawn from the same model the system uses, so these results show that the "
-        "estimators and policies behave as designed when the model is right; they say nothing about "
-        "real students.",
+        "These results come from a simulation under the assumptions in `src/eduai/sim/students.py`. "
+        "Responses are drawn from the same model the system uses, so the results describe estimator "
+        "and policy behavior when that model is correct. They do not describe real students.",
         "",
         f"Response model: p = c + (1 - c) sigmoid(theta - b), c = 0.25. Fisher information peaks at "
         f"p* = {a['p_star']:.3f}, where one item carries I = {a['max_item_information']:.3f}.",
