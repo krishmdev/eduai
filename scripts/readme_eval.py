@@ -28,7 +28,8 @@ def render(r: dict, card: dict) -> str:
     ft = s["finetuned"]
     sp = r["structure_problems"]["finetuned"]
     L = [
-        f"There are {r['n_prompts']} held-out prompts from the SciQ test split, and all three arms get the same "
+        f"There are {r['n_prompts']} prompts from groups assigned to the held-out test split "
+        "(including SciQ rows originally labeled train or valid), and all three arms get the same "
         "prompts ([reports/eval_report.md](reports/eval_report.md), raw generations in `reports/eval/`). "
         "This section is written by `scripts/readme_eval.py`.",
         "",

@@ -21,10 +21,12 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
     L = [
         "# Generation eval: base vs few-shot vs fine-tuned",
         "",
-        f"{n} held-out prompts from the SciQ test split, each with a target learning objective assigned by an "
-        "independent labeling pass that never saw tagger output (`data/gold/eval_lo_labels.jsonl`; AI-labeled, "
-        f"pending human spot-check). {card['off_curriculum']} candidates labeled off-curriculum were dropped. "
-        f"Leakage filter against the SFT train/valid rows: screened {lf['screened']}, dropped "
+        f"The report covers {n} prompts from groups assigned to the held-out test split, including "
+        "SciQ rows originally labeled train or valid. An independent labeling pass assigned each "
+        "prompt a target learning objective without seeing tagger output "
+        "(`data/gold/eval_lo_labels.jsonl`; AI-labeled, pending human spot-check). "
+        f"The eval dropped {card['off_curriculum']} off-curriculum candidates. The leakage filter "
+        f"against SFT train/valid rows screened {lf['screened']} prompts and dropped "
         f"{lf['dropped_passage_containment']} for >= 50% 8-gram passage containment and "
         f"{lf['dropped_same_answer_qa']} for a same-answer question with Q+A cosine >= 0.88. "
         f"Manifest: `{manifest_name}`.",

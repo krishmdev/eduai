@@ -1,6 +1,6 @@
 # Generation eval: base vs few-shot vs fine-tuned
 
-150 held-out prompts from the SciQ test split, each with a target learning objective assigned by an independent labeling pass that never saw tagger output (`data/gold/eval_lo_labels.jsonl`; AI-labeled, pending human spot-check). 59 candidates labeled off-curriculum were dropped. Leakage filter against the SFT train/valid rows: screened 244, dropped 5 for >= 50% 8-gram passage containment and 9 for a same-answer question with Q+A cosine >= 0.88. Manifest: `eval_manifest.json`.
+The report covers 150 prompts from groups assigned to the held-out test split, including SciQ rows originally labeled train or valid. An independent labeling pass assigned each prompt a target learning objective without seeing tagger output (`data/gold/eval_lo_labels.jsonl`; AI-labeled, pending human spot-check). The eval dropped 59 off-curriculum candidates. The leakage filter against SFT train/valid rows screened 244 prompts and dropped 5 for >= 50% 8-gram passage containment and 9 for a same-answer question with Q+A cosine >= 0.88. Manifest: `eval_manifest.json`.
 
 Every percentage uses all prompts as the denominator. Checks are scored independently:
 
