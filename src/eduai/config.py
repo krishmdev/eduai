@@ -91,7 +91,7 @@ SCIQ_DATASET = ("allenai/sciq", "2c94ad3e1aafab77146f384e23536f97a4849815")
 class Settings(BaseSettings):
     model_config = SettingsConfigDict(env_prefix="EDUAI_", env_file=None)
 
-    backend: str = "auto"  # auto | mlx | ollama | bank
+    backend: str = "auto"  # auto | mlx (base, 2-shot) | adapter | ollama | bank
     base_model: str = "llama-3b"
     adapter_path: Path = ROOT / "adapters" / "llama32-3b-eduai"
     ollama_url: str = "http://127.0.0.1:11434"

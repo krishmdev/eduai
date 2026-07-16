@@ -231,7 +231,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             passage=body["passage"],
             target_misconception=body.get("target_misconception"),
         )
-        gen = Generator(backend).generate(req)
+        from eduai.evaluation.compare import fixed_shots
+
+        # Base models get the same two fixed examples as the eval's best arm; the adapter runs 0-shot.
+        shots = [] if backend.name == "mlx+adapter" else fixed_shots()
+        gen = Generator(backend, shots=shots).generate(req)
         res = validate_item(gen.text, req)
         return {
             "ok": res.ok,

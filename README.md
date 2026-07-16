@@ -1,6 +1,7 @@
 # EduAI
 
-EduAI generates AP-style multiple-choice science questions with a LoRA-tuned Llama 3.2 3B.
+EduAI generates AP-style multiple-choice science questions with Llama 3.2 3B, either the base
+model with two fixed examples or a LoRA adapter trained here (the eval compares both).
 An embedding-based tagger maps questions to learning objectives, and an adaptive test chooses
 each next question from the student's earlier responses. It covers Biology, Chemistry,
 Physics 1 and Environmental Science using SciQ source material. The pipeline runs on one
@@ -66,9 +67,10 @@ make serve                                           # full app; backend auto-se
 make test
 ```
 
-The app tries backends in this order: MLX with the adapter, MLX base, then Ollama
+The app tries backends in this order: the MLX base model with the eval's two fixed examples
+(the arm that produced the most usable items), then MLX with the LoRA adapter, then Ollama
 (`llama3.2:3b`, base only; Ollama can't load the MLX adapter), then bank-only. You can force one
-with `EDUAI_BACKEND=mlx|ollama|bank`.
+with `EDUAI_BACKEND=mlx|adapter|ollama|bank`.
 
 ## Curriculum
 

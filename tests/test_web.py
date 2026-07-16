@@ -115,3 +115,12 @@ def test_concurrent_submits_record_one_response(client):
     con = sqlite3.connect(bank.path)
     rows = con.execute("SELECT COUNT(*) FROM responses WHERE session_id = ?", (sid,)).fetchone()[0]
     assert rows == 1 and n1 - n0 == 1
+
+
+def test_backend_order_prefers_base_two_shot():
+    from eduai.evaluation.compare import fixed_shots
+    from eduai.llm.select import ORDER
+
+    assert ORDER[0] == "mlx-base"
+    shots = fixed_shots()
+    assert sorted(r.format for r, _ in shots) == ["standard", "stimulus"]

@@ -35,8 +35,14 @@ def request_of(row: dict) -> GenerationRequest:
     return GenerationRequest(**row["request"])
 
 
-def fixed_shots(sft_train: Path) -> list[tuple[GenerationRequest, dict]]:
-    """First standard and first stimulus example from SFT train, without a target misconception."""
+SHOTS_SAMPLE = ROOT / "data" / "samples" / "sft_sample.jsonl"
+
+
+def fixed_shots(sft_train: Path = SHOTS_SAMPLE) -> list[tuple[GenerationRequest, dict]]:
+    """First standard and first stimulus example from SFT train, without a target misconception.
+
+    The committed sample holds the first SFT train rows, so it yields the same two shots the eval used.
+    """
     shots, want = [], ["standard", "stimulus"]
     for row in read_jsonl(sft_train):
         req = parse_user(row["messages"][1]["content"])

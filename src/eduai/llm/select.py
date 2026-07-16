@@ -1,4 +1,8 @@
-"""Backend auto-selection: MLX + adapter -> MLX base -> Ollama -> bank-only."""
+"""Backend auto-selection: MLX base (2-shot) -> MLX + adapter -> Ollama -> bank-only.
+
+The base model with two fixed examples produced the most usable items in the eval
+(reports/eval_report.md), so it comes first; the LoRA adapter is opt-in with EDUAI_BACKEND=adapter.
+"""
 
 from __future__ import annotations
 
@@ -9,7 +13,7 @@ from eduai.llm.bank_backend import BankBackend
 from eduai.llm.base import BackendUnavailable, LLMBackend
 
 log = logging.getLogger(__name__)
-ORDER = ("mlx+adapter", "mlx-base", "ollama", "bank")
+ORDER = ("mlx-base", "mlx+adapter", "ollama", "bank")
 
 
 def _try(kind: str, s: Settings) -> LLMBackend:
@@ -30,7 +34,13 @@ def _try(kind: str, s: Settings) -> LLMBackend:
 
 def select_backend(s: Settings) -> tuple[LLMBackend, list[str]]:
     """Returns the backend and the reasons earlier candidates were skipped."""
-    wanted = {"auto": ORDER, "mlx": ("mlx+adapter", "mlx-base"), "ollama": ("ollama",), "bank": ("bank",)}
+    wanted = {
+        "auto": ORDER,
+        "mlx": ("mlx-base",),
+        "adapter": ("mlx+adapter",),
+        "ollama": ("ollama",),
+        "bank": ("bank",),
+    }
     order = wanted.get(s.backend)
     if order is None:
         raise ValueError(f"unknown backend {s.backend!r}")
