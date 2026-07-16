@@ -48,19 +48,24 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
         "- Usable: all checks and not a copy of the source question. This is the bank-promotion criterion.",
         "- Memorized: stem cosine >= 0.92 with an SFT training stem. Reported only; it doesn't reject items.",
         "",
-        "| | JSON | First-try JSON | Schema | Structure | Key agreement | Aligned | Novel | All checks | "
-        "Source copy | Usable | Memorized (train) |",
-        "|---|---|---|---|---|---|---|---|---|---|---|---|",
+        "- Key agreement (valid): the same judge result over schema-valid items only, which removes the "
+        "effect of JSON failures. Items whose key text also appears as a distractor never count as agreeing.",
+        "",
+        "| | JSON | First-try JSON | Schema | Structure | Key agreement | Key agreement (valid) | Aligned | "
+        "Novel | All checks | Source copy | Usable | Memorized (train) |",
+        "|---|---|---|---|---|---|---|---|---|---|---|---|---|",
     ]
     ref = s["reference"]
-    L.append(f"| {LABELS['reference']} | | | | | {_p(ref['key'])} | {_p(ref['aligned'])} | | | | | |")
+    L.append(
+        f"| {LABELS['reference']} | | | | | {_p(ref['key'])} | {_p(ref['key'])} | {_p(ref['aligned'])} | | | | | |"
+    )
     for arm in ("base-0shot", "base-2shot", "finetuned"):
         if arm not in s:
             continue
         r = s[arm]
         L.append(
             f"| {LABELS[arm]} | {_p(r['json'])} | {_p(r['first_try_json'])} | {_p(r['schema'])} | "
-            f"{_p(r['structure'])} | {_p(r['key'])} | {_p(r['aligned'])} | {_p(r['novel'])} | "
+            f"{_p(r['structure'])} | {_p(r['key'])} | {_p(r['key_on_valid'])} | {_p(r['aligned'])} | {_p(r['novel'])} | "
             f"{_p(r['all_checks'])} | {_p(r['source_copy'])} | {_p(r['usable'])} | {_p(r['memorized'])} |"
         )
     L += [

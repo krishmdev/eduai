@@ -248,9 +248,12 @@ def score(
                     problems = structure_problems(item, req)
                     r["structure"] = not problems and misconception_present(item, req.target_misconception)
                     j = judge.get((arm, pid))
-                    r["key"] = bool(j and j["agrees"])
+                    texts = [v.strip().lower() for v in item["choices"].values()]
+                    # A key whose text also appears as a distractor can't be told apart by any judge.
+                    distinct = texts.count(item["choices"][item["answer"]].strip().lower()) == 1
+                    r["key"] = bool(j and j["agrees"]) and distinct
                     s2 = secondary.get((arm, pid))
-                    r["key_secondary"] = None if s2 is None else bool(s2["agrees"])
+                    r["key_secondary"] = None if s2 is None else bool(s2["agrees"]) and distinct
                     r["aligned"] = aligns[pid]["aligned"]
                     ok, info = novelty.check(
                         item,
@@ -351,6 +354,9 @@ def summarize(per_item: dict[str, list[dict]]) -> dict:
         ):
             if rows and k in rows[0]:
                 s[k] = sum(bool(r[k]) for r in rows) / n
+        valid = [r for r in rows if r.get("schema", True)]
+        s["key_on_valid"] = sum(bool(r["key"]) for r in valid) / len(valid) if valid else None
+        s["n_schema_valid"] = len(valid)
         sec = [r["key_secondary"] for r in rows if r.get("key_secondary") is not None]
         s["key_secondary"] = sum(sec) / n if sec else None
         letters = [r.get("key_letter") for r in rows if r.get("key_letter")]

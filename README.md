@@ -174,12 +174,12 @@ There are 150 prompts from groups assigned to the held-out test split (including
 - **Novelty excludes the prompt's own source item and its group.** Copies of the source question are counted separately. **Usable** means passing all checks and not being a source copy; it is the criterion for promoting an item into the bank.
 - **Memorization is reported only.** It counts items within 0.92 cosine of an SFT training stem, and it does not reject anything.
 
-| Arm | Schema valid | Structure | Key agreement | Aligned | Novel | All checks | Source copy | Usable | Gen tok/s |
+| Arm | Schema valid | Structure | Key agreement (schema-valid items) | Aligned | Novel | All checks | Source copy | Usable | Gen tok/s |
 |---|---|---|---|---|---|---|---|---|---|
 | SciQ reference item (ceiling) | | | 93.3% | 70.7% | | | | | |
 | Base 3B, 0-shot | 93.3% | 40.7% | 70.7% | 74.7% | 92.7% | 26.7% | 4.7% | 23.3% | 80.3 |
 | Base 3B, 2-shot | 80.7% | 60.7% | 60.7% | 64.0% | 80.0% | 36.7% | 2.7% | 34.7% | 76.1 |
-| Base 3B + EduAI LoRA | 100.0% | 54.0% | 77.3% | 72.0% | 96.0% | 30.7% | 25.3% | 21.3% | 48.0 |
+| Base 3B + EduAI LoRA | 100.0% | 54.0% | 66.0% | 72.0% | 96.0% | 30.7% | 25.3% | 21.3% | 48.0 |
 
 The fine-tuned model does not generate better questions overall. The paired bootstrap over prompts gives these differences:
 
@@ -191,7 +191,8 @@ Fine-tuning fixed the output format:
 
 - It produced schema-valid JSON on 100.0% of prompts, against 80.7% for 2-shot.
 - It almost never drops the requested misconception.
-- Its keys agree with the judge more often: +16.7 points (95% CI +6.7 to +26.7) vs 2-shot.
+
+Key agreement on schema-valid items is 66.0% for the fine-tune, 75.2% for 2-shot and 75.7% for 0-shot. An item whose key text is repeated among its options counts as not agreeing, and many of the fine-tune's items have repeated options.
 
 It also learned the wrong things from its targets, which were the SciQ source questions:
 
@@ -201,7 +202,7 @@ It also learned the wrong things from its targets, which were the SciQ source qu
 
 Before items enter the bank, their options are reshuffled and the key is remapped. Alignment is at the reference ceiling (70.7%) for 0-shot and fine-tuned; 2-shot is lower at 64.0%. Generation with the unfused adapter ran at 48 tok/s, against 80 for the base model.
 
-In short, the LoRA fine-tune taught format reliability, but the 3,000 SciQ-derived targets also taught copying and a key-position bias. With these data, 2-shot prompting of the base model produces the most usable items.
+In short, the LoRA fine-tune of Llama 3.2 3B taught format reliability, but the 3,000 SciQ-derived targets also taught copying and a key-position bias. With these data, 2-shot prompting of the base model produces the most usable items.
 <!-- eval:end -->
 
 `make eval-check` audits the committed evaluation snapshot without models: it checks the 150

@@ -47,7 +47,7 @@ def render(r: dict, card: dict) -> str:
         "- **Memorization is reported only.** It counts items within 0.92 cosine of an SFT training stem, and "
         "it does not reject anything.",
         "",
-        "| Arm | Schema valid | Structure | Key agreement | Aligned | Novel | All checks | Source copy | Usable | Gen tok/s |",
+        "| Arm | Schema valid | Structure | Key agreement (schema-valid items) | Aligned | Novel | All checks | Source copy | Usable | Gen tok/s |",
         "|---|---|---|---|---|---|---|---|---|---|",
         f"| SciQ reference item (ceiling) | | | {pct(s['reference']['key'])} | {pct(s['reference']['aligned'])} | | | | | |",
     ]
@@ -74,7 +74,11 @@ def render(r: dict, card: dict) -> str:
         f"- It produced schema-valid JSON on {pct(ft['schema'])} of prompts, against {pct(s['base-2shot']['schema'])} "
         "for 2-shot.",
         "- It almost never drops the requested misconception.",
-        f"- Its keys agree with the judge more often: {ci(b['finetuned - base-2shot | key'])} vs 2-shot.",
+        "",
+        f"Key agreement on schema-valid items is {pct(ft['key_on_valid'])} for the fine-tune, "
+        f"{pct(s['base-2shot']['key_on_valid'])} for 2-shot and {pct(s['base-0shot']['key_on_valid'])} for 0-shot. "
+        "An item whose key text is repeated among its options counts as not agreeing, and many of the "
+        "fine-tune's items have repeated options.",
         "",
         "It also learned the wrong things from its targets, which were the SciQ source questions:",
         "",
@@ -90,7 +94,7 @@ def render(r: dict, card: dict) -> str:
         f"{t['finetuned']['mean_generation_tps']:.0f} tok/s, against {t['base-0shot']['mean_generation_tps']:.0f} "
         "for the base model.",
         "",
-        "In short, the LoRA fine-tune taught format reliability, but the 3,000 SciQ-derived targets also taught "
+        "In short, the LoRA fine-tune of Llama 3.2 3B taught format reliability, but the 3,000 SciQ-derived targets also taught "
         "copying and a key-position bias. With these data, 2-shot prompting of the base model produces the "
         "most usable items.",
     ]

@@ -12,12 +12,14 @@ Every percentage uses all prompts as the denominator. Checks are scored independ
 - Usable: all checks and not a copy of the source question. This is the bank-promotion criterion.
 - Memorized: stem cosine >= 0.92 with an SFT training stem. Reported only; it doesn't reject items.
 
-| | JSON | First-try JSON | Schema | Structure | Key agreement | Aligned | Novel | All checks | Source copy | Usable | Memorized (train) |
-|---|---|---|---|---|---|---|---|---|---|---|---|
-| SciQ reference item (ceiling) | | | | | 93.3% | 70.7% | | | | | |
-| Base 3B, 0-shot | 100.0% | 99.3% | 93.3% | 40.7% | 70.7% | 74.7% | 92.7% | 26.7% | 4.7% | 23.3% | 0.7% |
-| Base 3B, 2-shot | 100.0% | 98.0% | 80.7% | 60.7% | 60.7% | 64.0% | 80.0% | 36.7% | 2.7% | 34.7% | 0.0% |
-| Base 3B + EduAI LoRA | 100.0% | 100.0% | 100.0% | 54.0% | 77.3% | 72.0% | 96.0% | 30.7% | 25.3% | 21.3% | 1.3% |
+- Key agreement (valid): the same judge result over schema-valid items only, which removes the effect of JSON failures. Items whose key text also appears as a distractor never count as agreeing.
+
+| | JSON | First-try JSON | Schema | Structure | Key agreement | Key agreement (valid) | Aligned | Novel | All checks | Source copy | Usable | Memorized (train) |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| SciQ reference item (ceiling) | | | | | 93.3% | 93.3% | 70.7% | | | | | |
+| Base 3B, 0-shot | 100.0% | 99.3% | 93.3% | 40.7% | 70.7% | 75.7% | 74.7% | 92.7% | 26.7% | 4.7% | 23.3% | 0.7% |
+| Base 3B, 2-shot | 100.0% | 98.0% | 80.7% | 60.7% | 60.7% | 75.2% | 64.0% | 80.0% | 36.7% | 2.7% | 34.7% | 0.0% |
+| Base 3B + EduAI LoRA | 100.0% | 100.0% | 100.0% | 54.0% | 66.0% | 66.0% | 72.0% | 96.0% | 30.7% | 25.3% | 21.3% | 1.3% |
 
 Paired bootstrap (5,000 resamples over prompts), difference in rate with 95% CI. With n = 150, one arm's rate has a standard error around 4 points, so differences under about 10 points should be read as noise unless the interval excludes zero.
 
@@ -26,15 +28,15 @@ Paired bootstrap (5,000 resamples over prompts), difference in rate with 95% CI.
 | finetuned - base-0shot | usable | -2.0% | [-12.0%, +7.3%] |
 | finetuned - base-0shot | all_checks | +4.0% | [-5.3%, +14.0%] |
 | finetuned - base-0shot | aligned | -2.7% | [-10.7%, +4.7%] |
-| finetuned - base-0shot | key | +6.7% | [-3.3%, +16.7%] |
+| finetuned - base-0shot | key | -4.7% | [-15.3%, +6.7%] |
 | finetuned - base-0shot | json | +0.0% | [+0.0%, +0.0%] |
 | finetuned - base-2shot | usable | -13.3% | [-23.3%, -3.3%] |
 | finetuned - base-2shot | all_checks | -6.0% | [-16.7%, +4.0%] |
 | finetuned - base-2shot | aligned | +8.0% | [-0.7%, +17.3%] |
-| finetuned - base-2shot | key | +16.7% | [+6.7%, +26.7%] |
+| finetuned - base-2shot | key | +5.3% | [-6.0%, +16.7%] |
 | finetuned - base-2shot | json | +0.0% | [+0.0%, +0.0%] |
 | finetuned - reference | aligned | +1.3% | [-5.3%, +8.0%] |
-| finetuned - reference | key | -16.0% | [-23.3%, -8.7%] |
+| finetuned - reference | key | -27.3% | [-36.0%, -19.3%] |
 | base-2shot - base-0shot | usable | +11.3% | [+1.3%, +20.7%] |
 | base-2shot - base-0shot | all_checks | +10.0% | [+0.7%, +19.3%] |
 | base-2shot - base-0shot | aligned | -10.7% | [-18.7%, -2.7%] |
@@ -46,9 +48,9 @@ Secondary key agreement with the base 3B as judge (self-judged for the base arms
 | | Key agreement (3B judge) |
 |---|---|
 | SciQ reference item (ceiling) | 96.7% |
-| Base 3B, 0-shot | 76.7% |
+| Base 3B, 0-shot | 75.3% |
 | Base 3B, 2-shot | 65.3% |
-| Base 3B + EduAI LoRA | 84.0% |
+| Base 3B + EduAI LoRA | 71.3% |
 
 First failing check per item (checks in validator order):
 
@@ -65,7 +67,7 @@ Answer-key letter distribution (schema-valid items) and judge key agreement by k
 | SciQ reference item (ceiling) | 32 | 37 | 31 | 50 | 87.5% | 94.6% | 93.5% | 96.0% |
 | Base 3B, 0-shot | 15 | 73 | 38 | 14 | 53.3% | 75.3% | 81.6% | 85.7% |
 | Base 3B, 2-shot | 19 | 57 | 22 | 23 | 73.7% | 71.9% | 100.0% | 60.9% |
-| Base 3B + EduAI LoRA | 104 | 28 | 9 | 9 | 79.8% | 75.0% | 88.9% | 44.4% |
+| Base 3B + EduAI LoRA | 104 | 28 | 9 | 9 | 67.3% | 67.9% | 66.7% | 44.4% |
 
 Structure problems among schema-valid items (an item can have several):
 

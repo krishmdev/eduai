@@ -51,6 +51,10 @@ class Judge:
         return totals
 
     def __call__(self, item: dict, passage: str | None = None) -> dict:
+        texts = [v.strip().lower() for v in item["choices"].values()]
+        if texts.count(item["choices"][item["answer"]].strip().lower()) > 1:
+            # The key's text also appears as a distractor, so "the keyed option" is ambiguous.
+            return {"majority": None, "agrees": False, "p_key": None, "duplicate_options": True}
         scores = self.option_scores(item, passage)
         vals = np.array([scores[k] for k in LETTERS])
         probs = np.exp(vals - vals.max())
