@@ -92,7 +92,8 @@ def render(r: dict, card: dict) -> str:
         f"Alignment is at the reference ceiling ({pct(s['reference']['aligned'])}) for 0-shot and fine-tuned; "
         f"2-shot is lower at {pct(s['base-2shot']['aligned'])}. Generation with the unfused adapter ran at "
         f"{t['finetuned']['mean_generation_tps']:.0f} tok/s, against {t['base-0shot']['mean_generation_tps']:.0f} "
-        "for the base model.",
+        "for the base model, on a machine with other background load (see the eval manifest), so treat the "
+        "speeds as rough.",
         "",
         "In short, the LoRA fine-tune of Llama 3.2 3B taught format reliability, but the 3,000 SciQ-derived targets also taught "
         "copying and a key-position bias. With these data, 2-shot prompting of the base model produces the "

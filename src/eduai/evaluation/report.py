@@ -134,7 +134,10 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
             L.append(f"| {LABELS[arm]} | " + " | ".join(str(c.get(k, 0)) for k in kinds) + " |")
     L += [
         "",
-        "Generation speed (greedy, one request at a time, MLX on the M1 Pro, nothing else heavy running):",
+        "Generation speed (greedy, one request at a time, MLX on the M1 Pro). No other training or benchmark "
+        "job ran at the same time, but the machine wasn't idle: `eval_manifest.json` records a load average "
+        "of 7 to 9.5, 6 running containers and about 12 GB of swap in use. Treat these speeds, and the gap "
+        "between the adapter and base arms, as rough.",
         "",
         "| Arm | Mean generation tok/s | Mean seconds per item | Peak memory (GB) |",
         "|---|---|---|---|",

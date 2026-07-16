@@ -116,8 +116,8 @@ assistant: {"stem": "Based on the excerpt, the process by which leaves collect s
 
 The fine-tune is mlx-lm 0.31.3 LoRA on `mlx-community/Llama-3.2-3B-Instruct-4bit`
 ([configs/lora_llama32_3b.yaml](configs/lora_llama32_3b.yaml)). Settings: rank 8, the last 16
-layers, lr 2e-5, 600 iterations at batch 4, prompt masked, and gradient checkpointing. Both runs
-ran exclusively on the machine.
+layers, lr 2e-5, 600 iterations at batch 4, prompt masked, and gradient checkpointing. No other
+training or benchmark job ran at the same time; background load during training wasn't recorded.
 
 | Run | Iterations | Wall time | Peak memory | Train tokens/s | Source |
 |---|---|---|---|---|---|
@@ -202,7 +202,7 @@ It also learned the wrong things from its targets, which were the SciQ source qu
 - It writes near-identical options on 63 of 150 items, including 9 where all four options are the same string.
 - It puts the key at A on 104 of 150 valid items, even though the SFT answer letters were exactly 25% each.
 
-Before items enter the bank, their options are reshuffled and the key is remapped. Alignment is at the reference ceiling (70.7%) for 0-shot and fine-tuned; 2-shot is lower at 64.0%. Generation with the unfused adapter ran at 48 tok/s, against 80 for the base model.
+Before items enter the bank, their options are reshuffled and the key is remapped. Alignment is at the reference ceiling (70.7%) for 0-shot and fine-tuned; 2-shot is lower at 64.0%. Generation with the unfused adapter ran at 48 tok/s, against 80 for the base model, on a machine with other background load (see the eval manifest), so treat the speeds as rough.
 
 In short, the LoRA fine-tune of Llama 3.2 3B taught format reliability, but the 3,000 SciQ-derived targets also taught copying and a key-position bias. With these data, 2-shot prompting of the base model produces the most usable items.
 <!-- eval:end -->

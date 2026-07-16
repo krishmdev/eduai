@@ -77,7 +77,7 @@ Structure problems among schema-valid items (an item can have several):
 | Base 3B, 2-shot | 0 | 11 | 11 | 1 | 11 | 0 |
 | Base 3B + EduAI LoRA | 9 | 63 | 12 | 0 | 1 | 0 |
 
-Generation speed (greedy, one request at a time, MLX on the M1 Pro, nothing else heavy running):
+Generation speed (greedy, one request at a time, MLX on the M1 Pro). No other training or benchmark job ran at the same time, but the machine wasn't idle: `eval_manifest.json` records a load average of 7 to 9.5, 6 running containers and about 12 GB of swap in use. Treat these speeds, and the gap between the adapter and base arms, as rough.
 
 | Arm | Mean generation tok/s | Mean seconds per item | Peak memory (GB) |
 |---|---|---|---|
