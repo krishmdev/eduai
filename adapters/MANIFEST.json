@@ -7,8 +7,8 @@
   },
   "asset": {
     "filename": "llama-3.2-3b-eduai-lora-v1.tar.gz",
-    "sha256": "a090ec7d92879dbe7222750455c9b547d1bfee60d893f91f3a3d8ab07c000412",
-    "size_bytes": 25747920,
+    "sha256": "433fd6aee96f9857aa859dc73a891663c425a403b3e245971ad3fa69bc034448",
+    "size_bytes": 25748325,
     "url": "https://github.com/krishmdev/eduai/releases/download/adapter-v1/llama-3.2-3b-eduai-lora-v1.tar.gz",
     "release": "GitHub Release adapter-v1 on krishmdev/eduai"
   },
@@ -17,9 +17,13 @@
       "sha256": "8cc15535a8a34b41888f644b339a1a9eb428af793a4f5e24df58a3e5b1487d74",
       "size_bytes": 7669
     },
+    "NOTICE": {
+      "sha256": "6694523c3a8810d6fa27ca40d76a30d99c09c79fbf30d9f2b2c13d51464dfb37",
+      "size_bytes": 277
+    },
     "TRAINING_CARD.md": {
-      "sha256": "d93fa1ea8c7f36e27ee963a6978b31be6f199a05619a493baa8ad854525fc91d",
-      "size_bytes": 1235
+      "sha256": "f62cd67e836645f29996a840575a92f27c131962673002541ac99305af1aea3c",
+      "size_bytes": 1586
     },
     "USE_POLICY_LLAMA_3.2.md": {
       "sha256": "40e2777d7faa6beaf98400654170f414d8ab29b921b5163ad4ea0a1d39894201",
