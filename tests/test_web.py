@@ -85,7 +85,7 @@ def test_bad_input(client):
     assert client.post("/api/generate", json={"lo_id": "BIO.2.1.a", "passage": "x"}).status_code == 503
     assert client.post("/api/generate", json={"passage": "x"}).status_code == 400
     assert client.post("/api/generate", json={"lo_id": "NOPE", "passage": "x"}).status_code == 400
-    for bad in (-5, 0, 61, "abc"):
+    for bad in (-5, 0, 61, "abc", 2.7, True):
         r = client.post("/api/sessions", json={"subject": "BIO", "mode": "assessment", "length": bad})
         assert r.status_code == 400, bad
 

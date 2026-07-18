@@ -112,10 +112,14 @@ class Service:
             raise ValueError(f"unknown subject {subject}")
         if mode not in ("practice", "assessment"):
             raise ValueError("mode must be practice or assessment")
-        try:
-            n = int(length) if length is not None else None
-        except (TypeError, ValueError) as exc:
-            raise ValueError("length must be an integer") from exc
+        if length is None:
+            n = None
+        elif isinstance(length, int) and not isinstance(length, bool):
+            n = length
+        elif isinstance(length, str) and length.strip().isdigit():
+            n = int(length)
+        else:
+            raise ValueError("length must be a whole number")
         if n is not None and not 1 <= n <= 60:
             raise ValueError("length must be 1-60")
         if mode == "assessment":
