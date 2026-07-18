@@ -36,8 +36,7 @@ make demo         # bank-only app on http://127.0.0.1:8001
 
 The demo serves a committed sample of 634 SciQ-derived items (`data/samples/bank_sample.jsonl`)
 and 32 validated generated items. It needs neither the raw dataset nor a model. In the browser,
-choose Biology, start a 10-question
-practice session, answer a few questions to see source-passage feedback and unit progress, then
+choose Biology, start a 10-question practice session, answer a few questions to see source-passage feedback and unit progress, then
 open the report. Assessment mode withholds the answer until the session ends and shows an
 illustrative ability estimate. The sample questions and AI-derived labels await human review;
 the session does not measure learning in real students.
@@ -48,7 +47,7 @@ network access:
 
 ```bash
 tools/offline-run make e2e-offline   # sandbox-exec profile that denies outbound network (macOS)
-make egress-open-check                                                   # the same canary connects when unsandboxed
+make egress-open-check               # the same canary connects when unsandboxed
 ```
 
 `e2e-offline` starts the API server and turns on an egress canary inside the server process. It
