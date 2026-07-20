@@ -287,15 +287,16 @@ class Service:
                     "correct": r.correct,
                     "choice": r.choice,
                     "answer": item.get("answer"),
+                    "choice_text": item.get("choices", {}).get(r.choice or "", ""),
+                    "answer_text": item.get("choices", {}).get(item.get("answer") or "", ""),
+                    "lo_text": self.tax.lo(r.lo_id).text,
                     "b": r.b,
                     "theta_after": r.theta_after,
                     "sd_after": r.sd_after,
                 }
             )
-        misconceptions = [
-            {"lo_id": lo, "lo_text": self.tax.lo(lo).text, "picked": text}
-            for lo, text in st.misconceptions.items()
-        ]
+        # Wrong answers, most recent first; the page shows five and folds the rest.
+        misconceptions = [r for r in reversed(responses) if not r["correct"]]
         return {
             **self.progress(sid),
             "summary": summary,
@@ -305,7 +306,7 @@ class Service:
         }
 
 
-def trajectory_chart(responses: list[dict], w: int = 640, h: int = 220, pad: int = 36) -> dict | None:
+def trajectory_chart(responses: list[dict], w: int = 640, h: int = 220, pad: int = 48) -> dict | None:
     """SVG geometry for theta-hat after each response with a +/- 1.96 SD band (prior at x = 0)."""
     if not responses:
         return None

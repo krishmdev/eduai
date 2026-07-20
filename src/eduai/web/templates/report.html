@@ -1,50 +1,62 @@
 {% extends "base.html" %}
 {% block title %}EduAI · Report{% endblock %}
 {% block body_class %}page-report{% endblock %}
-{% block masthead %}<span class="session-label">{{ r.subject_name }} · {{ r.mode|capitalize }} report</span>{% endblock %}
+{% block masthead %}<span class="session-label">{{ r.subject_name }} · {{ r.mode|capitalize }}</span>{% endblock %}
+{% macro signed(x) %}{{ "%+.2f"|format(0.0 if (x|abs) < 0.005 else x) }}{% endmacro %}
 {% block main %}
 {% set s = r.summary %}
+<h1 class="report-title">{{ r.subject_name }} {{ r.mode }} report</h1>
+{% if not r.done %}
+<div class="notice notice-info in-progress">
+  <p><strong>In progress.</strong> {{ r.answered }} of {{ "up to " if r.mode == "assessment" else "" }}{{ r.max_items }} questions answered. These numbers will change as you continue.</p>
+  <a class="btn btn-primary" href="/sessions/{{ r.id }}">Continue session</a>
+</div>
+{% endif %}
+
+{% if not r.responses %}
+<div class="empty"><h2>Nothing answered yet</h2><p>Answer at least one question to get a report.</p></div>
+{% else %}
 <section class="report-head">
   <div class="hero">
-    <p class="eyebrow">Simulated score</p>
-    <p class="hero-figure">{{ s.simulated_score }}<span class="hero-scale">/5</span></p>
-    <p class="hero-note">Illustrative mapping from the ability estimate. Not an AP score.</p>
+    <p class="eyebrow">Ability estimate</p>
+    <p class="hero-figure">{{ signed(s.theta) }}</p>
+    <p class="hero-note">95% interval {{ signed(s.ci95[0]) }} to {{ signed(s.ci95[1]) }} on a scale where 0 is an average student.</p>
   </div>
   <dl class="stats">
-    <div><dt>Ability estimate</dt><dd>{{ "%+.2f"|format(s.theta) }}</dd><dd class="stat-sub">95% interval {{ "%+.2f"|format(s.ci95[0]) }} to {{ "%+.2f"|format(s.ci95[1]) }}</dd></div>
     <div><dt>Answered</dt><dd>{{ s.answered }}</dd><dd class="stat-sub">{{ s.correct }} correct</dd></div>
-    <div><dt>Ended by</dt><dd>{{ "Precision" if s.stopped_by == "precision" else "Length" }}</dd><dd class="stat-sub">{% if r.mode == "assessment" %}SD {{ "%.2f"|format(s.sd) }}, target below {{ r.sd_stop }}{% else %}{{ r.max_items }}-question practice{% endif %}</dd></div>
+    <div><dt>{{ "Ended by" if r.done else "Status" }}</dt><dd>{% if not r.done %}In progress{% elif s.stopped_by == "precision" %}Precision{% else %}Length{% endif %}</dd><dd class="stat-sub">{% if r.mode == "assessment" %}±{{ "%.2f"|format(s.sd) }} now, target ±{{ "%.2f"|format(r.sd_stop) }}{% else %}{{ r.max_items }}-question practice{% endif %}</dd></div>
+    <div><dt>Simulated score</dt><dd>{{ s.simulated_score }}<span class="stat-scale">/5</span></dd><dd class="stat-sub">Illustrative mapping, not an AP score</dd></div>
   </dl>
 </section>
 
-{% if not r.responses %}
-<div class="empty"><h2>Nothing answered yet</h2><p>Answer at least one question to get a report. <a href="/sessions/{{ r.id }}">Back to the session</a>.</p></div>
-{% else %}
 <div class="report-grid">
   <section class="card chart-card">
     <h2>Ability estimate after each answer</h2>
-    <p class="card-sub">Line: EAP estimate. Band: ±1.96 posterior SD. Starts at the prior, 0 ± 1.</p>
+    <p class="card-sub">Line: estimate. Band: 95% interval. Starts at the prior, 0 ± 1.96.</p>
     {% set c = r.chart %}
-    <figure class="chart" role="img" aria-label="Ability estimate ended at {{ '%+.2f'|format(c.last.t) }} after {{ c.last.i }} answers">
-      <svg viewBox="0 0 {{ c.w }} {{ c.h }}" preserveAspectRatio="xMidYMid meet">
+    <figure class="chart" role="group" aria-label="Ability estimate ended at {{ signed(c.last.t) }} after {{ c.last.i }} answers. Values are listed in the answer table below.">
+      <svg viewBox="0 0 {{ c.w }} {{ c.h + 28 }}" preserveAspectRatio="xMidYMid meet">
         {% for t in c.ticks %}
         <line class="grid" x1="{{ c.pad }}" x2="{{ c.w - c.pad }}" y1="{{ t.y }}" y2="{{ t.y }}"/>
         <text class="tick" x="{{ c.pad - 8 }}" y="{{ t.y + 4 }}" text-anchor="end">{{ "%+d"|format(t.v) if t.v else "0" }}</text>
         {% endfor %}
         {% for t in c.xticks %}<text class="tick" x="{{ t.x }}" y="{{ c.h - 4 }}" text-anchor="middle">{{ t.i }}</text>{% endfor %}
+        <text class="axis-title" x="{{ c.w / 2 }}" y="{{ c.h + 20 }}" text-anchor="middle">Questions answered</text>
+        <text class="axis-title" x="10" y="{{ c.h / 2 }}" text-anchor="middle" transform="rotate(-90 10 {{ c.h / 2 }})">Ability (θ)</text>
         <polygon class="band" points="{{ c.band }}"/>
         <polyline class="line" points="{{ c.line }}"/>
         {% for d in c.dots %}
-        <g class="pt" tabindex="0"><circle class="hit" cx="{{ d.x }}" cy="{{ d.y }}" r="12"/><circle class="dot" cx="{{ d.x }}" cy="{{ d.y }}" r="4"/><title>After {{ d.i }}: {{ "%+.2f"|format(d.t) }} ± {{ "%.2f"|format(d.s) }}</title></g>
+        <g class="pt" tabindex="{{ '0' if loop.last else '-1' }}" role="img" aria-label="After {{ d.i }}: {{ signed(d.t) }}, plus or minus {{ '%.2f'|format(1.96 * d.s) }}"><circle class="hit" cx="{{ d.x }}" cy="{{ d.y }}" r="12"/><circle class="dot" cx="{{ d.x }}" cy="{{ d.y }}" r="4"/><title>After {{ d.i }}: {{ signed(d.t) }} ± {{ "%.2f"|format(1.96 * d.s) }}</title></g>
         {% endfor %}
-        <text class="end-label" x="{{ c.last.x + 8 }}" y="{{ c.last.y + 4 }}">{{ "%+.2f"|format(c.last.t) }}</text>
+        <text class="end-label" x="{{ c.last.x + 8 }}" y="{{ c.last.y + 4 }}">{{ signed(c.last.t) }}</text>
       </svg>
     </figure>
   </section>
 
   <section class="card">
     <h2>Mastery by unit</h2>
-    <p class="card-sub">BKT estimate over the objectives you were asked about.</p>
+    <p class="card-sub">Knowledge-tracing estimate over the objectives you were asked about.</p>
+    <div class="table-scroll">
     <table class="table unit-table">
       <thead><tr><th scope="col">Unit</th><th scope="col">Mastery</th><th scope="col" class="num">Correct</th><th scope="col" class="num">Objectives</th></tr></thead>
       <tbody>
@@ -58,14 +70,22 @@
       {% endfor %}
       </tbody>
     </table>
+    </div>
   </section>
 
   {% if r.misconceptions %}
   <section class="card">
-    <h2>Wrong answers worth a second look</h2>
+    <h2>Wrong answers to revisit</h2>
+    <p class="card-sub">{{ r.misconceptions|length }} wrong, most recent first.</p>
+    {% macro wrong_item(m) %}<li><p class="mis-stem">{{ m.stem }}</p><p class="mis-picked">You picked “{{ m.choice_text }}”. Answer: “{{ m.answer_text }}”.</p><p class="mis-lo"><span class="lo-id">{{ m.lo_id }}</span> {{ m.lo_text }}</p></li>{% endmacro %}
     <ul class="misconceptions">
-      {% for m in r.misconceptions %}<li><p class="mis-picked">You picked “{{ m.picked }}”</p><p class="mis-lo"><span class="lo-id">{{ m.lo_id }}</span> {{ m.lo_text }}</p></li>{% endfor %}
+      {% for m in r.misconceptions[:5] %}{{ wrong_item(m) }}{% endfor %}
     </ul>
+    {% if r.misconceptions|length > 5 %}
+    <details class="more"><summary>Show all {{ r.misconceptions|length }}</summary>
+      <ul class="misconceptions">{% for m in r.misconceptions[5:] %}{{ wrong_item(m) }}{% endfor %}</ul>
+    </details>
+    {% endif %}
   </section>
   {% endif %}
 
@@ -73,7 +93,7 @@
     <h2>Every answer</h2>
     <div class="table-scroll">
     <table class="table log-table">
-      <thead><tr><th scope="col" class="num">#</th><th scope="col">Question</th><th scope="col">Unit</th><th scope="col">Result</th><th scope="col" class="num">Difficulty b</th><th scope="col" class="num">Estimate after</th></tr></thead>
+      <thead><tr><th scope="col" class="num">#</th><th scope="col">Question</th><th scope="col">Unit</th><th scope="col">Result</th><th scope="col" class="num">Difficulty b</th><th scope="col" class="num">Estimate after (95%)</th></tr></thead>
       <tbody>
       {% for x in r.responses %}
       <tr>
@@ -81,8 +101,8 @@
         <td class="log-stem">{{ x.stem }}</td>
         <td>{{ x.unit }}</td>
         <td><span class="result {{ 'result-ok' if x.correct else 'result-no' }}">{{ "Correct" if x.correct else "Wrong (" ~ x.choice ~ ", key " ~ x.answer ~ ")" }}</span></td>
-        <td class="num">{{ "%+.2f"|format(x.b) }}</td>
-        <td class="num">{{ "%+.2f"|format(x.theta_after) }} ± {{ "%.2f"|format(x.sd_after) }}</td>
+        <td class="num">{{ signed(x.b) }}</td>
+        <td class="num">{{ signed(x.theta_after) }} ± {{ "%.2f"|format(1.96 * x.sd_after) }}</td>
       </tr>
       {% endfor %}
       </tbody>
@@ -91,5 +111,5 @@
   </section>
 </div>
 {% endif %}
-<p class="report-actions"><a class="btn btn-primary" href="/">Start another session</a></p>
+<p class="report-actions">{% if not r.done %}<a class="btn btn-primary" href="/sessions/{{ r.id }}">Continue session</a> {% endif %}<a class="btn" href="/">Start another session</a></p>
 {% endblock %}
