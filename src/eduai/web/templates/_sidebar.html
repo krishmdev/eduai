@@ -1,14 +1,22 @@
-<aside class="sidebar" id="sidebar" aria-label="Mastery by unit" {% if oob %}hx-swap-oob="true"{% endif %}>
+<aside class="sidebar" id="sidebar" aria-label="{{ 'Measurement precision' if progress.mode == 'assessment' else 'Mastery by unit' }}" {% if oob %}hx-swap-oob="true"{% endif %}>
   {% if progress.mode == "assessment" %}
+  {# No per-answer signal during an assessment: only how close the estimate is to its precision target. #}
+  {% set sd = [progress.sd, 1.0]|min %}
+  {% set span = 1.0 - progress.sd_stop %}
+  {% set pct_done = ([(1.0 - sd) / span, 1.0]|min * 100) if span > 0 else 100 %}
   <section class="estimate">
-    <h2>Ability estimate</h2>
-    <p class="estimate-value">{{ "%+.2f"|format(progress.theta) }}</p>
-    <p class="estimate-sd">± {{ "%.2f"|format(progress.sd) }} SD · stops below {{ progress.sd_stop }}</p>
-    <div class="sd-track" aria-hidden="true"><div class="sd-fill" style="width: {{ ([progress.sd, 1.0]|min * 100)|round }}%"></div><div class="sd-goal" style="left: {{ (progress.sd_stop * 100)|round }}%"></div></div>
+    <h2>Precision</h2>
+    <p class="estimate-copy">The test ends when the estimate is precise to ±{{ "%.2f"|format(progress.sd_stop) }}, or after {{ progress.max_items }} questions.</p>
+    <div class="precision" role="meter" aria-label="Progress toward the precision target" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ pct_done|round|int }}">
+      <div class="precision-fill" style="width: {{ pct_done|round(1) }}%"></div>
+    </div>
+    <div class="precision-labels"><span>Starting</span><span>Target ±{{ "%.2f"|format(progress.sd_stop) }}</span></div>
+    <p class="estimate-sd">Current ±{{ "%.2f"|format(progress.sd) }} after {{ progress.answered }} answer{{ "" if progress.answered == 1 else "s" }}</p>
+    <p class="mastery-note">Results by unit appear in the report when you finish.</p>
   </section>
-  {% endif %}
-  <section class="mastery">
-    <h2>Mastery by unit</h2>
+  {% else %}
+  <details class="mastery" open>
+    <summary><h2>Mastery by unit</h2></summary>
     <p class="mastery-note">Estimated from the objectives you've been asked about.</p>
     <ol class="unit-list">
       {% for u in progress.units %}
@@ -17,7 +25,7 @@
       {% else %}
       <li class="unit">
         <div class="unit-head"><span class="unit-name">{{ u.name }}</span><span class="unit-value">{{ u.mastery|pct }}</span></div>
-        <div class="meter" role="meter" aria-label="{{ u.name }} mastery" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ (u.mastery * 100)|round }}">
+        <div class="meter" role="meter" aria-label="{{ u.name }} mastery" aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{ (u.mastery * 100)|round|int }}">
           <div class="meter-fill" style="width: {{ (u.mastery * 100)|round(1) }}%"></div>
         </div>
         <div class="unit-sub">{{ u.correct }}/{{ u.answered }} correct · {{ u.los_observed }} of {{ u.los_total }} objectives</div>
@@ -25,5 +33,6 @@
       {% endif %}
       {% endfor %}
     </ol>
-  </section>
+  </details>
+  {% endif %}
 </aside>

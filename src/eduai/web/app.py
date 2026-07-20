@@ -73,6 +73,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def render(request: Request, name: str, status: int = 200, **ctx) -> HTMLResponse:
         return templates.TemplateResponse(request, name, ctx, status_code=status)
 
+    def public_progress(prog: dict) -> dict:
+        """During a running assessment, hide anything that reveals right/wrong per answer."""
+        if prog["mode"] == "assessment" and not prog["done"]:
+            return {k: v for k, v in prog.items() if k not in ("correct", "theta", "units")}
+        return prog
+
     def get_state(sid: str) -> dict:
         try:
             return service.progress(sid)
@@ -97,12 +103,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         try:
             sid = service.create(subject, mode, length if mode == "practice" else None)
         except ValueError as exc:
+            friendly = {
+                "mode": "Choose practice or assessment.",
+                "subject": "Choose one of the subjects below.",
+                "length": "Choose a practice length from the list.",
+            }
+            key = next((k for k in friendly if k in str(exc)), None)
             return render(
                 request,
                 "index.html",
                 400,
                 subjects=service.subjects(),
-                error=str(exc),
+                error=friendly.get(key, "That didn't work. Check your choices and try again."),
                 practice_lengths=PRACTICE_LENGTHS,
                 assessment_max=ASSESSMENT_MAX,
             )
@@ -169,18 +181,18 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             sid = service.create(body.get("subject", ""), body.get("mode", ""), body.get("length"))
         except ValueError as exc:
             raise HTTPException(400, str(exc)) from exc
-        return {"id": sid, **service.progress(sid)}
+        return {"id": sid, **public_progress(service.progress(sid))}
 
     @app.get("/api/sessions/{sid}")
     def api_progress(sid: str):
-        return get_state(sid)
+        return public_progress(get_state(sid))
 
     @app.get("/api/sessions/{sid}/next")
     def api_next(sid: str):
         prog = get_state(sid)
         q = None if prog["done"] else service.next_question(sid)
         if q is None:
-            return {"done": True, "progress": service.progress(sid)}
+            return {"done": True, "progress": public_progress(service.progress(sid))}
         item = {
             k: q.item.get(k) for k in ("id", "stem", "stimulus", "choices", "lo_id", "unit_id", "difficulty")
         }
@@ -198,7 +210,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         except ValueError as exc:
             raise HTTPException(400, str(exc)) from exc
         res.pop("item")
-        prog = service.progress(sid)
+        prog = public_progress(service.progress(sid))
         if prog["mode"] == "assessment":
             # No feedback during an assessment; the key is revealed in the report.
             res = {"choice": res["choice"], "done": res["done"]}
@@ -252,13 +264,11 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def not_found(request: Request, exc):
         if request.url.path.startswith("/api/"):
             return JSONResponse({"detail": getattr(exc, "detail", "not found")}, 404)
-        return render(
-            request,
-            "error.html",
-            404,
-            title="Not found",
-            message="That session doesn't exist. It may have been created on another machine.",
-        )
+        if request.url.path.startswith("/sessions/"):
+            message = "That session doesn't exist. Sessions live in this machine's local database."
+        else:
+            message = "There's no page at this address."
+        return render(request, "error.html", 404, title="Not found", message=message)
 
     return app
 

@@ -124,3 +124,23 @@ def test_backend_order_prefers_base_two_shot():
     assert ORDER[0] == "mlx-base"
     shots = fixed_shots()
     assert sorted(r.format for r, _ in shots) == ["standard", "stimulus"]
+
+
+def test_assessment_progress_hides_results_until_done(client):
+    sid = client.post("/api/sessions", json={"subject": "BIO", "mode": "assessment"}).json()["id"]
+    client.get(f"/api/sessions/{sid}/next")
+    res = client.post(f"/api/sessions/{sid}/answer", json={"choice": "A"}).json()
+    assert not {"correct", "theta", "units"} & set(res["progress"])
+    assert not {"correct", "theta", "units"} & set(client.get(f"/api/sessions/{sid}").json())
+    page = client.get(f"/sessions/{sid}").text
+    assert "Precision" in page and "correct ·" not in page
+
+
+def test_generic_404_and_in_progress_report(client):
+    r = client.get("/definitely-not-a-page")
+    assert r.status_code == 404 and "no page at this address" in r.text
+    sid = client.post("/api/sessions", json={"subject": "BIO", "mode": "practice", "length": 5}).json()["id"]
+    client.get(f"/api/sessions/{sid}/next")
+    client.post(f"/api/sessions/{sid}/answer", json={"choice": "A"})
+    rep = client.get(f"/sessions/{sid}/report").text
+    assert "In progress" in rep and "Continue session" in rep and "-0.00" not in rep
