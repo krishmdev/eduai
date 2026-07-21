@@ -1,6 +1,7 @@
 {% set item = res.item %}
 {% set answered = true %}
 {% include "_progress.html" %}
+<div id="notice" class="notice-slot" role="alert"></div>
 <article class="card question answered {{ 'is-correct' if res.correct else 'is-wrong' }}" id="question">
   <div class="q-number" aria-hidden="true">{{ "%02d"|format(progress.answered) }}</div>
   <div class="q-body">
@@ -8,6 +9,15 @@
     <p class="verdict" role="status">{{ "Correct." if res.correct else "Not quite. The answer is " ~ res.answer ~ "." }}</p>
     {% else %}
     <p class="verdict verdict-neutral" role="status">Answer recorded.</p>
+    {% endif %}
+    {% if res.done %}
+    <p class="complete" role="status">
+      {% if progress.mode == "assessment" %}
+        Assessment complete: {% if progress.sd < progress.sd_stop %}the estimate reached ±{{ "%.2f"|format(progress.sd_stop) }}{% else %}all {{ progress.max_items }} questions answered{% endif %}.
+      {% else %}
+        Practice complete: {{ progress.correct }}/{{ progress.answered }} correct.
+      {% endif %}
+    </p>
     {% endif %}
     {% if item.stimulus %}<blockquote class="stimulus">{{ item.stimulus }}</blockquote>{% endif %}
     <h2 class="stem">{{ item.stem }}</h2>
@@ -36,10 +46,11 @@
     {% endif %}
     <div class="actions">
       {% if res.done %}
-      <a class="btn btn-primary" href="/sessions/{{ progress.id }}/report">See report</a>
+      <a class="btn btn-primary" id="next-action" href="/sessions/{{ progress.id }}/report" autofocus>See report</a>
       {% else %}
-      <button class="btn btn-primary" hx-get="/sessions/{{ progress.id }}/next" hx-target="#stage" hx-swap="innerHTML" autofocus>Next question</button>
+      <button class="btn btn-primary" id="next-action" hx-get="/sessions/{{ progress.id }}/next" hx-target="#stage" hx-swap="innerHTML" hx-disabled-elt="this" autofocus>Next question</button>
       {% endif %}
+      <span class="hint">N or Enter to continue</span>
     </div>
   </div>
 </article>

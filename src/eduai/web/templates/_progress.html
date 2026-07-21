@@ -1,9 +1,14 @@
+{% set shown = [progress.answered + (0 if answered else 1), progress.max_items]|min %}
 <div class="progress" id="progress" {% if oob %}hx-swap-oob="true"{% endif %}>
   <div class="progress-text">
-    <span>Question {{ [progress.answered + (0 if answered else 1), progress.max_items]|min }} of {{ "up to " if progress.mode == "assessment" else "" }}{{ progress.max_items }}</span>
+    {% if progress.done %}
+    <span>{{ progress.answered }} answered</span>
+    {% else %}
+    <span>Question {{ shown }} of {{ "up to " if progress.mode == "assessment" else "" }}{{ progress.max_items }}</span>
+    {% endif %}
     {% if progress.mode == "practice" %}<span>{{ progress.correct }} correct</span>{% endif %}
   </div>
-  <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="{{ progress.max_items }}" aria-valuenow="{{ progress.answered }}" aria-label="Questions answered">
-    <div class="progress-fill" style="width: {{ (100 * progress.answered / progress.max_items)|round(1) }}%"></div>
+  <div class="progress-track" role="progressbar" aria-valuemin="0" aria-valuemax="{{ progress.max_items }}" aria-valuenow="{{ progress.max_items if progress.done else progress.answered }}" aria-label="Questions answered">
+    <div class="progress-fill" style="width: {{ 100 if progress.done else (100 * progress.answered / progress.max_items)|round(1) }}%"></div>
   </div>
 </div>
