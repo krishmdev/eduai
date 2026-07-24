@@ -62,7 +62,7 @@ make data SCIQ_DIR=~/Downloads/SciQ\ dataset-2\ 3   # SciQ JSON -> tagged items,
 make models-llm                                      # Llama 3.2 3B 4-bit (1.8 GB) + 1B judge, pinned revisions
 uv run eduai fetch-adapter                           # or: make train (about 2 hours)
 make eval                                            # 3 arms x 150 prompts, then judge and score (about 45 min)
-make serve                                           # full app; backend auto-selects MLX+adapter
+make serve                                           # full app; auto-selects MLX base 2-shot, then the adapter
 make test
 ```
 
@@ -178,8 +178,8 @@ There are 150 prompts from groups assigned to the held-out test split (including
 | Arm | Schema valid | Structure | Key agreement (schema-valid items) | Aligned | Novel | All checks | Source copy | Usable | Gen tok/s |
 |---|---|---|---|---|---|---|---|---|---|
 | SciQ reference item (ceiling) | | | 93.3% | 70.7% | | | | | |
-| Base 3B, 0-shot | 93.3% | 40.7% | 70.7% | 74.7% | 92.7% | 26.7% | 4.7% | 23.3% | 80.3 |
-| Base 3B, 2-shot | 80.7% | 60.7% | 60.7% | 64.0% | 80.0% | 36.7% | 2.7% | 34.7% | 76.1 |
+| Base 3B, 0-shot | 93.3% | 40.7% | 75.7% | 74.7% | 92.7% | 26.7% | 4.7% | 23.3% | 80.3 |
+| Base 3B, 2-shot | 80.7% | 60.7% | 75.2% | 64.0% | 80.0% | 36.7% | 2.7% | 34.7% | 76.1 |
 | Base 3B + EduAI LoRA | 100.0% | 54.0% | 66.0% | 72.0% | 96.0% | 30.7% | 25.3% | 21.3% | 48.0 |
 
 The fine-tuned model does not generate better questions overall. The paired bootstrap over prompts gives these differences:

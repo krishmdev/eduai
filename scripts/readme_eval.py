@@ -54,7 +54,7 @@ def render(r: dict, card: dict) -> str:
     for label, a in ARMS:
         x = s[a]
         L.append(
-            f"| {label} | {pct(x['schema'])} | {pct(x['structure'])} | {pct(x['key'])} | {pct(x['aligned'])} | "
+            f"| {label} | {pct(x['schema'])} | {pct(x['structure'])} | {pct(x['key_on_valid'])} | {pct(x['aligned'])} | "
             f"{pct(x['novel'])} | {pct(x['all_checks'])} | {pct(x['source_copy'])} | {pct(x['usable'])} | "
             f"{t[a]['mean_generation_tps']:.1f} |"
         )
