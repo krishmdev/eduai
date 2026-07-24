@@ -85,7 +85,8 @@ def test_bad_input(client):
     assert client.post("/api/generate", json={"lo_id": "BIO.2.1.a", "passage": "x"}).status_code == 503
     assert client.post("/api/generate", json={"passage": "x"}).status_code == 400
     assert client.post("/api/generate", json={"lo_id": "NOPE", "passage": "x"}).status_code == 400
-    for bad in (-5, 0, 61, "abc", 2.7, True):
+    assert client.post("/api/sessions", json={"subject": ["BIO"], "mode": "practice"}).status_code == 400
+    for bad in (-5, 0, 61, "abc", 2.7, True, "١٢", "²"):
         r = client.post("/api/sessions", json={"subject": "BIO", "mode": "assessment", "length": bad})
         assert r.status_code == 400, bad
 
@@ -144,3 +145,24 @@ def test_generic_404_and_in_progress_report(client):
     client.post(f"/api/sessions/{sid}/answer", json={"choice": "A"})
     rep = client.get(f"/sessions/{sid}/report").text
     assert "In progress" in rep and "Continue session" in rep and "-0.00" not in rep
+
+
+def test_unfinished_assessment_report_is_redacted(client):
+    sid = client.post("/api/sessions", json={"subject": "BIO", "mode": "assessment"}).json()["id"]
+    client.get(f"/api/sessions/{sid}/next")
+    client.post(f"/api/sessions/{sid}/answer", json={"choice": "A"})
+    api = client.get(f"/api/sessions/{sid}/report").json()
+    assert api["results_available"] is False
+    assert not {"theta", "units", "responses", "summary", "misconceptions", "correct"} & set(api)
+    assert round(api["sd"] * 10, 6).is_integer()
+    page = client.get(f"/sessions/{sid}/report").text
+    assert "Continue assessment" in page and "Ability estimate" not in page and "Wrong answers" not in page
+    session_page = client.get(f"/sessions/{sid}").text
+    assert "See report so far" not in session_page and "is-wrong" not in session_page
+
+
+def test_form_errors_render_friendly_page(client):
+    r = client.post("/sessions", data={"subject": "BIO"})
+    assert r.status_code == 400 and "Choose practice or assessment" in r.text
+    r = client.post("/sessions", data={"subject": "BIO", "mode": "practice", "length": "x"})
+    assert r.status_code == 400 and "practice length" in r.text

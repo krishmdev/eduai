@@ -2,7 +2,7 @@
 {% set answered = true %}
 {% include "_progress.html" %}
 <div id="notice" class="notice-slot" role="alert"></div>
-<article class="card question answered {{ 'is-correct' if res.correct else 'is-wrong' }}" id="question">
+<article class="card question answered {{ ('is-correct' if res.correct else 'is-wrong') if progress.mode == 'practice' else '' }}" id="question">
   <div class="q-number" aria-hidden="true">{{ "%02d"|format(progress.answered) }}</div>
   <div class="q-body">
     {% if progress.mode == "practice" %}

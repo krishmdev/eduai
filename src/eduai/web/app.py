@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import logging
+import math
 from pathlib import Path
 
 from fastapi import FastAPI, Form, HTTPException, Request
@@ -25,6 +26,11 @@ HERE = Path(__file__).parent
 log = logging.getLogger("eduai.web")
 
 GENERATED_ITEMS = ROOT / "data" / "samples" / "generated_items.jsonl"
+
+
+def coarse_sd(sd: float) -> float:
+    """Posterior SD rounded up to 0.1, for display during an assessment."""
+    return math.ceil(sd * 10 - 1e-9) / 10
 
 
 def bank_sources(settings: Settings) -> list[Path]:
@@ -76,7 +82,16 @@ def create_app(settings: Settings | None = None) -> FastAPI:
     def public_progress(prog: dict) -> dict:
         """During a running assessment, hide anything that reveals right/wrong per answer."""
         if prog["mode"] == "assessment" and not prog["done"]:
-            return {k: v for k, v in prog.items() if k not in ("correct", "theta", "units")}
+            out = {k: v for k, v in prog.items() if k not in ("correct", "theta", "units")}
+            # The size of each SD drop hints at right/wrong, so only coarse steps are shown.
+            out["sd"] = coarse_sd(prog["sd"])
+            return out
+        return prog
+
+    def page_progress(prog: dict) -> dict:
+        """For templates: same data, but a running assessment only ever sees coarse SD steps."""
+        if prog["mode"] == "assessment" and not prog["done"]:
+            return {**prog, "sd": coarse_sd(prog["sd"])}
         return prog
 
     def get_state(sid: str) -> dict:
@@ -98,8 +113,9 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.post("/sessions")
     def create_session(
-        request: Request, subject: str = Form(...), mode: str = Form(...), length: int = Form(10)
+        request: Request, subject: str = Form(""), mode: str = Form(""), length: str = Form("10")
     ):
+        # Every field is optional at the form layer so bad input gets a friendly page, not a raw 422.
         try:
             sid = service.create(subject, mode, length if mode == "practice" else None)
         except ValueError as exc:
@@ -126,7 +142,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if prog["done"]:
             return RedirectResponse(f"/sessions/{sid}/report", status_code=303)
         q = service.next_question(sid)
-        return render(request, "session.html", progress=prog, q=q)
+        return render(request, "session.html", progress=page_progress(prog), q=q)
 
     @app.get("/sessions/{sid}/next", response_class=HTMLResponse)
     def next_fragment(request: Request, sid: str):
@@ -136,7 +152,7 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             resp = HTMLResponse("")
             resp.headers["HX-Redirect"] = f"/sessions/{sid}/report"
             return resp
-        return render(request, "_question.html", progress=prog, q=q)
+        return render(request, "_question.html", progress=page_progress(prog), q=q)
 
     @app.post("/sessions/{sid}/answer", response_class=HTMLResponse)
     def answer_fragment(request: Request, sid: str, choice: str = Form("")):
@@ -153,11 +169,13 @@ def create_app(settings: Settings | None = None) -> FastAPI:
             return resp
         except ValueError as exc:
             return render(request, "_error.html", 400, message=str(exc))
-        return render(request, "_feedback.html", progress=service.progress(sid), res=res)
+        return render(request, "_feedback.html", progress=page_progress(service.progress(sid)), res=res)
 
     @app.get("/sessions/{sid}/report", response_class=HTMLResponse)
     def report_page(request: Request, sid: str):
-        get_state(sid)
+        prog = get_state(sid)
+        if prog["mode"] == "assessment" and not prog["done"]:
+            return render(request, "report_pending.html", progress=page_progress(prog))
         return render(request, "report.html", r=service.report(sid))
 
     # -- JSON -----------------------------------------------------------------------------------
@@ -218,8 +236,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
 
     @app.get("/api/sessions/{sid}/report")
     def api_report(sid: str):
-        get_state(sid)
-        return service.report(sid)
+        prog = get_state(sid)
+        if prog["mode"] == "assessment" and not prog["done"]:
+            # Results stay hidden until the assessment ends.
+            keep = ("id", "mode", "subject", "subject_name", "answered", "max_items", "done", "sd_stop")
+            return {**{k: prog[k] for k in keep}, "sd": coarse_sd(prog["sd"]), "results_available": False}
+        return {**service.report(sid), "results_available": True}
 
     @app.post("/api/generate")
     def api_generate(body: dict):

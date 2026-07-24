@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}EduAI · Assessment in progress{% endblock %}
+{% block body_class %}page-report{% endblock %}
+{% block masthead %}<span class="session-label">{{ progress.subject_name }} · Assessment</span>{% endblock %}
+{% block main %}
+<h1 class="report-title">{{ progress.subject_name }} assessment in progress</h1>
+<div class="notice notice-info in-progress">
+  <p>Results appear when the assessment ends. {{ progress.answered }} of up to {{ progress.max_items }} questions answered; the estimate is precise to ±{{ "%.1f"|format(progress.sd) }} so far, and the target is ±{{ "%.2f"|format(progress.sd_stop) }}.</p>
+  <a class="btn btn-primary" href="/sessions/{{ progress.id }}">Continue assessment</a>
+</div>
+{% endblock %}

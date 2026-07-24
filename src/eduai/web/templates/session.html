@@ -3,7 +3,7 @@
 {% block body_class %}page-session{% endblock %}
 {% block masthead %}
   <span class="session-label">{{ progress.subject_name }} · {{ progress.mode|capitalize }}</span>
-  <a class="link-quiet" href="/sessions/{{ progress.id }}/report">See report so far</a>
+  {% if progress.mode == "practice" %}<a class="link-quiet" href="/sessions/{{ progress.id }}/report">See report so far</a>{% endif %}
 {% endblock %}
 {% block main %}
 <h1 class="sr-only">{{ progress.subject_name }} {{ progress.mode }} session</h1>

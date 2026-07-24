@@ -11,7 +11,7 @@
       <div class="precision-fill" style="width: {{ pct_done|round(1) }}%"></div>
     </div>
     <div class="precision-labels"><span>Starting</span><span>Target ±{{ "%.2f"|format(progress.sd_stop) }}</span></div>
-    <p class="estimate-sd">Current ±{{ "%.2f"|format(progress.sd) }} after {{ progress.answered }} answer{{ "" if progress.answered == 1 else "s" }}</p>
+    <p class="estimate-sd">Currently about ±{{ "%.1f"|format(progress.sd) }} after {{ progress.answered }} answer{{ "" if progress.answered == 1 else "s" }}</p>
     <p class="mastery-note">Results by unit appear in the report when you finish.</p>
   </section>
   {% else %}
