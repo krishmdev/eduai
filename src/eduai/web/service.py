@@ -108,16 +108,16 @@ class Service:
         ]
 
     def create(self, subject: str, mode: str, length: int | None = None, student: str = "guest") -> str:
-        if subject not in self.tax.subjects:
-            raise ValueError(f"unknown subject {subject}")
-        if mode not in ("practice", "assessment"):
+        if not isinstance(subject, str) or subject not in self.tax.subjects:
+            raise ValueError("unknown subject")
+        if not isinstance(mode, str) or mode not in ("practice", "assessment"):
             raise ValueError("mode must be practice or assessment")
         if length is None:
             n = None
         elif isinstance(length, int) and not isinstance(length, bool):
             n = length
-        elif isinstance(length, str) and length.strip().isdigit():
-            n = int(length)
+        elif isinstance(length, str) and length.strip().isascii() and length.strip().isdigit():
+            n = int(length.strip())
         else:
             raise ValueError("length must be a whole number")
         if n is not None and not 1 <= n <= 60:
