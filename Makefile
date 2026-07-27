@@ -29,11 +29,11 @@ models-llm:
 	$(PY) eduai models verify llama-3b llama-1b
 
 lint:
-	$(PY) ruff check .
-	$(PY) ruff format --check .
+	uv run --extra dev ruff check .
+	uv run --extra dev ruff format --check .
 
 test:
-	$(PY) pytest
+	uv run --extra dev pytest
 
 data:
 	$(PY) eduai data build --sciq "$(SCIQ_DIR)" --out data
