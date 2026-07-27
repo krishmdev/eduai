@@ -92,3 +92,10 @@ document.addEventListener("click", (e) => {
   const summary = e.target.closest && e.target.closest("details.mastery > summary");
   if (summary) masteryOpen = !summary.parentElement.open;
 });
+
+// Mobile: the chart scrolls sideways; start at the latest answers.
+document.addEventListener("DOMContentLoaded", () => {
+  document.querySelectorAll(".chart").forEach((c) => {
+    c.scrollLeft = c.scrollWidth;
+  });
+});

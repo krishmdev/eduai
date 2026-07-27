@@ -285,6 +285,7 @@ form[aria-busy="true"] .btn .btn-busy, .htmx-request .btn .btn-busy { display: i
   .masthead { flex-wrap: wrap; gap: var(--s2); }
   .masthead-meta { justify-content: flex-start; gap: var(--s3); }
   .meter-inline { display: none; }
+  .unit-table th:nth-child(4), .unit-table td:nth-child(4) { display: none; }
   .hero-figure { font-size: 3.2rem; }
   .chart { overflow-x: auto; }
   .chart svg { min-width: 560px; }
