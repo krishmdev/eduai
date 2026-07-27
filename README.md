@@ -289,11 +289,12 @@ The app is FastAPI with Jinja and htmx, plus a JSON API under `/api/` and SQLite
 
 Practice mode gives feedback and the source-passage explanation after each answer, with a
 mastery-by-unit sidebar. Assessment mode gives no feedback until the end: the page shows only how
-close the estimate is to its precision target, and the JSON API holds back correctness, ability
-and unit results until the session finishes. The report leads with the ability estimate and its
+close the estimate is to its precision target, rounded to 0.1 so the size of each step doesn't
+reveal whether an answer was right. The report page and the JSON API hold back correctness,
+ability and unit results until the session finishes. The report leads with the ability estimate and its
 95% interval, then the trajectory chart, unit mastery with counts, wrong answers with the key, and
 the full response log. Its 1 to 5 score is an illustrative mapping, labeled as simulated. An
-unfinished session's report is marked as in progress, with a link back to the session.
+unfinished practice session's report is marked as in progress, with a link back to the session.
 
 <img src="docs/screenshots/desktop_report.png" alt="Report page with the ability estimate and interval, trajectory chart, unit mastery table, wrong answers, and answer log" width="70%">
 
