@@ -149,6 +149,28 @@ def data_eval_prompts(
     console.print(stats)
 
 
+@data_app.command("valid-prompts")
+def data_valid_prompts(
+    data: Path = typer.Option(Path("data")),
+    out: Path = typer.Option(Path("reports/valid_eval")),
+    n: int = 150,
+    seed: int = 20260905,
+) -> None:
+    """Model-selection prompts from the valid split, built like the test prompts but with tagger labels."""
+    from eduai.curriculum.embedder import get_embedder
+    from eduai.curriculum.taxonomy import default_taxonomy
+    from eduai.data.eval_prompts import build_prompts, candidates, write
+
+    cands, leak = candidates(data, get_embedder("bge-small"), n, seed=seed, split="valid")
+    labels = {c["id"]: c["tagger_lo_id"] for c in cands}
+    rows, stats = build_prompts(cands, labels, default_taxonomy(), n, seed, label_source="tagger")
+    stats.update(split="valid", leakage_filter=leak)
+    write(rows, data / "eval" / "valid_prompts.jsonl")
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "prompts_card.json").write_text(json.dumps(stats, indent=2) + "\n")
+    console.print(stats)
+
+
 @tagger_app.command("sample-gold")
 def tagger_sample_gold(
     sciq: Path = typer.Option(..., help="Directory with SciQ train/valid/test.json"),

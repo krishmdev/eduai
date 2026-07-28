@@ -7,6 +7,10 @@
    has cosine >= 0.88 with a training item that has the same answer.
 3. An independent labeling pass (never shown tagger output) assigns an LO or marks the item
    off-curriculum; off-curriculum items are dropped and the first 150 labeled items are kept.
+
+The valid-split prompts used for model selection come from the same code with split="valid": groups
+assigned to the valid split, minus the SFT valid rows, filtered against the SFT train rows only, and
+labeled with the tagger's own LO (only tagger-aligned items are candidates).
 """
 
 from __future__ import annotations
@@ -36,17 +40,22 @@ def sft_qa(row: dict) -> tuple[str, str]:
     return tag_text(d["stem"], d["choices"][d["answer"]]), d["choices"][d["answer"]]
 
 
-def candidates(data_dir: Path, embedder, n: int, seed: int = 20260924) -> tuple[list[dict], dict]:
+def candidates(
+    data_dir: Path, embedder, n: int, seed: int = 20260805, split: str = "test"
+) -> tuple[list[dict], dict]:
     items = [SciqItem.from_dict(d) for d in read_jsonl(data_dir / "items_tagged.jsonl")]
-    sft_test = {m["id"] for m in read_jsonl(data_dir / "sft_meta.jsonl")}
-    train_rows = read_jsonl(data_dir / "sft" / "train.jsonl") + read_jsonl(data_dir / "sft" / "valid.jsonl")
+    sft_rows = {m["id"] for m in read_jsonl(data_dir / "sft_meta.jsonl")}
+    train_rows = read_jsonl(data_dir / "sft" / "train.jsonl")
+    if split == "test":
+        train_rows += read_jsonl(data_dir / "sft" / "valid.jsonl")
     pool = [
         it
         for it in items
         if it.grounded
-        and it.tags["final_split"] == "test"
-        and it.id not in sft_test
+        and it.tags["final_split"] == split
+        and it.id not in sft_rows
         and explain.sentences(it.support)
+        and (split == "test" or it.tags["aligned"])
     ]
     rng = random.Random(seed)
     rng.shuffle(pool)
@@ -70,18 +79,20 @@ def candidates(data_dir: Path, embedder, n: int, seed: int = 20260924) -> tuple[
         if leakage.same_answer_qa_leaks(v, [it.correct], ref_vecs, [a for _, a in qa]):
             stats["dropped_same_answer_qa"] += 1
             continue
-        kept.append(
-            {
-                "id": it.id,
-                "question": it.question,
-                "answer": it.correct,
-                "passage": passage,
-                "difficulty": it.tags["difficulty"],
-                "group": it.tags["group"],
-                "distractors": it.distractors,
-                "max_containment": round(cont, 3),
-            }
-        )
+        row = {
+            "id": it.id,
+            "question": it.question,
+            "answer": it.correct,
+            "passage": passage,
+            "difficulty": it.tags["difficulty"],
+            "group": it.tags["group"],
+            "distractors": it.distractors,
+            "max_containment": round(cont, 3),
+        }
+        if split != "test":
+            # Test candidates go to an independent labeler and must not carry tagger output.
+            row["tagger_lo_id"] = it.tags["lo_id"]
+        kept.append(row)
     stats["kept"] = len(kept)
     stats["pool"] = len(pool)
     return kept, dict(stats)
@@ -95,6 +106,7 @@ def build_prompts(
     seed: int,
     stimulus_frac: float = 0.4,
     misconception_frac: float = 0.3,
+    label_source: str = "independent",
 ) -> tuple[list[dict], dict]:
     rng = random.Random(seed)
     labeled = [c for c in cands if labels.get(c["id"])]
@@ -122,7 +134,7 @@ def build_prompts(
                 "request": req.__dict__,
                 "group": c["group"],
                 "reference": {"question": c["question"], "answer": c["answer"]},
-                "label_source": "independent",
+                "label_source": label_source,
             }
         )
     stats = {
