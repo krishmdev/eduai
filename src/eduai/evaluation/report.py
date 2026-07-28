@@ -6,8 +6,14 @@ LABELS = {
     "reference": "SciQ reference item (ceiling)",
     "base-0shot": "Base 3B, 0-shot",
     "base-2shot": "Base 3B, 2-shot",
-    "finetuned": "Base 3B + EduAI LoRA",
+    "finetuned": "Base 3B + EduAI LoRA v1",
+    "finetuned-v2": "Base 3B + EduAI LoRA v2",
+    "finetuned-v2-2shot": "Base 3B + EduAI LoRA v2, 2-shot",
 }
+
+
+def label(arm: str) -> str:
+    return LABELS.get(arm, arm)
 
 
 def _p(x) -> str:
@@ -18,18 +24,35 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
     s = res["summary"]
     n = res["n_prompts"]
     lf = card["leakage_filter"]
+    arms = [a for a in s if a != "reference"]
+    if card.get("split") == "valid":
+        intro = [
+            "# Model-selection eval on the valid split",
+            "",
+            f"The report covers {n} prompts from groups assigned to the valid split that are not SFT valid rows. "
+            "It is used for choosing training settings and adapters; the test prompts are not. Target "
+            "objectives are the tagger's own labels (the test prompts use an independent labeling pass), so "
+            "alignment here is easier than on the test set. The leakage filter against SFT train rows "
+            f"screened {lf['screened']} prompts and dropped {lf['dropped_passage_containment']} for >= 50% "
+            f"8-gram passage containment and {lf['dropped_same_answer_qa']} for a same-answer question with "
+            f"Q+A cosine >= 0.88. Manifest: `{manifest_name}`.",
+        ]
+    else:
+        intro = [
+            "# Generation eval: base vs few-shot vs fine-tuned",
+            "",
+            f"The report covers {n} prompts from groups assigned to the held-out test split, including "
+            "SciQ rows originally labeled train or valid. An independent labeling pass assigned each "
+            "prompt a target learning objective without seeing tagger output "
+            "(`data/gold/eval_lo_labels.jsonl`; AI-labeled, pending human spot-check). "
+            f"The eval dropped {card['off_curriculum']} off-curriculum candidates. The leakage filter "
+            f"against SFT train/valid rows screened {lf['screened']} prompts and dropped "
+            f"{lf['dropped_passage_containment']} for >= 50% 8-gram passage containment and "
+            f"{lf['dropped_same_answer_qa']} for a same-answer question with Q+A cosine >= 0.88. "
+            f"Manifest: `{manifest_name}`.",
+        ]
     L = [
-        "# Generation eval: base vs few-shot vs fine-tuned",
-        "",
-        f"The report covers {n} prompts from groups assigned to the held-out test split, including "
-        "SciQ rows originally labeled train or valid. An independent labeling pass assigned each "
-        "prompt a target learning objective without seeing tagger output "
-        "(`data/gold/eval_lo_labels.jsonl`; AI-labeled, pending human spot-check). "
-        f"The eval dropped {card['off_curriculum']} off-curriculum candidates. The leakage filter "
-        f"against SFT train/valid rows screened {lf['screened']} prompts and dropped "
-        f"{lf['dropped_passage_containment']} for >= 50% 8-gram passage containment and "
-        f"{lf['dropped_same_answer_qa']} for a same-answer question with Q+A cosine >= 0.88. "
-        f"Manifest: `{manifest_name}`.",
+        *intro,
         "",
         "Every percentage uses all prompts as the denominator. Checks are scored independently:",
         "",
@@ -59,12 +82,10 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
     L.append(
         f"| {LABELS['reference']} | | | | | {_p(ref['key'])} | {_p(ref['key'])} | {_p(ref['aligned'])} | | | | | |"
     )
-    for arm in ("base-0shot", "base-2shot", "finetuned"):
-        if arm not in s:
-            continue
+    for arm in arms:
         r = s[arm]
         L.append(
-            f"| {LABELS[arm]} | {_p(r['json'])} | {_p(r['first_try_json'])} | {_p(r['schema'])} | "
+            f"| {label(arm)} | {_p(r['json'])} | {_p(r['first_try_json'])} | {_p(r['schema'])} | "
             f"{_p(r['structure'])} | {_p(r['key'])} | {_p(r['key_on_valid'])} | {_p(r['aligned'])} | {_p(r['novel'])} | "
             f"{_p(r['all_checks'])} | {_p(r['source_copy'])} | {_p(r['usable'])} | {_p(r['memorized'])} |"
         )
@@ -88,9 +109,8 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
         "| | Key agreement (3B judge) |",
         "|---|---|",
     ]
-    for arm in ("reference", "base-0shot", "base-2shot", "finetuned"):
-        if arm in s:
-            L.append(f"| {LABELS[arm]} | {_p(s[arm].get('key_secondary'))} |")
+    for arm in ("reference", *arms):
+        L.append(f"| {label(arm)} | {_p(s[arm].get('key_secondary'))} |")
     L += [
         "",
         "First failing check per item (checks in validator order):",
@@ -100,7 +120,7 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
     cols = sorted({k for v in res["rejections"].values() for k in v})
     L.append("|---|" + "---|" * len(cols))
     for arm, hist in res["rejections"].items():
-        L.append(f"| {LABELS[arm]} | " + " | ".join(str(hist.get(c, 0)) for c in cols) + " |")
+        L.append(f"| {label(arm)} | " + " | ".join(str(hist.get(c, 0)) for c in cols) + " |")
     L += [
         "",
         "Answer-key letter distribution (schema-valid items) and judge key agreement by keyed letter. A "
@@ -110,12 +130,10 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
         "| Arm | A | B | C | D | Agree when key=A | B | C | D |",
         "|---|---|---|---|---|---|---|---|---|",
     ]
-    for arm in ("reference", "base-0shot", "base-2shot", "finetuned"):
-        if arm not in s:
-            continue
+    for arm in ("reference", *arms):
         kl, ka = s[arm]["key_letters"], s[arm]["key_agreement_by_letter"]
         L.append(
-            f"| {LABELS[arm]} | "
+            f"| {label(arm)} | "
             + " | ".join(str(kl[x]) for x in "ABCD")
             + " | "
             + " | ".join(_p(ka[x]) for x in "ABCD")
@@ -131,7 +149,7 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
             "|---|" + "---|" * len(kinds),
         ]
         for arm, c in res["structure_problems"].items():
-            L.append(f"| {LABELS[arm]} | " + " | ".join(str(c.get(k, 0)) for k in kinds) + " |")
+            L.append(f"| {label(arm)} | " + " | ".join(str(c.get(k, 0)) for k in kinds) + " |")
     L += [
         "",
         "Generation speed (greedy, one request at a time, MLX on the M1 Pro). No other training or benchmark "
@@ -146,6 +164,6 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
         tps = "n/a" if t["mean_generation_tps"] is None else f"{t['mean_generation_tps']:.1f}"
         sec = "n/a" if t["mean_seconds_per_item"] is None else f"{t['mean_seconds_per_item']:.1f}"
         mem = "n/a" if t["peak_memory_gb"] is None else f"{t['peak_memory_gb']:.2f}"
-        L.append(f"| {LABELS[arm]} | {tps} | {sec} | {mem} |")
+        L.append(f"| {label(arm)} | {tps} | {sec} | {mem} |")
     L.append("")
     return "\n".join(L)
