@@ -1,4 +1,4 @@
-"""Base 0-shot vs base 2-shot vs fine-tuned, on the same held-out prompts.
+"""Base 0-shot vs base 2-shot vs fine-tuned adapters, on the same prompts.
 
 Phases (each runs in its own process so only one model is resident at a time):
   generate  one arm -> reports/eval/gen_<arm>.jsonl (raw text, timing)
@@ -22,13 +22,28 @@ from eduai.data.sciq import read_jsonl, write_jsonl
 from eduai.generation.validate import misconception_present, parse, schema_errors, structure_problems
 from eduai.prompts import GenerationRequest, parse_user
 
-ARMS = ("base-0shot", "base-2shot", "finetuned")
+ARMS = ("base-0shot", "base-2shot", "finetuned", "finetuned-v2", "finetuned-v2-2shot")
 ADAPTER = ROOT / "adapters" / "llama32-3b-eduai"
+ADAPTER_V2 = ROOT / "adapters" / "llama32-3b-eduai-v2"
+# arm -> (adapter or None, whether the prompt carries the two fixed examples)
+ARM_SPECS = {
+    "base-0shot": (None, False),
+    "base-2shot": (None, True),
+    "finetuned": (ADAPTER, False),
+    "finetuned-v2": (ADAPTER_V2, False),
+    "finetuned-v2-2shot": (ADAPTER_V2, True),
+}
 EVAL_DIR = ROOT / "reports" / "eval"
 
 
 def load_prompts(path: Path) -> list[dict]:
     return read_jsonl(path)
+
+
+def arms_present(out_dir: Path) -> list[str]:
+    """Arms with generations in out_dir: the named arms in ARMS order, then any sweep arms by name."""
+    found = {p.name[len("gen_") : -len(".jsonl")] for p in out_dir.glob("gen_*.jsonl")}
+    return [a for a in ARMS if a in found] + sorted(found - set(ARMS))
 
 
 def request_of(row: dict) -> GenerationRequest:
@@ -54,6 +69,13 @@ def fixed_shots(sft_train: Path = SHOTS_SAMPLE) -> list[tuple[GenerationRequest,
     return shots
 
 
+def _rel(path: Path | None) -> str | None:
+    if path is None:
+        return None
+    path = Path(path).resolve()
+    return str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path)
+
+
 def _free_mlx() -> None:
     gc.collect()
     try:
@@ -65,12 +87,25 @@ def _free_mlx() -> None:
 
 
 # -- phase 1 ------------------------------------------------------------------------------------
-def generate_arm(arm: str, prompts: list[dict], out_dir: Path = EVAL_DIR, limit: int | None = None) -> Path:
+def generate_arm(
+    arm: str,
+    prompts: list[dict],
+    out_dir: Path = EVAL_DIR,
+    limit: int | None = None,
+    adapter: Path | None = None,
+    shots: bool | None = None,
+) -> Path:
+    """Greedy, one request at a time. Named arms use ARM_SPECS; sweep arms pass `adapter` and `shots`."""
     from eduai.generation.generator import Generator
     from eduai.llm.mlx_backend import MLXBackend
 
-    backend = MLXBackend(model_path("llama-3b"), ADAPTER if arm == "finetuned" else None)
-    shots = fixed_shots(ROOT / "data" / "sft" / "train.jsonl") if arm == "base-2shot" else []
+    spec_adapter, spec_shots = ARM_SPECS.get(arm, (None, False))
+    if arm not in ARM_SPECS and adapter is None:
+        raise ValueError(f"unknown arm {arm!r}: pass an adapter for a sweep arm")
+    adapter = adapter if adapter is not None else spec_adapter
+    use_shots = spec_shots if shots is None else shots
+    backend = MLXBackend(model_path("llama-3b"), adapter)
+    shots = fixed_shots(ROOT / "data" / "sft" / "train.jsonl") if use_shots else []
     gen = Generator(backend, shots=shots, temperature=0.0, retry=True)
     rows = []
     t0 = time.time()
@@ -99,6 +134,7 @@ def generate_arm(arm: str, prompts: list[dict], out_dir: Path = EVAL_DIR, limit:
                 "wall_seconds": round(time.time() - t0, 1),
                 "shots": len(shots),
                 "backend": backend.name,
+                "adapter": _rel(adapter),
             },
             indent=2,
         )
@@ -135,27 +171,39 @@ def reference_items(prompts: list[dict], data_dir: Path) -> dict[str, dict]:
 
 
 def judge_all(
-    prompts: list[dict], judge_key: str, out_dir: Path = EVAL_DIR, data_dir: Path = ROOT / "data"
+    prompts: list[dict],
+    judge_key: str,
+    out_dir: Path = EVAL_DIR,
+    data_dir: Path = ROOT / "data",
+    arms: list[str] | None = None,
 ) -> Path:
+    """Judge every arm (arms=None), or only `arms`, keeping the existing rows of the other arms as they are."""
     from eduai.evaluation.solver import Judge
     from eduai.llm.mlx_backend import MLXBackend
 
+    out = out_dir / f"judge_{judge_key}.jsonl"
+    kept: dict[str, list[dict]] = {}
+    if arms is not None and out.exists():
+        for r in read_jsonl(out):
+            if r["arm"] not in arms:
+                kept.setdefault(r["arm"], []).append(r)
     judge = Judge(MLXBackend(model_path(judge_key), None))
     passages = {p["id"]: p["request"]["passage"] for p in prompts}
-    rows = []
-    refs = reference_items(prompts, data_dir)
-    for pid, item in refs.items():
-        rows.append({"id": pid, "arm": "reference", **judge(item, passages[pid])})
-    for arm in ARMS:
-        path = out_dir / f"gen_{arm}.jsonl"
-        if not path.exists():
+    rows = kept.pop("reference", None)
+    if rows is None:
+        refs = reference_items(prompts, data_dir)
+        rows = [{"id": pid, "arm": "reference", **judge(item, passages[pid])} for pid, item in refs.items()]
+    for arm in arms_present(out_dir):
+        if arm in kept:
+            rows += kept.pop(arm)
             continue
-        for g in read_jsonl(path):
+        if arms is not None and arm not in arms:
+            continue
+        for g in read_jsonl(out_dir / f"gen_{arm}.jsonl"):
             item, _ = parse(g["text"])
             if item is None or schema_errors(item):
                 continue
             rows.append({"id": g["id"], "arm": arm, **judge(item, passages[g["id"]])})
-    out = out_dir / f"judge_{judge_key}.jsonl"
     write_jsonl(out, rows)
     return out
 
@@ -199,10 +247,9 @@ def score(
         for i, a in zip(ids, ref_align, strict=True)
     ]
     timing = {}
-    for arm in ARMS:
+    arms = arms_present(out_dir)
+    for arm in arms:
         path = out_dir / f"gen_{arm}.jsonl"
-        if not path.exists():
-            continue
         gens = {g["id"]: g for g in read_jsonl(path)}
         rows, hist = [], {}
         parsed = {}
@@ -300,10 +347,8 @@ def score(
 
     summary = summarize(per_item)
     structure = {}
-    for arm in ARMS:
+    for arm in arms:
         path = out_dir / f"gen_{arm}.jsonl"
-        if not path.exists():
-            continue
         c: dict[str, int] = {}
         for g in read_jsonl(path):
             item, _ = parse(g["text"])
@@ -332,7 +377,9 @@ def score(
         "structure_problems": structure,
         "timing": timing,
         "rejections": reasons,
-        "bootstrap": bootstrap_diffs(per_item),
+        "bootstrap": bootstrap_diffs(
+            per_item, pairs=PAIRS + tuple((a, "base-2shot") for a in arms if a not in ARMS)
+        ),
         "judge": judge_key,
         "secondary_judge": secondary_key,
     }
@@ -379,15 +426,27 @@ def summarize(per_item: dict[str, list[dict]]) -> dict:
     return out
 
 
-def bootstrap_diffs(per_item: dict[str, list[dict]], n_boot: int = 5000, seed: int = 0) -> dict:
+# The first four pairs are the v1 comparisons; new pairs go after them so one seeded generator
+# reproduces the v1 intervals exactly.
+PAIRS = (
+    ("finetuned", "base-0shot"),
+    ("finetuned", "base-2shot"),
+    ("finetuned", "reference"),
+    ("base-2shot", "base-0shot"),
+    ("finetuned-v2", "base-0shot"),
+    ("finetuned-v2", "base-2shot"),
+    ("finetuned-v2", "finetuned"),
+    ("finetuned-v2", "reference"),
+    ("finetuned-v2-2shot", "base-2shot"),
+    ("finetuned-v2-2shot", "finetuned-v2"),
+)
+
+
+def bootstrap_diffs(
+    per_item: dict[str, list[dict]], n_boot: int = 5000, seed: int = 0, pairs: tuple = PAIRS
+) -> dict:
     """Paired bootstrap over prompts: 95% CI of (arm A rate - arm B rate)."""
     rng = np.random.default_rng(seed)
-    pairs = [
-        ("finetuned", "base-0shot"),
-        ("finetuned", "base-2shot"),
-        ("finetuned", "reference"),
-        ("base-2shot", "base-0shot"),
-    ]
     out = {}
     for a, b in pairs:
         if a not in per_item or b not in per_item:

@@ -1,4 +1,7 @@
 import json
+import random
+
+import pytest
 
 from eduai.curriculum.embedder import HashingEmbedder
 from eduai.data.sciq import write_jsonl
@@ -102,3 +105,73 @@ def test_score_counts_all_prompts_and_renders(tmp_path):
     }
     md = report.render(res, "m.json", card)
     assert "Base 3B + EduAI LoRA" in md and "95% CI" in md
+
+
+def test_arms_present_orders_named_arms_then_sweep_arms(tmp_path):
+    for arm in ("sweep-b", "finetuned", "base-0shot", "sweep-a"):
+        write_jsonl(tmp_path / f"gen_{arm}.jsonl", [])
+    assert compare.arms_present(tmp_path) == ["base-0shot", "finetuned", "sweep-a", "sweep-b"]
+
+
+def test_v1_bootstrap_intervals_do_not_move_when_v2_arms_are_added():
+    rng = random.Random(3)
+
+    def rows():
+        return [{"usable": rng.random() < 0.3, "key": rng.random() < 0.6} for _ in range(40)]
+
+    v1 = {arm: rows() for arm in ("reference", "base-0shot", "base-2shot", "finetuned")}
+    both = {**v1, "finetuned-v2": rows(), "finetuned-v2-2shot": rows()}
+    old, new = compare.bootstrap_diffs(v1, n_boot=200), compare.bootstrap_diffs(both, n_boot=200)
+    assert old and all(new[k] == v for k, v in old.items())
+    assert "finetuned-v2 - base-2shot | usable" in new and "finetuned-v2 - finetuned | key" in new
+
+
+def test_generate_rejects_an_unknown_arm_without_an_adapter():
+    with pytest.raises(ValueError, match="sweep arm"):
+        compare.generate_arm("no-such-arm", [])
+
+
+def test_judge_only_named_arms_keeps_other_rows(tmp_path, monkeypatch):
+    prompts, data, out = _setup(tmp_path)
+    before = {
+        r["arm"]: r for r in compare.read_jsonl(out / "judge_llama-1b.jsonl") if r["arm"] != "reference"
+    }
+
+    class FakeBackend:
+        def __init__(self, *a, **k):
+            pass
+
+        def choice_logprobs(self, messages, letters=("A", "B", "C", "D")):
+            body = messages[-1]["content"]
+            return {x: (0.0 if f"{x}. nucleus" in body else -5.0) for x in letters}
+
+    import eduai.llm.mlx_backend as mb
+
+    monkeypatch.setattr(mb, "MLXBackend", FakeBackend)
+    monkeypatch.setattr(compare, "model_path", lambda key: tmp_path)
+    compare.judge_all(prompts, "llama-1b", out, data, arms=["finetuned-v2"])
+    rows = compare.read_jsonl(out / "judge_llama-1b.jsonl")
+    assert [r["arm"] for r in rows][:2] == ["reference", "reference"]
+    after = {r["arm"]: r for r in rows if r["arm"] != "reference"}
+    assert set(after) == set(before)
+    for arm in before:
+        if arm != "finetuned-v2":
+            assert after[arm] == before[arm]
+    # The fake judge always picks the nucleus option (B) wherever it is rotated to; the key is A.
+    assert after["finetuned-v2"]["agrees"] is False and "p_key" in after["finetuned-v2"]
+
+
+def test_report_labels_versions_and_valid_split_intro(tmp_path):
+    prompts, data, out = _setup(tmp_path)
+    write_jsonl(out / "gen_sweep-lr1e4.jsonl", compare.read_jsonl(out / "gen_finetuned.jsonl"))
+    nov = NoveltyIndex(HashingEmbedder(64), ["unrelated stem about rocks"], ["sciq-train-00001"], [99], [])
+    res = compare.score(prompts, AlignAll(), nov, data_dir=data, out_dir=out)
+    card = {
+        "split": "valid",
+        "leakage_filter": {"screened": 2, "dropped_passage_containment": 0, "dropped_same_answer_qa": 0},
+    }
+    md = report.render(res, "m.json", card)
+    assert md.startswith("# Model-selection eval on the valid split")
+    assert "| Base 3B + EduAI LoRA v1 |" in md and "| Base 3B + EduAI LoRA v2, 2-shot |" in md
+    assert "| sweep-lr1e4 |" in md
+    assert "sweep-lr1e4 - base-2shot | usable" in res["bootstrap"]
