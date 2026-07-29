@@ -2,19 +2,39 @@
 # Generation + judging for the eval, one model per process. Run it on an otherwise idle machine
 # (timings are recorded); `make eval RUN_WRAPPER=...` can prefix a job queue. RUN_MANIFEST_TOOL optionally points at a script
 # that records host state as JSON.
+#
+# Defaults reproduce the test-set eval. Model selection uses the valid split instead:
+#   PROMPTS=data/eval/valid_prompts.jsonl OUT=reports/valid_eval JUDGES=llama-1b ARMS="..." scripts/run_eval.sh
+# JUDGE_ARMS limits judging to those arms and keeps the other arms' judge rows.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 export HF_HOME="$PWD/.models" HF_HUB_OFFLINE=1 TOKENIZERS_PARALLELISM=false
-mkdir -p reports/eval
+prompts=${PROMPTS:-data/eval/prompts.jsonl}
+out=${OUT:-reports}
+if [[ "$out" == "reports" ]]; then eval_dir=reports/eval; else eval_dir="$out/gen"; fi
+mkdir -p "$eval_dir"
 tool=${RUN_MANIFEST_TOOL:-}
-[[ -n "$tool" && -x "$tool" ]] && python3 "$tool" --out reports/eval_manifest.json task=eval phase=start device=mps \
+tag=${MANIFEST_TAG:-eval}
+[[ -n "$tool" && -x "$tool" ]] && python3 "$tool" --out "$out/${tag}_manifest.json" task=eval phase=start device=mps \
+  prompts="$prompts" arms="${ARMS:-base-0shot base-2shot finetuned}" \
   model=mlx-community/Llama-3.2-3B-Instruct-4bit judge=mlx-community/Llama-3.2-1B-Instruct-4bit
 start=$(date +%s)
 for arm in ${ARMS:-base-0shot base-2shot finetuned}; do
-  uv run eduai eval generate "$arm" ${LIMIT:+--limit $LIMIT}
+  # NAME=ADAPTER_DIR[:shots] defines a sweep arm; plain names are the fixed arms.
+  if [[ "$arm" == *=* ]]; then
+    name=${arm%%=*}; spec=${arm#*=}; shots=--no-shots
+    [[ "$spec" == *:shots ]] && { shots=--shots; spec=${spec%:shots}; }
+    uv run eduai eval generate "$name" --prompts "$prompts" --eval-dir "$eval_dir" --adapter "$spec" $shots \
+      ${LIMIT:+--limit $LIMIT}
+  else
+    uv run eduai eval generate "$arm" --prompts "$prompts" --eval-dir "$eval_dir" ${LIMIT:+--limit $LIMIT}
+  fi
 done
-uv run eduai eval judge --judge llama-1b
-uv run eduai eval judge --judge llama-3b
+judge_args=()
+for a in ${JUDGE_ARMS:-}; do judge_args+=(--arm "$a"); done
+for judge in ${JUDGES:-llama-1b llama-3b}; do
+  uv run eduai eval judge --judge "$judge" --prompts "$prompts" --eval-dir "$eval_dir" ${judge_args[@]+"${judge_args[@]}"}
+done
 end=$(date +%s)
-[[ -n "$tool" && -x "$tool" ]] && python3 "$tool" --out reports/eval_manifest_end.json task=eval wall_seconds=$((end - start))
+[[ -n "$tool" && -x "$tool" ]] && python3 "$tool" --out "$out/${tag}_manifest_end.json" task=eval wall_seconds=$((end - start))
 echo "eval generation+judging took $((end - start)) s"
