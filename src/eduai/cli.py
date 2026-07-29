@@ -317,39 +317,52 @@ def _novelty_index():
 
 @eval_app.command("generate")
 def eval_generate(
-    arm: str, prompts: Path = typer.Option(Path("data/eval/prompts.jsonl")), limit: int = None
+    arm: str,
+    prompts: Path = typer.Option(Path("data/eval/prompts.jsonl")),
+    limit: int = None,
+    eval_dir: Path = typer.Option(Path("reports/eval"), help="Where gen_<arm>.jsonl is written"),
+    adapter: Path = typer.Option(None, help="Adapter dir for a sweep arm (named arms have their own)"),
+    shots: bool = typer.Option(None, "--shots/--no-shots", help="Override the arm's fixed examples"),
 ) -> None:
     from eduai.evaluation.compare import generate_arm, load_prompts
 
-    out = generate_arm(arm, load_prompts(prompts), limit=limit)
+    out = generate_arm(arm, load_prompts(prompts), eval_dir, limit=limit, adapter=adapter, shots=shots)
     console.print(f"wrote {out}")
 
 
 @eval_app.command("judge")
 def eval_judge(
-    judge: str = "llama-1b", prompts: Path = typer.Option(Path("data/eval/prompts.jsonl"))
+    judge: str = "llama-1b",
+    prompts: Path = typer.Option(Path("data/eval/prompts.jsonl")),
+    eval_dir: Path = typer.Option(Path("reports/eval")),
+    arm: list[str] = typer.Option(None, help="Judge only these arms and keep the other arms' rows"),
 ) -> None:
     from eduai.evaluation.compare import judge_all, load_prompts
 
-    console.print(f"wrote {judge_all(load_prompts(prompts), judge)}")
+    console.print(f"wrote {judge_all(load_prompts(prompts), judge, eval_dir, arms=arm or None)}")
 
 
 @eval_app.command("score")
 def eval_score(
-    prompts: Path = typer.Option(Path("data/eval/prompts.jsonl")), out: Path = typer.Option(Path("reports"))
+    prompts: Path = typer.Option(Path("data/eval/prompts.jsonl")),
+    out: Path = typer.Option(Path("reports")),
+    eval_dir: Path = typer.Option(Path("reports/eval")),
+    card: Path = typer.Option(Path("reports/eval_prompts_card.json")),
 ) -> None:
     from eduai.curriculum.tagger import build_tagger
     from eduai.curriculum.taxonomy import default_taxonomy
     from eduai.evaluation import compare, report
     from eduai.manifest import write_manifest
 
-    res = compare.score(compare.load_prompts(prompts), build_tagger(default_taxonomy()), _novelty_index())
+    res = compare.score(
+        compare.load_prompts(prompts), build_tagger(default_taxonomy()), _novelty_index(), out_dir=eval_dir
+    )
     (out / "eval.json").write_text(json.dumps(res, indent=2) + "\n")
     manifest = out / "eval_manifest.json"
     if not manifest.exists():
         write_manifest(manifest, {"task": "eval-score"})
-    card = json.loads((out / "eval_prompts_card.json").read_text())
-    (out / "eval_report.md").write_text(report.render(res, manifest.name, card))
+    card_data = json.loads(card.read_text())
+    (out / "eval_report.md").write_text(report.render(res, manifest.name, card_data))
     console.print((out / "eval_report.md").read_text())
 
 
