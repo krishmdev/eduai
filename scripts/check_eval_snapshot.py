@@ -15,7 +15,9 @@ from pathlib import Path
 from eduai.evaluation import compare, report
 
 ROOT = Path(__file__).resolve().parents[1]
-ARMS = ("reference", *compare.ARMS)
+# Arms with committed generations; the three v1 arms must always be there.
+GEN_ARMS = compare.arms_present(ROOT / "reports/eval")
+ARMS = ("reference", *GEN_ARMS)
 
 
 def rows(path: Path) -> list[dict]:
@@ -28,6 +30,7 @@ def require(condition: bool, message: str) -> None:
 
 
 def main() -> None:
+    require({"base-0shot", "base-2shot", "finetuned"} <= set(GEN_ARMS), "v1 arms")
     index = json.loads((ROOT / "reports/eval/prompt_index.json").read_text())
     prompt_rows = index["rows"]
     ids = [r["id"] for r in prompt_rows]
@@ -55,7 +58,7 @@ def main() -> None:
     require(compare.summarize(per_item) == result["summary"], "summary rates")
     require(compare.bootstrap_diffs(per_item) == result["bootstrap"], "paired bootstrap")
 
-    for arm in compare.ARMS:
+    for arm in GEN_ARMS:
         gen = rows(ROOT / f"reports/eval/gen_{arm}.jsonl")
         require([r["id"] for r in gen] == ids, f"{arm} generation IDs/order")
         require(all(r["arm"] == arm for r in gen), f"{arm} generation label")
@@ -67,7 +70,7 @@ def main() -> None:
             seen.setdefault(row["arm"], set()).add(row["id"])
         require(sum(map(len, seen.values())) == len(judge_rows), f"{judge} duplicate rows")
         require(seen.get("reference") == set(ids), f"{judge} reference IDs")
-        for arm in compare.ARMS:
+        for arm in GEN_ARMS:
             expected = {r["id"] for r in per_item[arm] if r["schema"]}
             require(seen.get(arm) == expected, f"{judge} {arm} schema-valid IDs")
 

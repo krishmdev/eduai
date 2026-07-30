@@ -19,7 +19,7 @@ Every percentage uses all prompts as the denominator. Checks are scored independ
 | SciQ reference item (ceiling) | | | | | 93.3% | 93.3% | 70.7% | | | | | |
 | Base 3B, 0-shot | 100.0% | 99.3% | 93.3% | 40.7% | 70.7% | 75.7% | 74.7% | 92.7% | 26.7% | 4.7% | 23.3% | 0.7% |
 | Base 3B, 2-shot | 100.0% | 98.0% | 80.7% | 60.7% | 60.7% | 75.2% | 64.0% | 80.0% | 36.7% | 2.7% | 34.7% | 0.0% |
-| Base 3B + EduAI LoRA | 100.0% | 100.0% | 100.0% | 54.0% | 66.0% | 66.0% | 72.0% | 96.0% | 30.7% | 25.3% | 21.3% | 1.3% |
+| Base 3B + EduAI LoRA v1 | 100.0% | 100.0% | 100.0% | 54.0% | 66.0% | 66.0% | 72.0% | 96.0% | 30.7% | 25.3% | 21.3% | 1.3% |
 
 Paired bootstrap (5,000 resamples over prompts), difference in rate with 95% CI. With n = 150, one arm's rate has a standard error around 4 points, so differences under about 10 points should be read as noise unless the interval excludes zero.
 
@@ -50,7 +50,7 @@ Secondary key agreement with the base 3B as judge (self-judged for the base arms
 | SciQ reference item (ceiling) | 96.7% |
 | Base 3B, 0-shot | 75.3% |
 | Base 3B, 2-shot | 65.3% |
-| Base 3B + EduAI LoRA | 71.3% |
+| Base 3B + EduAI LoRA v1 | 71.3% |
 
 First failing check per item (checks in validator order):
 
@@ -58,7 +58,7 @@ First failing check per item (checks in validator order):
 |---|---|---|---|---|---|---|
 | Base 3B, 0-shot | 40 | 0 | 11 | 10 | 10 | 79 |
 | Base 3B, 2-shot | 55 | 1 | 18 | 17 | 29 | 30 |
-| Base 3B + EduAI LoRA | 46 | 3 | 11 | 21 | 0 | 69 |
+| Base 3B + EduAI LoRA v1 | 46 | 3 | 11 | 21 | 0 | 69 |
 
 Answer-key letter distribution (schema-valid items) and judge key agreement by keyed letter. A skewed key position is a generation defect in its own right; four-rotation judging removes the judge's own position bias from the comparison.
 
@@ -67,7 +67,7 @@ Answer-key letter distribution (schema-valid items) and judge key agreement by k
 | SciQ reference item (ceiling) | 32 | 37 | 31 | 50 | 87.5% | 94.6% | 93.5% | 96.0% |
 | Base 3B, 0-shot | 15 | 73 | 38 | 14 | 53.3% | 75.3% | 81.6% | 85.7% |
 | Base 3B, 2-shot | 19 | 57 | 22 | 23 | 73.7% | 71.9% | 100.0% | 60.9% |
-| Base 3B + EduAI LoRA | 104 | 28 | 9 | 9 | 67.3% | 67.9% | 66.7% | 44.4% |
+| Base 3B + EduAI LoRA v1 | 104 | 28 | 9 | 9 | 67.3% | 67.9% | 66.7% | 44.4% |
 
 Structure problems among schema-valid items (an item can have several):
 
@@ -75,7 +75,7 @@ Structure problems among schema-valid items (an item can have several):
 |---|---|---|---|---|---|---|
 | Base 3B, 0-shot | 0 | 52 | 1 | 0 | 32 | 13 |
 | Base 3B, 2-shot | 0 | 11 | 11 | 1 | 11 | 0 |
-| Base 3B + EduAI LoRA | 9 | 63 | 12 | 0 | 1 | 0 |
+| Base 3B + EduAI LoRA v1 | 9 | 63 | 12 | 0 | 1 | 0 |
 
 Generation speed (greedy, one request at a time, MLX on the M1 Pro). No other training or benchmark job ran at the same time, but the machine wasn't idle: `eval_manifest.json` records a load average of 7 to 9.5, 6 running containers and about 12 GB of swap in use. Treat these speeds, and the gap between the adapter and base arms, as rough.
 
@@ -83,4 +83,4 @@ Generation speed (greedy, one request at a time, MLX on the M1 Pro). No other tr
 |---|---|---|---|
 | Base 3B, 0-shot | 80.3 | 3.0 | 2.50 |
 | Base 3B, 2-shot | 76.1 | 3.8 | 2.74 |
-| Base 3B + EduAI LoRA | 48.0 | 3.6 | 3.05 |
+| Base 3B + EduAI LoRA v1 | 48.0 | 3.6 | 3.05 |
