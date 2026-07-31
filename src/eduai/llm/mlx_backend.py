@@ -65,6 +65,82 @@ class MLXBackend:
     ) -> list[str]:
         return [self.generate(m, max_tokens, temperature) for m in batch]
 
+    def sample_batch(
+        self,
+        batch: list[list[dict]],
+        max_tokens: int = 512,
+        temperature: float = 0.8,
+        top_p: float = 0.95,
+        completion_batch_size: int = 16,
+    ) -> tuple[list[str], dict]:
+        """Sampled completions for many prompts at once (continuous batching). Used for training data,
+        never for the eval, which decodes one request at a time."""
+        from mlx_lm import batch_generate
+        from mlx_lm.sample_utils import make_sampler
+
+        prompts = [self._prompt(m) for m in batch]
+        with self._lock:
+            resp = batch_generate(
+                self.model,
+                self.tokenizer,
+                prompts,
+                max_tokens=max_tokens,
+                sampler=make_sampler(temp=temperature, top_p=top_p),
+                completion_batch_size=completion_batch_size,
+                prefill_batch_size=min(8, completion_batch_size),
+            )
+        st = resp.stats
+        stats = {
+            "prompt_tokens": st.prompt_tokens,
+            "prompt_tps": st.prompt_tps,
+            "generation_tokens": st.generation_tokens,
+            "generation_tps": st.generation_tps,
+            "peak_memory_gb": st.peak_memory,
+        }
+        return list(resp.texts), stats
+
+    def _letter_ids(self, letters: tuple[str, ...]) -> dict[str, list[int]]:
+        return {
+            letter: [
+                i[0]
+                for i in (self.tokenizer.encode(v, add_special_tokens=False) for v in (letter, " " + letter))
+                if i
+            ]
+            for letter in letters
+        }
+
+    def _last_logits(self, x, rows, cols):
+        """Logits at one position per row. Llama-style models are projected only at those positions,
+        since full (batch, length, 128k) logits for a 16-prompt judge batch take several GB."""
+        inner, args = getattr(self.model, "model", None), getattr(self.model, "args", None)
+        if inner is None or args is None:
+            return self.model(x)[rows, cols]
+        h = inner(x)[rows, cols]
+        if getattr(args, "tie_word_embeddings", False):
+            return inner.embed_tokens.as_linear(h)
+        return self.model.lm_head(h)
+
+    def choice_logprobs_batch(
+        self, batch: list[list[dict]], letters: tuple[str, ...] = ("A", "B", "C", "D")
+    ) -> list[dict[str, float]]:
+        """choice_logprobs for several prompts in one right-padded forward pass. Causal attention means
+        the padding never affects the last real position. Results differ from the one-prompt path by
+        half-precision rounding (up to about 0.03 nats on the 3B), so the eval judge keeps using
+        choice_logprobs and this is only used to screen training data."""
+        import mlx.core as mx
+
+        prompts = [self._prompt(m) for m in batch]
+        width = max(len(p) for p in prompts)
+        pad = self.tokenizer.eos_token_id
+        x = mx.array([p + [pad] * (width - len(p)) for p in prompts])
+        rows, cols = mx.arange(len(prompts)), mx.array([len(p) - 1 for p in prompts])
+        with self._lock:
+            last = self._last_logits(x, rows, cols)
+            logp = last - mx.logsumexp(last, axis=-1, keepdims=True)
+            mx.eval(logp)
+        ids = self._letter_ids(letters)
+        return [{k: max(float(row[i]) for i in v) for k, v in ids.items()} for row in logp]
+
     def choice_logprobs(
         self, messages: list[dict], letters: tuple[str, ...] = ("A", "B", "C", "D")
     ) -> dict[str, float]:
