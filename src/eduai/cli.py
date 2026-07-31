@@ -19,6 +19,8 @@ app.add_typer(tagger_app, name="tagger", help="Curriculum tagger evaluation.")
 app.add_typer(bank_app, name="bank", help="Item bank maintenance and generation.")
 eval_app = typer.Typer(no_args_is_help=True)
 app.add_typer(eval_app, name="eval", help="Base vs few-shot vs fine-tuned comparison.")
+rft_app = typer.Typer(no_args_is_help=True)
+app.add_typer(rft_app, name="rft", help="Rejection-sampled training data for the v2 adapter.")
 console = Console()
 
 
@@ -364,6 +366,104 @@ def eval_score(
     card_data = json.loads(card.read_text())
     (out / "eval_report.md").write_text(report.render(res, manifest.name, card_data))
     console.print((out / "eval_report.md").read_text())
+
+
+def _rft_prompts(data: Path) -> list[dict]:
+    from eduai.data.rft import train_prompts
+    from eduai.evaluation.compare import fixed_shots
+    from eduai.prompts import render_user
+
+    shots = fixed_shots(data / "sft" / "train.jsonl")
+    return train_prompts(data, {render_user(r) for r, _ in shots})
+
+
+@rft_app.command("sample")
+def rft_sample(
+    data: Path = typer.Option(Path("data")),
+    out: Path = typer.Option(Path("data/rft/samples.jsonl")),
+    shots: bool = typer.Option(True, "--shots/--no-shots", help="Sample with the eval's two fixed examples"),
+    n: int = typer.Option(1, help="Samples per prompt"),
+    temperature: float = 0.8,
+    limit: int = typer.Option(None, help="Only the first N prompts (after a seeded shuffle)"),
+    batch: int = 16,
+    seed: int = 20260905,
+    model: str = "llama-3b",
+    adapter: Path = typer.Option(None, help="Sample from an adapter instead of the base model"),
+) -> None:
+    """Sample items from the base model for SFT train-split prompts."""
+    import random
+
+    from eduai.config import model_path
+    from eduai.data import rft
+    from eduai.evaluation.compare import fixed_shots
+    from eduai.llm.mlx_backend import MLXBackend
+
+    prompts = _rft_prompts(data)
+    random.Random(seed).shuffle(prompts)
+    backend = MLXBackend(model_path(model), adapter, seed=seed)
+    ex = fixed_shots(data / "sft" / "train.jsonl") if shots else None
+    rft.sample(backend, prompts[:limit], out, ex, n, temperature, batch=batch, log=console.print)
+
+
+@rft_app.command("check")
+def rft_check(
+    data: Path = typer.Option(Path("data")),
+    samples: Path = typer.Option(Path("data/rft/samples.jsonl")),
+    out: Path = typer.Option(Path("data/rft/checked.jsonl")),
+) -> None:
+    """Schema, structure, alignment, novelty and source-copy checks for every sample (no LLM)."""
+    from eduai.curriculum.tagger import build_tagger
+    from eduai.curriculum.taxonomy import default_taxonomy
+    from eduai.data import rft
+    from eduai.data.sciq import read_jsonl, write_jsonl
+
+    prompts = {p["id"]: p for p in _rft_prompts(data)}
+    rows = rft.check(read_jsonl(samples), prompts, build_tagger(default_taxonomy()), _novelty_index())
+    write_jsonl(out, rows)
+    console.print(f"wrote {out}: {sum(rft.needs_judge(r) for r in rows)} of {len(rows)} need the key check")
+
+
+@rft_app.command("judge")
+def rft_judge(
+    data: Path = typer.Option(Path("data")),
+    checked: Path = typer.Option(Path("data/rft/checked.jsonl")),
+    judge: str = "llama-3b",
+    out: Path = typer.Option(None, help="Default data/rft/judged_<judge>.jsonl"),
+) -> None:
+    """Four-rotation key check for the samples that pass everything else."""
+    from eduai.config import model_path
+    from eduai.data import rft
+    from eduai.data.sciq import read_jsonl
+    from eduai.llm.mlx_backend import MLXBackend
+
+    prompts = {p["id"]: p for p in _rft_prompts(data)}
+    out = out or checked.parent / f"judged_{judge}.jsonl"
+    rft.judge(MLXBackend(model_path(judge), None), read_jsonl(checked), prompts, out, log=console.print)
+
+
+@rft_app.command("build")
+def rft_build(
+    data: Path = typer.Option(Path("data")),
+    checked: Path = typer.Option(Path("data/rft/checked.jsonl")),
+    judged: Path = typer.Option(Path("data/rft/judged_llama-3b.jsonl")),
+    out: Path = typer.Option(Path("data/sft_v2")),
+    card: Path = typer.Option(Path("reports/rft_card.json")),
+    min_p_key: float = 0.0,
+) -> None:
+    """Pick one passing sample per prompt and write the v2 SFT files."""
+    from eduai.data import rft
+    from eduai.data.sciq import read_jsonl
+
+    prompts = {p["id"]: p for p in _rft_prompts(data)}
+    merged = rft.merge(read_jsonl(checked), read_jsonl(judged))
+    stats = {
+        "prompts": len(prompts),
+        "sampling": rft.summary(merged),
+        "min_p_key": min_p_key,
+        "build": rft.build(rft.select(merged, min_p_key), prompts, out),
+    }
+    card.write_text(json.dumps(stats, indent=2) + "\n")
+    console.print(stats)
 
 
 @app.command("serve")
