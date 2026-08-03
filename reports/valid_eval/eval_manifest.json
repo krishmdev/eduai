@@ -1,0 +1,20 @@
+{
+  "recorded_at": "2026-09-05T09:49:39-0400",
+  "host": {
+    "platform": "macOS-26.5.1-arm64-arm-64bit"
+  },
+  "extra": {
+    "task": "eval-score"
+  },
+  "repo": {
+    "commit": "1cc71d3fcf22a1ad8e2d21d1d78f57346acb687a",
+    "dirty": true
+  },
+  "packages": {
+    "numpy": "2.4.6",
+    "sentence-transformers": "6.1.0",
+    "torch": "2.14.0",
+    "mlx": "0.32.2",
+    "mlx-lm": "0.31.3"
+  }
+}

@@ -1,0 +1,298 @@
+{
+  "n_prompts": 150,
+  "summary": {
+    "reference": {
+      "n": 150,
+      "key": 0.92,
+      "aligned": 1.0,
+      "key_on_valid": 0.92,
+      "n_schema_valid": 150,
+      "key_secondary": null,
+      "key_letters": {
+        "A": 32,
+        "B": 37,
+        "C": 31,
+        "D": 50
+      },
+      "key_agreement_by_letter": {
+        "A": 0.90625,
+        "B": 0.9459459459459459,
+        "C": 0.967741935483871,
+        "D": 0.88
+      }
+    },
+    "base-0shot": {
+      "n": 150,
+      "json": 1.0,
+      "first_try_json": 1.0,
+      "schema": 0.98,
+      "structure": 0.4866666666666667,
+      "key": 0.6866666666666666,
+      "aligned": 0.8066666666666666,
+      "novel": 0.96,
+      "source_copy": 0.006666666666666667,
+      "memorized": 0.0,
+      "all_checks": 0.24666666666666667,
+      "usable": 0.24,
+      "key_on_valid": 0.7006802721088435,
+      "n_schema_valid": 147,
+      "key_secondary": null,
+      "key_letters": {
+        "A": 20,
+        "B": 61,
+        "C": 44,
+        "D": 22
+      },
+      "key_agreement_by_letter": {
+        "A": 0.7,
+        "B": 0.7540983606557377,
+        "C": 0.6590909090909091,
+        "D": 0.6363636363636364
+      }
+    },
+    "base-2shot": {
+      "n": 150,
+      "json": 0.98,
+      "first_try_json": 0.9533333333333334,
+      "schema": 0.8333333333333334,
+      "structure": 0.6733333333333333,
+      "key": 0.54,
+      "aligned": 0.6466666666666666,
+      "novel": 0.82,
+      "source_copy": 0.06666666666666667,
+      "memorized": 0.006666666666666667,
+      "all_checks": 0.36,
+      "usable": 0.32,
+      "key_on_valid": 0.648,
+      "n_schema_valid": 125,
+      "key_secondary": null,
+      "key_letters": {
+        "A": 25,
+        "B": 51,
+        "C": 21,
+        "D": 28
+      },
+      "key_agreement_by_letter": {
+        "A": 0.72,
+        "B": 0.5882352941176471,
+        "C": 0.6666666666666666,
+        "D": 0.6785714285714286
+      }
+    },
+    "finetuned": {
+      "n": 150,
+      "json": 1.0,
+      "first_try_json": 1.0,
+      "schema": 1.0,
+      "structure": 0.5266666666666666,
+      "key": 0.6866666666666666,
+      "aligned": 0.7333333333333333,
+      "novel": 0.9733333333333334,
+      "source_copy": 0.25333333333333335,
+      "memorized": 0.006666666666666667,
+      "all_checks": 0.34,
+      "usable": 0.16,
+      "key_on_valid": 0.6866666666666666,
+      "n_schema_valid": 150,
+      "key_secondary": null,
+      "key_letters": {
+        "A": 95,
+        "B": 30,
+        "C": 6,
+        "D": 19
+      },
+      "key_agreement_by_letter": {
+        "A": 0.7052631578947368,
+        "B": 0.7,
+        "C": 0.5,
+        "D": 0.631578947368421
+      }
+    }
+  },
+  "structure_problems": {
+    "base-0shot": {
+      "near-identical options": 44,
+      "target misconception missing": 37,
+      "wrong lo_id": 11,
+      "stem gives away the answer": 1
+    },
+    "base-2shot": {
+      "target misconception missing": 9,
+      "near-identical options": 7,
+      "stem gives away the answer": 7,
+      "stimulus format without a stimulus": 2
+    },
+    "finetuned": {
+      "near-identical options": 60,
+      "stem gives away the answer": 19,
+      "all four options identical": 13,
+      "target misconception missing": 2
+    }
+  },
+  "timing": {
+    "base-0shot": {
+      "mean_generation_tps": 75.90814124681161,
+      "mean_seconds_per_item": 3.152413333333333,
+      "peak_memory_gb": 2.501688528
+    },
+    "base-2shot": {
+      "mean_generation_tps": 74.0300152188941,
+      "mean_seconds_per_item": 3.911806666666666,
+      "peak_memory_gb": 2.739113154
+    },
+    "finetuned": {
+      "mean_generation_tps": 47.37583375726336,
+      "mean_seconds_per_item": 3.798866666666667,
+      "peak_memory_gb": 3.067395428
+    }
+  },
+  "rejections": {
+    "base-0shot": {
+      "not_aligned": 8,
+      "accepted": 37,
+      "structure": 74,
+      "key_disagreement": 27,
+      "schema": 3,
+      "duplicate": 1
+    },
+    "base-2shot": {
+      "not_aligned": 13,
+      "schema": 22,
+      "key_disagreement": 32,
+      "structure": 24,
+      "accepted": 54,
+      "no_json": 3,
+      "duplicate": 2
+    },
+    "finetuned": {
+      "structure": 71,
+      "accepted": 51,
+      "not_aligned": 18,
+      "key_disagreement": 8,
+      "duplicate": 2
+    }
+  },
+  "bootstrap": {
+    "finetuned - base-0shot | usable": {
+      "diff": -0.08,
+      "ci95": [
+        -0.16666666666666666,
+        0.006666666666666667
+      ]
+    },
+    "finetuned - base-0shot | all_checks": {
+      "diff": 0.09333333333333334,
+      "ci95": [
+        -0.006666666666666667,
+        0.19333333333333333
+      ]
+    },
+    "finetuned - base-0shot | aligned": {
+      "diff": -0.07333333333333333,
+      "ci95": [
+        -0.14666666666666667,
+        0.0
+      ]
+    },
+    "finetuned - base-0shot | key": {
+      "diff": 0.0,
+      "ci95": [
+        -0.1,
+        0.10666666666666667
+      ]
+    },
+    "finetuned - base-0shot | json": {
+      "diff": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    "finetuned - base-2shot | usable": {
+      "diff": -0.16,
+      "ci95": [
+        -0.24666666666666667,
+        -0.07333333333333333
+      ]
+    },
+    "finetuned - base-2shot | all_checks": {
+      "diff": -0.02,
+      "ci95": [
+        -0.12,
+        0.08
+      ]
+    },
+    "finetuned - base-2shot | aligned": {
+      "diff": 0.08666666666666667,
+      "ci95": [
+        0.006666666666666667,
+        0.17333333333333334
+      ]
+    },
+    "finetuned - base-2shot | key": {
+      "diff": 0.14666666666666667,
+      "ci95": [
+        0.02666666666666667,
+        0.26
+      ]
+    },
+    "finetuned - base-2shot | json": {
+      "diff": 0.02,
+      "ci95": [
+        0.0,
+        0.04666666666666667
+      ]
+    },
+    "finetuned - reference | aligned": {
+      "diff": -0.26666666666666666,
+      "ci95": [
+        -0.34,
+        -0.2
+      ]
+    },
+    "finetuned - reference | key": {
+      "diff": -0.23333333333333334,
+      "ci95": [
+        -0.32,
+        -0.14666666666666667
+      ]
+    },
+    "base-2shot - base-0shot | usable": {
+      "diff": 0.08,
+      "ci95": [
+        -0.013333333333333334,
+        0.17333333333333334
+      ]
+    },
+    "base-2shot - base-0shot | all_checks": {
+      "diff": 0.11333333333333333,
+      "ci95": [
+        0.02666666666666667,
+        0.20016666666666424
+      ]
+    },
+    "base-2shot - base-0shot | aligned": {
+      "diff": -0.16,
+      "ci95": [
+        -0.24666666666666667,
+        -0.07333333333333333
+      ]
+    },
+    "base-2shot - base-0shot | key": {
+      "diff": -0.14666666666666667,
+      "ci95": [
+        -0.24666666666666667,
+        -0.04666666666666667
+      ]
+    },
+    "base-2shot - base-0shot | json": {
+      "diff": -0.02,
+      "ci95": [
+        -0.04666666666666667,
+        0.0
+      ]
+    }
+  },
+  "judge": "llama-1b",
+  "secondary_judge": "llama-3b"
+}

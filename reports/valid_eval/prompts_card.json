@@ -1,0 +1,21 @@
+{
+  "candidates": 150,
+  "labeled_in_curriculum": 150,
+  "off_curriculum": 0,
+  "used": 150,
+  "short_of_target": 0,
+  "by_subject": {
+    "BIO": 61,
+    "APES": 23,
+    "PHYS1": 35,
+    "CHEM": 31
+  },
+  "split": "valid",
+  "leakage_filter": {
+    "screened": 163,
+    "dropped_same_answer_qa": 10,
+    "dropped_passage_containment": 3,
+    "kept": 150,
+    "pool": 623
+  }
+}
