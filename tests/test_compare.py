@@ -175,3 +175,5 @@ def test_report_labels_versions_and_valid_split_intro(tmp_path):
     assert "| Base 3B + EduAI LoRA v1 |" in md and "| Base 3B + EduAI LoRA v2, 2-shot |" in md
     assert "| sweep-lr1e4 |" in md
     assert "sweep-lr1e4 - base-2shot | usable" in res["bootstrap"]
+    # no 3B judge rows, so no all-n/a secondary table; the speed note doesn't quote the test-run load
+    assert "3B judge" not in md and "6 running containers" not in md

@@ -101,16 +101,17 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
     for k, v in res["bootstrap"].items():
         pair, metric = k.split(" | ")
         L.append(f"| {pair} | {metric} | {v['diff']:+.1%} | [{v['ci95'][0]:+.1%}, {v['ci95'][1]:+.1%}] |")
-    L += [
-        "",
-        "Secondary key agreement with the base 3B as judge (self-judged for the base arms, so biased in "
-        "their favor):",
-        "",
-        "| | Key agreement (3B judge) |",
-        "|---|---|",
-    ]
-    for arm in ("reference", *arms):
-        L.append(f"| {label(arm)} | {_p(s[arm].get('key_secondary'))} |")
+    if any(s[a].get("key_secondary") is not None for a in ("reference", *arms)):
+        L += [
+            "",
+            "Secondary key agreement with the base 3B as judge (self-judged for the base arms, so biased in "
+            "their favor):",
+            "",
+            "| | Key agreement (3B judge) |",
+            "|---|---|",
+        ]
+        for arm in ("reference", *arms):
+            L.append(f"| {label(arm)} | {_p(s[arm].get('key_secondary'))} |")
     L += [
         "",
         "First failing check per item (checks in validator order):",
@@ -150,12 +151,23 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
         ]
         for arm, c in res["structure_problems"].items():
             L.append(f"| {label(arm)} | " + " | ".join(str(c.get(k, 0)) for k in kinds) + " |")
+    if card.get("split") == "valid":
+        load = (
+            "Generation speed (greedy, one request at a time, MLX on the M1 Pro). Generation held the "
+            "compute lease, so no other training or benchmark job ran at the same time, but the machine "
+            "wasn't idle; host load for each run is in the `*_manifest.json` files next to this report. "
+            "Treat these speeds, and the gap between the adapter and base arms, as rough."
+        )
+    else:
+        load = (
+            "Generation speed (greedy, one request at a time, MLX on the M1 Pro). No other training or benchmark "
+            "job ran at the same time, but the machine wasn't idle: `eval_manifest.json` records a load average "
+            "of 7 to 9.5, 6 running containers and about 12 GB of swap in use. Treat these speeds, and the gap "
+            "between the adapter and base arms, as rough."
+        )
     L += [
         "",
-        "Generation speed (greedy, one request at a time, MLX on the M1 Pro). No other training or benchmark "
-        "job ran at the same time, but the machine wasn't idle: `eval_manifest.json` records a load average "
-        "of 7 to 9.5, 6 running containers and about 12 GB of swap in use. Treat these speeds, and the gap "
-        "between the adapter and base arms, as rough.",
+        load,
         "",
         "| Arm | Mean generation tok/s | Mean seconds per item | Peak memory (GB) |",
         "|---|---|---|---|",
