@@ -2,10 +2,12 @@
 # Run an MLX LoRA fine-tune and record the log, a run manifest, and parsed metrics.
 # Usage: scripts/train_mlx.sh <config.yaml> [--pilot] [extra mlx_lm.lora args...]
 # Run it on an otherwise idle machine; timing and peak memory are recorded.
+# RUN_NAME sets the report file prefix (default "training", the v1 run), so a v2 run doesn't
+# overwrite the v1 log: RUN_NAME=training_v2 scripts/train_mlx.sh configs/lora_llama32_3b_v2.yaml
 set -euo pipefail
 cd "$(dirname "$0")/.."
 config="$1"; shift
-name="training"
+name="${RUN_NAME:-training}"
 extra=()
 if [[ "${1:-}" == "--pilot" ]]; then
   shift
