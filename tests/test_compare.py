@@ -177,3 +177,4 @@ def test_report_labels_versions_and_valid_split_intro(tmp_path):
     assert "sweep-lr1e4 - base-2shot | usable" in res["bootstrap"]
     # no 3B judge rows, so no all-n/a secondary table; the speed note doesn't quote the test-run load
     assert "3B judge" not in md and "6 running containers" not in md
+    assert "v2 caveat" in md

@@ -25,6 +25,8 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
     n = res["n_prompts"]
     lf = card["leakage_filter"]
     arms = [a for a in s if a != "reference"]
+    # v2 and sweep adapters were trained on targets chosen with these same checks
+    rft_arms = [a for a in arms if a not in ("base-0shot", "base-2shot", "finetuned")]
     if card.get("split") == "valid":
         intro = [
             "# Model-selection eval on the valid split",
@@ -70,6 +72,17 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
         "its near-duplicate group. Closeness to the source is reported separately as source copy.",
         "- Usable: all checks and not a copy of the source question. This is the bank-promotion criterion.",
         "- Memorized: stem cosine >= 0.92 with an SFT training stem. Reported only; it doesn't reject items.",
+        *(
+            [
+                "- v2 caveat: the v2 adapters' training targets are base 3B samples kept only when they passed "
+                "these same checks (structure, tagger alignment, novelty, not a source copy), with the base 3B "
+                "as the key judge. Usable is partly what v2 was trained to pass, so it overstates v2 more than "
+                "the other arms; the blind audit in the README is the check on that. Memorized is measured "
+                "against the v1 SFT train stems, which the v2 targets were screened against at build time.",
+            ]
+            if rft_arms
+            else []
+        ),
         "",
         "- Key agreement (valid): the same judge result over schema-valid items only, which removes the "
         "effect of JSON failures. Items whose key text also appears as a distractor never count as agreeing.",
@@ -105,7 +118,11 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
         L += [
             "",
             "Secondary key agreement with the base 3B as judge (self-judged for the base arms, so biased in "
-            "their favor):",
+            + (
+                "their favor; the 3B also picked the v2 training data, so it favors v2 too):"
+                if rft_arms
+                else "their favor):"
+            ),
             "",
             "| | Key agreement (3B judge) |",
             "|---|---|",
