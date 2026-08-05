@@ -300,14 +300,14 @@ def simulate(students: int = 500, out: Path = typer.Option(Path("reports")), see
     console.print(f"wrote {out / 'sim_report.md'} in {res['seconds']} s")
 
 
-def _novelty_index():
+def _novelty_index(data: Path = Path("data")):
     from eduai.curriculum.embedder import get_embedder
     from eduai.data.sciq import read_jsonl
     from eduai.generation.dedup import NoveltyIndex
 
-    bank = read_jsonl(Path("data/bank/sciq_items.jsonl"))
-    groups = {d["id"]: d["tags"]["group"] for d in read_jsonl(Path("data/items_tagged.jsonl"))}
-    train = [r["stem"] for r in read_jsonl(Path("data/sft/train_stems.jsonl"))]
+    bank = read_jsonl(data / "bank" / "sciq_items.jsonl")
+    groups = {d["id"]: d["tags"]["group"] for d in read_jsonl(data / "items_tagged.jsonl")}
+    train = [r["stem"] for r in read_jsonl(data / "sft" / "train_stems.jsonl")]
     return NoveltyIndex(
         get_embedder("bge-small"),
         [b["stem"] for b in bank],
@@ -389,20 +389,33 @@ def rft_sample(
     seed: int = 20260905,
     model: str = "llama-3b",
     adapter: Path = typer.Option(None, help="Sample from an adapter instead of the base model"),
+    top_up: bool = typer.Option(
+        False, help="Only prompts with no passing sample yet in --checked/--judged (raise --n to add samples)"
+    ),
+    checked: Path = typer.Option(Path("data/rft/checked.jsonl")),
+    judged: Path = typer.Option(Path("data/rft/judged_llama-3b.jsonl")),
 ) -> None:
     """Sample items from the base model for SFT train-split prompts."""
     import random
 
     from eduai.config import model_path
     from eduai.data import rft
+    from eduai.data.sciq import read_jsonl
     from eduai.evaluation.compare import fixed_shots
     from eduai.llm.mlx_backend import MLXBackend
 
     prompts = _rft_prompts(data)
     random.Random(seed).shuffle(prompts)
+    prompts = prompts[:limit]
+    if top_up:
+        merged = rft.merge(read_jsonl(checked), rft.read_rows(judged))
+        passed = {r["id"] for r in merged if r["passed"]}
+        prompts = [p for p in prompts if p["id"] not in passed]
+        console.print(f"top-up: {len(prompts)} prompts without a passing sample")
     backend = MLXBackend(model_path(model), adapter, seed=seed)
     ex = fixed_shots(data / "sft" / "train.jsonl") if shots else None
-    rft.sample(backend, prompts[:limit], out, ex, n, temperature, batch=batch, log=console.print)
+    params = {"model": model, "adapter": str(adapter) if adapter else None, "seed": seed}
+    rft.sample(backend, prompts, out, ex, n, temperature, batch=batch, params=params, log=console.print)
 
 
 @rft_app.command("check")
@@ -415,10 +428,10 @@ def rft_check(
     from eduai.curriculum.tagger import build_tagger
     from eduai.curriculum.taxonomy import default_taxonomy
     from eduai.data import rft
-    from eduai.data.sciq import read_jsonl, write_jsonl
+    from eduai.data.sciq import write_jsonl
 
     prompts = {p["id"]: p for p in _rft_prompts(data)}
-    rows = rft.check(read_jsonl(samples), prompts, build_tagger(default_taxonomy()), _novelty_index())
+    rows = rft.check(rft.read_rows(samples), prompts, build_tagger(default_taxonomy()), _novelty_index(data))
     write_jsonl(out, rows)
     console.print(f"wrote {out}: {sum(rft.needs_judge(r) for r in rows)} of {len(rows)} need the key check")
 
@@ -429,6 +442,7 @@ def rft_judge(
     checked: Path = typer.Option(Path("data/rft/checked.jsonl")),
     judge: str = "llama-3b",
     out: Path = typer.Option(None, help="Default data/rft/judged_<judge>.jsonl"),
+    chunk: int = typer.Option(32, help="Samples per write; the forward pass takes 4 samples (16 prompts)"),
 ) -> None:
     """Four-rotation key check for the samples that pass everything else."""
     from eduai.config import model_path
@@ -438,7 +452,9 @@ def rft_judge(
 
     prompts = {p["id"]: p for p in _rft_prompts(data)}
     out = out or checked.parent / f"judged_{judge}.jsonl"
-    rft.judge(MLXBackend(model_path(judge), None), read_jsonl(checked), prompts, out, log=console.print)
+    rft.judge(
+        MLXBackend(model_path(judge), None), read_jsonl(checked), prompts, out, chunk=chunk, log=console.print
+    )
 
 
 @rft_app.command("build")
@@ -448,21 +464,56 @@ def rft_build(
     judged: Path = typer.Option(Path("data/rft/judged_llama-3b.jsonl")),
     out: Path = typer.Option(Path("data/sft_v2")),
     card: Path = typer.Option(Path("reports/rft_card.json")),
+    pin: Path = typer.Option(Path("configs/sft_v2.sha256"), help="sha256 of the written train/valid files"),
     min_p_key: float = 0.0,
+    balance: bool = typer.Option(True, "--balance/--no-balance", help="Move keys to balanced letters"),
+    force: bool = typer.Option(False, help="Overwrite an existing build"),
 ) -> None:
     """Pick one passing sample per prompt and write the v2 SFT files."""
-    from eduai.data import rft
+    import hashlib
+
+    from eduai.curriculum.embedder import get_embedder
+    from eduai.curriculum.tagger import tag_text
+    from eduai.data import leakage, rft
     from eduai.data.sciq import read_jsonl
 
+    if not force and any(p.exists() for p in (out / "train.jsonl", card, pin)):
+        raise typer.BadParameter(f"{out}, {card} or {pin} exists; pass --force to rebuild")
     prompts = {p["id"]: p for p in _rft_prompts(data)}
-    merged = rft.merge(read_jsonl(checked), read_jsonl(judged))
+    merged = rft.merge(read_jsonl(checked), rft.read_rows(judged))
+
+    # Same-answer Q+A screen against the eval prompts' reference questions, as the eval prompts were
+    # screened against the v1 train rows.
+    refs = [
+        p["reference"]
+        for f in ("prompts.jsonl", "valid_prompts.jsonl")
+        for p in read_jsonl(data / "eval" / f)
+    ]
+    emb = get_embedder("bge-small")
+    ref_vecs = emb.encode([tag_text(r["question"], r["answer"]) for r in refs])
+
+    def leaks(targets: list[dict]) -> list[bool]:
+        keys = [t["choices"][t["answer"]] for t in targets]
+        vecs = emb.encode([tag_text(t["stem"], k) for t, k in zip(targets, keys, strict=True)])
+        hit = {
+            i for i, _, _ in leakage.same_answer_qa_leaks(vecs, keys, ref_vecs, [r["answer"] for r in refs])
+        }
+        return [i in hit for i in range(len(targets))]
+
     stats = {
         "prompts": len(prompts),
-        "sampling": rft.summary(merged),
+        "prompt_mix": rft.mix(prompts, prompts),
+        "sampling": rft.summary(merged, prompts),
         "min_p_key": min_p_key,
-        "build": rft.build(rft.select(merged, min_p_key), prompts, out),
+        "build": rft.build(rft.select(merged, min_p_key), prompts, out, leaks=leaks, balance=balance),
     }
     card.write_text(json.dumps(stats, indent=2) + "\n")
+    pin.write_text(
+        "".join(
+            f"{hashlib.sha256((out / f).read_bytes()).hexdigest()}  {out / f}\n"
+            for f in ("train.jsonl", "valid.jsonl")
+        )
+    )
     console.print(stats)
 
 

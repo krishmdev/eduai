@@ -6,7 +6,14 @@ sampled items for the SFT *train* prompts, kept only when they pass the eval's c
 
   schema -> structure (distinct options, requested LO and format, target misconception present)
   -> key text unique among the options -> tagger alignment -> novelty against the bank (own group
-  excluded) and not a copy of the source question -> answer key confirmed by a judge.
+  excluded), not a copy of the source question, and not a copy of any SFT train stem (the novelty
+  check leaves the prompt's group out, so without this a sibling question from the same group would
+  pass) -> answer key confirmed by a judge.
+
+Rows are keyed by (prompt id, shots, sample idx, sha1 of the text), so judge verdicts can't be
+attached to a regenerated sample. A samples file is pinned to one model, adapter, seed and
+temperature. Sampling uses continuous batching, whose output depends on how prompts are grouped
+into batches, so the seed alone doesn't reproduce a samples file; the file itself is the record.
 
 The judge here is the base 3B, not the eval's 1B judge, so the adapter isn't trained directly on
 the metric's judge. The 3B judge column of the eval is therefore no longer independent for v2.
@@ -18,6 +25,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 from collections import Counter
 from pathlib import Path
 
@@ -26,7 +34,40 @@ from eduai.generation.validate import misconception_present, parse, schema_error
 from eduai.prompts import GenerationRequest, build_messages, parse_user
 from eduai.schema import LETTERS
 
-CHECK_ORDER = ("json", "schema", "structure", "distinct_key", "aligned", "novel", "not_source_copy", "key")
+CHECK_ORDER = (
+    "json",
+    "schema",
+    "structure",
+    "distinct_key",
+    "aligned",
+    "novel",
+    "not_source_copy",
+    "not_memorized",
+    "key",
+)
+SAMPLE_PARAMS = ("model", "adapter", "seed", "temperature")
+
+
+def text_sha(text: str) -> str:
+    return hashlib.sha1(text.encode()).hexdigest()[:16]
+
+
+def read_rows(path: Path) -> list[dict]:
+    """Rows of an append-only jsonl file. A partial last line (a crash mid-write) is cut off the file."""
+    if not path.exists():
+        return []
+    raw = path.read_bytes()
+    rows, good = [], 0
+    for line in raw.splitlines(keepends=True):
+        if not line.endswith(b"\n"):
+            break
+        if line.strip():
+            rows.append(json.loads(line))
+        good += len(line)
+    if good < len(raw):
+        with path.open("r+b") as fh:
+            fh.truncate(good)
+    return rows
 
 
 def train_prompts(data_dir: Path, exclude_users: set[str] = frozenset()) -> list[dict]:
@@ -146,34 +187,106 @@ def holdout(pid: str, frac: float = 0.05) -> bool:
     return int(hashlib.sha1(pid.encode()).hexdigest()[:8], 16) / 0xFFFFFFFF < frac
 
 
-def build(selected: list[dict], prompts: dict[str, dict], out_dir: Path, valid_frac: float = 0.05) -> dict:
+_LETTER_REF = re.compile(r"\b((?:[Oo]ption|[Cc]hoice|[Aa]nswer)\s+)([A-D])\b|\(([A-D])\)")
+
+
+def move_key(item: dict, letter: str) -> dict:
+    """Swap the keyed option with the option at `letter`, and follow the swap in the explanation's
+    letter references ("B is correct.", "option C", "(D)"). A bare capital A is left alone, since it
+    is almost always the article."""
+    old = item["answer"]
+    if old == letter:
+        return item
+    swap = {old: letter, letter: old}
+    out = json.loads(json.dumps(item))
+    out["choices"][letter], out["choices"][old] = item["choices"][old], item["choices"][letter]
+    out["answer"] = letter
+    exp = item.get("explanation", "")
+    exp = re.sub(r"^([A-D])(?= is correct)", lambda m: swap.get(m[1], m[1]), exp)
+
+    def sub(m: re.Match) -> str:
+        if m[2]:
+            return m[1] + swap.get(m[2], m[2])
+        return f"({swap.get(m[3], m[3])})"
+
+    out["explanation"] = _LETTER_REF.sub(sub, exp)
+    return out
+
+
+def balanced_letters(ids: list[str]) -> dict[str, str]:
+    """An exactly balanced key letter per prompt, assigned in sha1(id) order so it doesn't depend on
+    anything the model wrote."""
+    order = sorted(ids, key=lambda i: hashlib.sha1(i.encode()).hexdigest())
+    return {pid: LETTERS[k % len(LETTERS)] for k, pid in enumerate(order)}
+
+
+def mix(ids, prompts: dict[str, dict]) -> dict:
+    c = Counter()
+    for pid in ids:
+        req = prompts[pid]["request"]
+        c[f"{req['format']}/{'misconception' if req.get('target_misconception') else 'none'}"] += 1
+    return dict(sorted(c.items()))
+
+
+def build(
+    selected: list[dict],
+    prompts: dict[str, dict],
+    out_dir: Path,
+    valid_frac: float = 0.05,
+    leaks=None,
+    balance: bool = True,
+    min_valid: int = 4,
+) -> dict:
     """Write {train,valid}.jsonl in the mlx-lm chat format. Valid rows are train-split prompts held out
-    for the training loss only; model selection uses the valid-split eval prompts."""
+    for the training loss only; model selection uses the valid-split eval prompts.
+
+    `leaks(targets)` returns one bool per target: True drops it (the CLI passes the same-answer Q+A
+    screen against the valid and test prompts' reference questions). With `balance`, each target's key
+    is moved to an exactly balanced letter, since the base model's own key letters are skewed.
+    """
     train, valid = [], []
     letters: Counter = Counter()
+    targets = []
     for r in selected:
         req = GenerationRequest(**prompts[r["id"]]["request"])
         item, _ = parse(r["text"])
-        tgt = target(item, req)
+        targets.append((r, req, target(item, req)))
+    dropped = leaks([t for _, _, t in targets]) if leaks else [False] * len(targets)
+    targets = [x for x, d in zip(targets, dropped, strict=True) if not d]
+    to = balanced_letters([r["id"] for r, _, _ in targets]) if balance else {}
+    original = Counter(t["answer"] for _, _, t in targets)
+    for r, req, tgt in targets:
+        if balance:
+            tgt = move_key(tgt, to[r["id"]])
         letters[tgt["answer"]] += 1
         row = {"messages": build_messages(req, tgt)}
         (valid if holdout(r["id"], valid_frac) else train).append(row)
+    if valid_frac > 0 and len(valid) < min_valid:
+        raise ValueError(f"only {len(valid)} holdout rows; mlx-lm needs at least one batch")
     out_dir.mkdir(parents=True, exist_ok=True)
     write_jsonl(out_dir / "train.jsonl", train)
     write_jsonl(out_dir / "valid.jsonl", valid)
+    kept = [r for r, _, _ in targets]
     stats = {
         "selected": len(selected),
+        "dropped_leak_same_answer_qa": int(sum(dropped)),
         "train": len(train),
         "valid": len(valid),
+        "sampled_key_letters": dict(sorted(original.items())),
         "key_letters": dict(sorted(letters.items())),
-        "from_2shot": sum(1 for r in selected if r.get("shots")),
+        "from_2shot": sum(1 for r in kept if r.get("shots")),
+        "mix": mix([r["id"] for r in kept], prompts),
     }
     (out_dir / "build_stats.json").write_text(json.dumps(stats, indent=2) + "\n")
     return stats
 
 
-def _key(r: dict) -> tuple:
+def _slot(r: dict) -> tuple:
     return (r["id"], r["shots"], r["idx"])
+
+
+def _key(r: dict) -> tuple:
+    return (*_slot(r), r["sha"])
 
 
 def sample(
@@ -186,12 +299,23 @@ def sample(
     chunk: int = 64,
     batch: int = 16,
     max_tokens: int = 480,
+    params: dict | None = None,
     log=print,
 ) -> Path:
-    """Append n sampled completions per prompt to `out`; rows already there are skipped (resumable)."""
+    """Append n sampled completions per prompt to `out`; rows already there are skipped (resumable).
+
+    `params` (model, adapter, seed) is stored on every row with the temperature, and a file whose rows
+    were sampled with other settings is refused rather than mixed.
+    """
     import time
 
-    done = {_key(r) for r in read_jsonl(out)} if out.exists() else set()
+    meta = {**dict.fromkeys(SAMPLE_PARAMS), **(params or {}), "temperature": temperature}
+    existing = read_rows(out)
+    for r in existing:
+        old = {k: r.get(k) for k in SAMPLE_PARAMS}
+        if old != meta:
+            raise ValueError(f"{out} was sampled with {old}, not {meta}; use another --out")
+    done = {_slot(r) for r in existing}
     n_shots = len(shots or [])
     todo = [(p, i) for p in prompts for i in range(n) if (p["id"], n_shots, i) not in done]
     out.parent.mkdir(parents=True, exist_ok=True)
@@ -202,13 +326,8 @@ def sample(
         texts, stats = backend.sample_batch(msgs, max_tokens, temperature, completion_batch_size=batch)
         with out.open("a") as fh:
             for (p, i), text in zip(part, texts, strict=True):
-                fh.write(
-                    json.dumps(
-                        {"id": p["id"], "shots": n_shots, "idx": i, "temperature": temperature, "text": text},
-                        ensure_ascii=False,
-                    )
-                    + "\n"
-                )
+                row = {"id": p["id"], "shots": n_shots, "idx": i, "sha": text_sha(text), **meta, "text": text}
+                fh.write(json.dumps(row, ensure_ascii=False) + "\n")
         log(
             f"{s + len(part)}/{len(todo)} samples, {time.time() - t0:.0f} s, "
             f"gen {stats['generation_tps']:.0f} tok/s, prompt {stats['prompt_tps']:.0f} tok/s, "
@@ -224,8 +343,10 @@ def check(samples: list[dict], prompts: dict[str, dict], tagger, novelty) -> lis
     rows, items = [], []
     for s in samples:
         req = GenerationRequest(**prompts[s["id"]]["request"])
+        if s["sha"] != text_sha(s["text"]):
+            raise ValueError(f"sample {_slot(s)} text doesn't match its sha")
         item, checks = cheap_checks(s["text"], req)
-        rows.append({**{k: s[k] for k in ("id", "shots", "idx")}, "checks": checks, "text": s["text"]})
+        rows.append({**{k: s[k] for k in ("id", "shots", "idx", "sha")}, "checks": checks, "text": s["text"]})
         items.append(item)
     todo = [i for i, it in enumerate(items) if it is not None]
     aligned = tagger.is_aligned(
@@ -242,7 +363,10 @@ def check(samples: list[dict], prompts: dict[str, dict], tagger, novelty) -> lis
         )
         novelty.accepted.clear()  # samples are checked independently
         rows[i]["checks"].update(
-            aligned=bool(a["aligned"]), novel=bool(ok), not_source_copy=not info.get("source_copy")
+            aligned=bool(a["aligned"]),
+            novel=bool(ok),
+            not_source_copy=not info.get("source_copy"),
+            not_memorized=not info["memorized"],
         )
         rows[i]["source_cos"] = round(info["source_cos"], 4)
         rows[i]["max_train_cos"] = round(info["max_train_cos"], 4)
@@ -257,7 +381,7 @@ def judge(
     backend, checked: list[dict], prompts: dict[str, dict], out: Path, chunk: int = 32, log=print
 ) -> Path:
     """Judge the samples that pass every other check; resumable like `sample`."""
-    done = {_key(r) for r in read_jsonl(out)} if out.exists() else set()
+    done = {_key(r) for r in read_rows(out)}
     todo = [r for r in checked if needs_judge(r) and _key(r) not in done]
     for s in range(0, len(todo), chunk):
         part = todo[s : s + chunk]
@@ -265,13 +389,19 @@ def judge(
         res = judge_batch(backend, items, [prompts[r["id"]]["request"]["passage"] for r in part])
         with out.open("a") as fh:
             for r, j in zip(part, res, strict=True):
-                fh.write(json.dumps({**{k: r[k] for k in ("id", "shots", "idx")}, **j}) + "\n")
+                fh.write(json.dumps({**{k: r[k] for k in ("id", "shots", "idx", "sha")}, **j}) + "\n")
         log(f"judged {s + len(part)}/{len(todo)}")
     return out
 
 
 def merge(checked: list[dict], judged: list[dict]) -> list[dict]:
+    """Attach judge verdicts to checked rows. Verdicts for a slot whose text has changed are stale and
+    raise, rather than silently scoring the new text."""
     by = {_key(j): j for j in judged}
+    texts = {_slot(r): r["sha"] for r in checked}
+    stale = [k for k in by if k[:3] in texts and texts[k[:3]] != k[3]]
+    if stale:
+        raise ValueError(f"{len(stale)} judge rows are for older sample texts, e.g. {stale[0]}")
     out = []
     for r in checked:
         j = by.get(_key(r))
@@ -285,7 +415,7 @@ def merge(checked: list[dict], judged: list[dict]) -> list[dict]:
     return out
 
 
-def summary(merged: list[dict]) -> dict:
+def summary(merged: list[dict], prompts: dict[str, dict] | None = None) -> dict:
     out = {}
     for shots in sorted({r["shots"] for r in merged}):
         rows = [r for r in merged if r["shots"] == shots]
@@ -294,5 +424,7 @@ def summary(merged: list[dict]) -> dict:
             "passed": sum(r["passed"] for r in rows),
             "first_failure": dict(Counter(r["first_failure"] or "passed" for r in rows).most_common()),
         }
-    out["prompts_with_a_pass"] = len({r["id"] for r in merged if r["passed"]})
+    passed = {r["id"] for r in merged if r["passed"]}
+    out["prompts_with_a_pass"] = len(passed)
+    out["prompts_with_a_pass_by_mix"] = mix(passed, prompts) if prompts else None
     return out
