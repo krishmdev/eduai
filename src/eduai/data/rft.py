@@ -297,7 +297,7 @@ def sample(
     n: int = 1,
     temperature: float = 0.8,
     chunk: int = 64,
-    batch: int = 16,
+    batch: int = 12,
     max_tokens: int = 480,
     params: dict | None = None,
     log=print,

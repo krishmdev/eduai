@@ -9,6 +9,15 @@ from pathlib import Path
 from eduai.llm.base import BackendUnavailable
 
 
+def shared_prefix_len(prompts: list[list[int]]) -> int:
+    """Length of the token prefix every prompt shares, leaving each prompt at least one token."""
+    first, n = prompts[0], 0
+    limit = min(len(p) for p in prompts) - 1
+    while n < limit and all(p[n] == first[n] for p in prompts):
+        n += 1
+    return n
+
+
 class MLXBackend:
     def __init__(self, model_dir: Path, adapter_path: Path | None = None, seed: int = 0):
         try:
@@ -71,26 +80,47 @@ class MLXBackend:
         max_tokens: int = 512,
         temperature: float = 0.8,
         top_p: float = 0.95,
-        completion_batch_size: int = 16,
+        completion_batch_size: int = 12,
+        cache_limit_gb: float = 2.0,
     ) -> tuple[list[str], dict]:
         """Sampled completions for many prompts at once (continuous batching). Used for training data,
-        never for the eval, which decodes one request at a time."""
+        never for the eval, which decodes one request at a time.
+
+        The token prefix all prompts share (system prompt and any fixed examples) is prefilled once and
+        its KV cache reused, which halves the time for 2-shot prompts. MLX's buffer cache is capped,
+        since left alone it held 10 GB on top of a 6 GB peak here and ran the 16 GB machine out of
+        memory.
+        """
+        import mlx.core as mx
         from mlx_lm import batch_generate
+        from mlx_lm.models.cache import make_prompt_cache
         from mlx_lm.sample_utils import make_sampler
 
         prompts = [self._prompt(m) for m in batch]
+        n = shared_prefix_len(prompts)
+        mx.set_cache_limit(int(cache_limit_gb * 2**30))
         with self._lock:
+            caches = None
+            if n >= 32:
+                cache = make_prompt_cache(self.model)
+                self.model(mx.array(prompts[0][:n])[None], cache=cache)
+                mx.eval([c.state for c in cache])
+                # batch_generate copies prompt caches into its batch cache, so one can be shared
+                caches, prompts = [cache] * len(prompts), [p[n:] for p in prompts]
             resp = batch_generate(
                 self.model,
                 self.tokenizer,
                 prompts,
+                prompt_caches=caches,
                 max_tokens=max_tokens,
                 sampler=make_sampler(temp=temperature, top_p=top_p),
                 completion_batch_size=completion_batch_size,
-                prefill_batch_size=min(8, completion_batch_size),
+                prefill_batch_size=min(4, completion_batch_size),
             )
+            mx.clear_cache()
         st = resp.stats
         stats = {
+            "shared_prefix_tokens": n if caches else 0,
             "prompt_tokens": st.prompt_tokens,
             "prompt_tps": st.prompt_tps,
             "generation_tokens": st.generation_tokens,

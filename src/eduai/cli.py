@@ -385,7 +385,7 @@ def rft_sample(
     n: int = typer.Option(1, help="Samples per prompt"),
     temperature: float = 0.8,
     limit: int = typer.Option(None, help="Only the first N prompts (after a seeded shuffle)"),
-    batch: int = 16,
+    batch: int = 12,
     seed: int = 20260905,
     model: str = "llama-3b",
     adapter: Path = typer.Option(None, help="Sample from an adapter instead of the base model"),

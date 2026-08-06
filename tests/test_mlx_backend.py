@@ -53,3 +53,11 @@ def test_batched_letter_logprobs_match_one_prompt_at_a_time(tied):
         want = b.choice_logprobs(m)
         assert g.keys() == want.keys()
         assert all(abs(g[k] - want[k]) < 1e-4 for k in g), (g, want)
+
+
+def test_shared_prefix_leaves_every_prompt_a_token():
+    from eduai.llm.mlx_backend import shared_prefix_len
+
+    assert shared_prefix_len([[1, 2, 3, 4], [1, 2, 3, 5], [1, 2, 3, 4, 6]]) == 3
+    assert shared_prefix_len([[1, 2, 3], [1, 2, 3]]) == 2
+    assert shared_prefix_len([[7], [7, 8]]) == 0
