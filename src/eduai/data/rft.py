@@ -187,7 +187,12 @@ def holdout(pid: str, frac: float = 0.05) -> bool:
     return int(hashlib.sha1(pid.encode()).hexdigest()[:8], 16) / 0xFFFFFFFF < frac
 
 
-_LETTER_REF = re.compile(r"\b((?:[Oo]ption|[Cc]hoice|[Aa]nswer)\s+)([A-D])\b|\(([A-D])\)")
+_LETTER_REF = re.compile(
+    r"\b((?i:(?:correct\s+)?(?:answer|option|choice)\s+is\s+))([A-D])\b"
+    r"|\b((?i:(?:option|choice|answer)\s+))([A-D])\b"
+    r"|\b([A-D])(?=\s+(?i:is\s+(?:in)?correct)\b)"
+    r"|\(([A-D])\)"
+)
 
 
 def move_key(item: dict, letter: str) -> dict:
@@ -202,12 +207,15 @@ def move_key(item: dict, letter: str) -> dict:
     out["choices"][letter], out["choices"][old] = item["choices"][old], item["choices"][letter]
     out["answer"] = letter
     exp = item.get("explanation", "")
-    exp = re.sub(r"^([A-D])(?= is correct)", lambda m: swap.get(m[1], m[1]), exp)
 
     def sub(m: re.Match) -> str:
         if m[2]:
             return m[1] + swap.get(m[2], m[2])
-        return f"({swap.get(m[3], m[3])})"
+        if m[4]:
+            return m[3] + swap.get(m[4], m[4])
+        if m[5]:
+            return swap.get(m[5], m[5])
+        return f"({swap.get(m[6], m[6])})"
 
     out["explanation"] = _LETTER_REF.sub(sub, exp)
     return out

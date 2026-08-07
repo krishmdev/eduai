@@ -195,6 +195,12 @@ def test_move_key_swaps_options_and_explanation_letters():
     # a bare article "A" is not a letter reference
     item = json.loads(_item(explanation="A is correct. A mitochondrion makes ATP."))
     assert rft.move_key(item, "C")["explanation"] == "C is correct. A mitochondrion makes ATP."
+    item = json.loads(_item(explanation="The correct answer is A. B is incorrect."))
+    assert rft.move_key(item, "B")["explanation"] == "The correct answer is B. A is incorrect."
+    item = json.loads(_item(explanation="Option A is correct. Choice B is incorrect. (A)"))
+    assert rft.move_key(item, "B")["explanation"] == "Option B is correct. Choice A is incorrect. (B)"
+    item = json.loads(_item(explanation="The answer is a mitochondrion."))
+    assert rft.move_key(item, "B")["explanation"] == "The answer is a mitochondrion."
     assert rft.move_key(item, "A") == item
 
 
