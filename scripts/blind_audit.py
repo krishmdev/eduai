@@ -25,7 +25,15 @@ def rows(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
 
 
-def draw(eval_dir: Path, prompts_path: Path, arms: list[str], n: int, seed: int, out: Path) -> None:
+def draw(
+    eval_dir: Path, prompts_path: Path, arms: list[str], n: int, seed: int, out: Path, force: bool = False
+) -> None:
+    if len(arms) < 2 or len(arms) != len(set(arms)):
+        raise SystemExit("draw needs at least two distinct arms")
+    if n < 1:
+        raise SystemExit("draw needs at least one item per arm")
+    if not force and any((out / name).exists() for name in ("sheet.jsonl", "key.json", "score.json")):
+        raise SystemExit(f"{out} already has an audit; pass --force to replace it")
     prompts = {p["id"]: p for p in rows(prompts_path)}
     usable = {}
     for r in rows(eval_dir / "per_item.jsonl"):
@@ -35,8 +43,12 @@ def draw(eval_dir: Path, prompts_path: Path, arms: list[str], n: int, seed: int,
     picked = []
     for arm in arms:
         ids = sorted(usable.get(arm, []))
+        if len(ids) != len(set(ids)):
+            raise SystemExit(f"{arm} has duplicate usable IDs")
+        if len(ids) < n:
+            raise SystemExit(f"{arm} has only {len(ids)} usable items; requested {n}")
         gen = {g["id"]: g for g in rows(eval_dir / f"gen_{arm}.jsonl")}
-        for pid in rng.sample(ids, min(n, len(ids))):
+        for pid in rng.sample(ids, n):
             picked.append((arm, pid, parse(gen[pid]["text"])[0]))
     rng.shuffle(picked)
     out.mkdir(parents=True, exist_ok=True)
@@ -60,6 +72,8 @@ def draw(eval_dir: Path, prompts_path: Path, arms: list[str], n: int, seed: int,
         key[aid] = {"arm": arm, "id": pid}
     (out / "sheet.jsonl").write_text("".join(json.dumps(r, ensure_ascii=False) + "\n" for r in sheet))
     (out / "key.json").write_text(json.dumps(key, indent=1) + "\n")
+    if force:
+        (out / "score.json").unlink(missing_ok=True)
     print(
         f"wrote {len(sheet)} rows to {out}/sheet.jsonl ({', '.join(f'{a}: {len(usable.get(a, []))} usable' for a in arms)})"
     )
@@ -67,10 +81,14 @@ def draw(eval_dir: Path, prompts_path: Path, arms: list[str], n: int, seed: int,
 
 def score(out: Path) -> dict:
     key = json.loads((out / "key.json").read_text())
+    sheet = rows(out / "sheet.jsonl")
+    ids = [r.get("audit_id") for r in sheet]
+    if len(ids) != len(set(ids)) or set(ids) != set(key):
+        raise SystemExit("audit sheet IDs must match key.json exactly, once each")
     res: dict[str, dict] = {}
-    for r in rows(out / "sheet.jsonl"):
-        if r["key_correct"] is None or r["lo_fit"] is None:
-            raise SystemExit(f"{r['audit_id']} has no verdict yet")
+    for r in sheet:
+        if type(r.get("key_correct")) is not bool or type(r.get("lo_fit")) is not bool:
+            raise SystemExit(f"{r['audit_id']} needs boolean key_correct and lo_fit verdicts")
         a = res.setdefault(key[r["audit_id"]]["arm"], {"n": 0, "key_correct": 0, "lo_fit": 0, "both": 0})
         a["n"] += 1
         a["key_correct"] += bool(r["key_correct"])
@@ -91,11 +109,12 @@ def main() -> None:
     d.add_argument("--n", type=int, default=40)
     d.add_argument("--seed", type=int, default=20260905)
     d.add_argument("--out", type=Path, required=True)
+    d.add_argument("--force", action="store_true", help="Replace an existing audit sheet and key")
     s = sub.add_parser("score")
     s.add_argument("--out", type=Path, required=True)
     a = ap.parse_args()
     if a.cmd == "draw":
-        draw(a.eval_dir, a.prompts, a.arm, a.n, a.seed, a.out)
+        draw(a.eval_dir, a.prompts, a.arm, a.n, a.seed, a.out, a.force)
     else:
         score(a.out)
 
