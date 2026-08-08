@@ -58,9 +58,11 @@ def containment_pairs(
     return sorted(set(pairs))
 
 
-def norm_answer(a: str) -> str:
+def norm_answer(a: str, strip_articles: bool = False) -> str:
+    """Lowercased word tokens. `strip_articles` also drops a leading the/a/an; it is off by default so
+    the committed eval prompt sets, screened without it, rebuild the same way."""
     tokens = _W.findall(a.lower())
-    if tokens and tokens[0] in ("the", "a", "an"):
+    if strip_articles and tokens and tokens[0] in ("the", "a", "an"):
         tokens = tokens[1:]
     return " ".join(tokens)
 
@@ -71,13 +73,14 @@ def same_answer_qa_leaks(
     ref_vecs: np.ndarray,
     ref_answers: Sequence[str],
     threshold: float = QA_COS_MAX,
+    strip_articles: bool = False,
 ) -> list[tuple[int, int, float]]:
     """(query idx, ref idx, cos) where the answers match and Q+A cosine >= threshold."""
     sims = q_vecs @ ref_vecs.T
-    ra = [norm_answer(a) for a in ref_answers]
+    ra = [norm_answer(a, strip_articles) for a in ref_answers]
     out = []
     for i, a in enumerate(q_answers):
-        na = norm_answer(a)
+        na = norm_answer(a, strip_articles)
         for j in np.nonzero(sims[i] >= threshold)[0]:
             if ra[j] == na:
                 out.append((i, int(j), float(sims[i, j])))

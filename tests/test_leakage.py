@@ -31,11 +31,13 @@ def test_containment_pairs():
 
 
 def test_norm_answer_strips_leading_articles():
-    assert norm_answer("the mitochondria") == "mitochondria"
-    assert norm_answer("A Mitochondrion") == "mitochondrion"
-    assert norm_answer("an electron") == "electron"
-    assert norm_answer("photosynthesis") == "photosynthesis"
-    assert norm_answer("THE cell wall") == "cell wall"
+    assert norm_answer("the mitochondria", True) == "mitochondria"
+    assert norm_answer("A Mitochondrion", True) == "mitochondrion"
+    assert norm_answer("an electron", True) == "electron"
+    assert norm_answer("photosynthesis", True) == "photosynthesis"
+    assert norm_answer("THE cell wall", True) == "cell wall"
+    # off by default: the eval prompt sets were screened without it
+    assert norm_answer("the mitochondria") == "the mitochondria"
 
 
 def test_same_answer_qa_leaks_detects_article_mismatches():
@@ -46,6 +48,7 @@ def test_same_answer_qa_leaks_detects_article_mismatches():
     ref_answers = ["mitochondria", "a plant"]
 
     # Match when answers are semantically equal after stripping articles
-    leaks = same_answer_qa_leaks(q_vecs, q_answers, ref_vecs, ref_answers, threshold=0.8)
+    assert same_answer_qa_leaks(q_vecs, q_answers, ref_vecs, ref_answers, threshold=0.8) == []
+    leaks = same_answer_qa_leaks(q_vecs, q_answers, ref_vecs, ref_answers, threshold=0.8, strip_articles=True)
     assert len(leaks) == 1
     assert leaks[0] == (0, 0, 1.0)

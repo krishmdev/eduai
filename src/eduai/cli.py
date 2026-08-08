@@ -496,7 +496,10 @@ def rft_build(
         keys = [t["choices"][t["answer"]] for t in targets]
         vecs = emb.encode([tag_text(t["stem"], k) for t, k in zip(targets, keys, strict=True)])
         hit = {
-            i for i, _, _ in leakage.same_answer_qa_leaks(vecs, keys, ref_vecs, [r["answer"] for r in refs])
+            i
+            for i, _, _ in leakage.same_answer_qa_leaks(
+                vecs, keys, ref_vecs, [r["answer"] for r in refs], strip_articles=True
+            )
         }
         return [i in hit for i in range(len(targets))]
 
