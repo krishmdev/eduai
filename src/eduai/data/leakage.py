@@ -59,7 +59,10 @@ def containment_pairs(
 
 
 def norm_answer(a: str) -> str:
-    return " ".join(_W.findall(a.lower()))
+    tokens = _W.findall(a.lower())
+    if tokens and tokens[0] in ("the", "a", "an"):
+        tokens = tokens[1:]
+    return " ".join(tokens)
 
 
 def same_answer_qa_leaks(
