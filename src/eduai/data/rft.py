@@ -188,10 +188,14 @@ def holdout(pid: str, frac: float = 0.05) -> bool:
 
 
 _LETTER_REF = re.compile(
-    r"\b((?i:(?:correct\s+)?(?:answer|option|choice)\s+is\s+))([A-D])\b"
-    r"|\b((?i:(?:option|choice|answer)\s+))([A-D])\b"
-    r"|\b([A-D])(?=\s+(?i:is\s+(?:in)?correct)\b)"
-    r"|\(([A-D])\)"
+    r"(?i:\b(?P<entity>vitamin|type|allele|point|factor|wave|stage|phase)\s+)(?P<ent_letter>[A-D])\b"
+    r"|\b(?P<opt_prefix>(?i:(?:options?|choices?|answers?)\s+))(?P<opt_list>[A-D](?:,\s*[A-D])*(?:\s*(?:and|or)\s*[A-D])?)\b"
+    r"|\b(?P<ans_is>(?i:(?:correct\s+)?(?:answer|option|choice)\s+is\s+))(?P<ans_is_letter>[A-D])\b"
+    r"|\b(?P<is_corr_letter>[A-D])(?=\s+(?i:is\s+(?:in)?correct)\b)"
+    r"|\((?P<paren_letter>[A-D])\)"
+    r"|(?<=^)(?P<start_letter>[A-D])(?=[:\)])"
+    r"|(?<=\n)(?P<nl_letter>[A-D])(?=[:\)])"
+    r"|(?<=\.\s)(?P<dot_letter>[A-D])(?=[:\)])"
 )
 
 
@@ -209,13 +213,24 @@ def move_key(item: dict, letter: str) -> dict:
     exp = item.get("explanation", "")
 
     def sub(m: re.Match) -> str:
-        if m[2]:
-            return m[1] + swap.get(m[2], m[2])
-        if m[4]:
-            return m[3] + swap.get(m[4], m[4])
-        if m[5]:
-            return swap.get(m[5], m[5])
-        return f"({swap.get(m[6], m[6])})"
+        if m.group("ent_letter"):
+            return m.group(0)
+        if m.group("opt_list"):
+            prefix = m.group("opt_prefix")
+            items = re.sub(
+                r"\b[A-D]\b", lambda lm: swap.get(lm.group(0), lm.group(0)), m.group("opt_list")
+            )
+            return prefix + items
+        if m.group("ans_is_letter"):
+            return m.group("ans_is") + swap.get(m.group("ans_is_letter"), m.group("ans_is_letter"))
+        if m.group("is_corr_letter"):
+            return swap.get(m.group("is_corr_letter"), m.group("is_corr_letter"))
+        if m.group("paren_letter"):
+            return f"({swap.get(m.group('paren_letter'), m.group('paren_letter'))})"
+        for k in ("start_letter", "nl_letter", "dot_letter"):
+            if m.group(k):
+                return swap.get(m.group(k), m.group(k))
+        return m.group(0)
 
     out["explanation"] = _LETTER_REF.sub(sub, exp)
     return out

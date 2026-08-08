@@ -201,6 +201,12 @@ def test_move_key_swaps_options_and_explanation_letters():
     assert rft.move_key(item, "B")["explanation"] == "Option B is correct. Choice A is incorrect. (B)"
     item = json.loads(_item(explanation="The answer is a mitochondrion."))
     assert rft.move_key(item, "B")["explanation"] == "The answer is a mitochondrion."
+    item = json.loads(_item(explanation="Vitamin A is correct because it maintains retinal health."))
+    assert rft.move_key(item, "B")["explanation"] == "Vitamin A is correct because it maintains retinal health."
+    item = json.loads(_item(explanation="Options A and B are incorrect. Leaving C."))
+    assert rft.move_key(item, "B")["explanation"] == "Options B and A are incorrect. Leaving C."
+    item = json.loads(_item(explanation="A: Mitochondria make ATP. B: Nucleus stores DNA."))
+    assert rft.move_key(item, "B")["explanation"] == "B: Mitochondria make ATP. A: Nucleus stores DNA."
     assert rft.move_key(item, "A") == item
 
 
