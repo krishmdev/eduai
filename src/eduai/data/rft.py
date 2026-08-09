@@ -188,7 +188,7 @@ def holdout(pid: str, frac: float = 0.05) -> bool:
 
 
 _LETTER_REF = re.compile(
-    r"(?i:\b(?P<entity>vitamin|type|allele|point|factor|wave|stage|phase)\s+)(?P<ent_letter>[A-D])\b"
+    r"(?i:\b(?P<entity>vitamin|type|allele|point|factor|wave|stage|phase|hepatitis|group|class|band|zone|region|site|horizon|layer)\s+)(?P<ent_letter>[A-D])\b"
     r"|\b(?P<opt_prefix>(?i:(?:options?|choices?|answers?)\s+))(?P<opt_list>[A-D](?:,\s*[A-D])*(?:\s*(?:and|or)\s*[A-D])?)\b"
     r"|\b(?P<ans_is>(?i:(?:correct\s+)?(?:answer|option|choice)\s+is\s+))(?P<ans_is_letter>[A-D])\b"
     r"|\b(?P<is_corr_letter>[A-D])(?=\s+(?i:is\s+(?:in)?correct)\b)"
@@ -199,13 +199,34 @@ _LETTER_REF = re.compile(
 )
 
 
-def move_key(item: dict, letter: str) -> dict:
+_LETTER_TOKEN = re.compile(r"(?<![\w'-])[A-D](?![\w'-])")
+_ARTICLE_A = re.compile(r"A\s+[a-z]")
+
+
+def unhandled_letters(explanation: str, letters: str = LETTERS) -> list[str]:
+    """Standalone capital A-D tokens that no letter-reference pattern covers, other than the article
+    "A" before a lowercase word. "Unlike B, ..." or "Answer: C" can't be rewritten safely."""
+    spans = [m.span() for m in _LETTER_REF.finditer(explanation)]
+    out = []
+    for m in _LETTER_TOKEN.finditer(explanation):
+        if m[0] not in letters or any(a <= m.start() < b for a, b in spans):
+            continue
+        if m[0] == "A" and _ARTICLE_A.match(explanation, m.start()):
+            continue
+        out.append(m[0])
+    return out
+
+
+def move_key(item: dict, letter: str) -> dict | None:
     """Swap the keyed option with the option at `letter`, and follow the swap in the explanation's
     letter references ("B is correct.", "option C", "(D)"). A bare capital A is left alone, since it
-    is almost always the article."""
+    is almost always the article. Returns None when the explanation has a letter reference the
+    patterns don't cover, so the caller keeps the item's own key rather than a half-rewritten one."""
     old = item["answer"]
     if old == letter:
         return item
+    if unhandled_letters(item.get("explanation", ""), (old, letter)):
+        return None
     swap = {old: letter, letter: old}
     out = json.loads(json.dumps(item))
     out["choices"][letter], out["choices"][old] = item["choices"][old], item["choices"][letter]
@@ -217,9 +238,7 @@ def move_key(item: dict, letter: str) -> dict:
             return m.group(0)
         if m.group("opt_list"):
             prefix = m.group("opt_prefix")
-            items = re.sub(
-                r"\b[A-D]\b", lambda lm: swap.get(lm.group(0), lm.group(0)), m.group("opt_list")
-            )
+            items = re.sub(r"\b[A-D]\b", lambda lm: swap.get(lm.group(0), lm.group(0)), m.group("opt_list"))
             return prefix + items
         if m.group("ans_is_letter"):
             return m.group("ans_is") + swap.get(m.group("ans_is_letter"), m.group("ans_is_letter"))
@@ -236,11 +255,19 @@ def move_key(item: dict, letter: str) -> dict:
     return out
 
 
-def balanced_letters(ids: list[str]) -> dict[str, str]:
-    """An exactly balanced key letter per prompt, assigned in sha1(id) order so it doesn't depend on
-    anything the model wrote."""
-    order = sorted(ids, key=lambda i: hashlib.sha1(i.encode()).hexdigest())
-    return {pid: LETTERS[k % len(LETTERS)] for k, pid in enumerate(order)}
+def balanced_letters(ids: list[str], fixed: dict[str, str] | None = None) -> dict[str, str]:
+    """A key letter per prompt, as balanced as possible given the `fixed` ones (items whose key can't
+    be moved). Free prompts are assigned in sha1(id) order, each to the least-used letter so far, so
+    the choice doesn't depend on anything the model wrote."""
+    fixed = fixed or {}
+    count = Counter({x: 0 for x in LETTERS})
+    count.update(fixed.values())
+    out = dict(fixed)
+    for pid in sorted((i for i in ids if i not in fixed), key=lambda i: hashlib.sha1(i.encode()).hexdigest()):
+        pick = min(LETTERS, key=lambda x: (count[x], LETTERS.index(x)))
+        out[pid] = pick
+        count[pick] += 1
+    return out
 
 
 def mix(ids, prompts: dict[str, dict]) -> dict:
@@ -276,11 +303,15 @@ def build(
         targets.append((r, req, target(item, req)))
     dropped = leaks([t for _, _, t in targets]) if leaks else [False] * len(targets)
     targets = [x for x, d in zip(targets, dropped, strict=True) if not d]
-    to = balanced_letters([r["id"] for r, _, _ in targets]) if balance else {}
+    # any uncovered letter token pins the key (conservative: it may name one of the swapped letters)
+    stuck = {
+        r["id"]: t["answer"] for r, _, t in targets if balance and unhandled_letters(t.get("explanation", ""))
+    }
+    to = balanced_letters([r["id"] for r, _, _ in targets], stuck) if balance else {}
     original = Counter(t["answer"] for _, _, t in targets)
     for r, req, tgt in targets:
         if balance:
-            tgt = move_key(tgt, to[r["id"]])
+            tgt = move_key(tgt, to[r["id"]]) or tgt
         letters[tgt["answer"]] += 1
         row = {"messages": build_messages(req, tgt)}
         (valid if holdout(r["id"], valid_frac) else train).append(row)
@@ -297,6 +328,7 @@ def build(
         "valid": len(valid),
         "sampled_key_letters": dict(sorted(original.items())),
         "key_letters": dict(sorted(letters.items())),
+        "key_not_moved_unhandled_letter_refs": len(stuck),
         "from_2shot": sum(1 for r in kept if r.get("shots")),
         "mix": mix([r["id"] for r in kept], prompts),
     }

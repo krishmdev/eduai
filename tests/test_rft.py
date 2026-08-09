@@ -202,7 +202,9 @@ def test_move_key_swaps_options_and_explanation_letters():
     item = json.loads(_item(explanation="The answer is a mitochondrion."))
     assert rft.move_key(item, "B")["explanation"] == "The answer is a mitochondrion."
     item = json.loads(_item(explanation="Vitamin A is correct because it maintains retinal health."))
-    assert rft.move_key(item, "B")["explanation"] == "Vitamin A is correct because it maintains retinal health."
+    assert (
+        rft.move_key(item, "B")["explanation"] == "Vitamin A is correct because it maintains retinal health."
+    )
     item = json.loads(_item(explanation="Options A and B are incorrect. Leaving C."))
     assert rft.move_key(item, "B")["explanation"] == "Options B and A are incorrect. Leaving C."
     item = json.loads(_item(explanation="A: Mitochondria make ATP. B: Nucleus stores DNA."))
@@ -210,9 +212,21 @@ def test_move_key_swaps_options_and_explanation_letters():
     assert rft.move_key(item, "A") == item
 
 
+def test_move_key_refuses_letter_references_it_cannot_rewrite():
+    for exp in ("A is correct. Unlike B, it makes ATP.", "A is correct. Answer: B is wrong."):
+        item = json.loads(_item(explanation=exp))
+        assert rft.unhandled_letters(exp) and rft.move_key(item, "B") is None
+    item = json.loads(_item(explanation="Hepatitis B is not involved. A is correct."))
+    assert rft.move_key(item, "B")["explanation"] == "Hepatitis B is not involved. B is correct."
+
+
 def test_balanced_letters_are_exact():
     got = rft.balanced_letters([f"train-{i:05d}" for i in range(10)])
     assert sorted(Counter(got.values()).values()) == [2, 2, 3, 3]
+    # items whose key can't move keep it, and the rest fill the other letters first
+    ids = [f"train-{i:05d}" for i in range(8)]
+    got = rft.balanced_letters(ids, {ids[0]: "A", ids[1]: "A"})
+    assert got[ids[0]] == got[ids[1]] == "A" and Counter(got.values()) == {"A": 2, "B": 2, "C": 2, "D": 2}
 
 
 class FakeSampler:
