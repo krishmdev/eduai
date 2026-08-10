@@ -1,0 +1,60 @@
+{
+  "prompts": 2998,
+  "prompt_mix": {
+    "standard/misconception": 548,
+    "standard/none": 1251,
+    "stimulus/misconception": 352,
+    "stimulus/none": 847
+  },
+  "sampling": {
+    "2-shot": {
+      "samples": 6096,
+      "passed": 1729,
+      "first_failure": {
+        "passed": 1729,
+        "structure": 1429,
+        "schema": 1188,
+        "aligned": 729,
+        "key": 535,
+        "json": 269,
+        "not_source_copy": 153,
+        "novel": 60,
+        "not_memorized": 4
+      }
+    },
+    "prompts_with_a_pass": 1705,
+    "prompts_with_a_pass_by_mix": {
+      "standard/misconception": 340,
+      "standard/none": 717,
+      "stimulus/misconception": 211,
+      "stimulus/none": 437
+    }
+  },
+  "min_p_key": 0.0,
+  "build": {
+    "selected": 1705,
+    "dropped_leak_same_answer_qa": 4,
+    "train": 1606,
+    "valid": 95,
+    "sampled_key_letters": {
+      "A": 270,
+      "B": 652,
+      "C": 365,
+      "D": 414
+    },
+    "key_letters": {
+      "A": 426,
+      "B": 425,
+      "C": 425,
+      "D": 425
+    },
+    "key_not_moved_unhandled_letter_refs": 15,
+    "from_2shot": 1701,
+    "mix": {
+      "standard/misconception": 340,
+      "standard/none": 713,
+      "stimulus/misconception": 211,
+      "stimulus/none": 437
+    }
+  }
+}
