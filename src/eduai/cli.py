@@ -394,6 +394,9 @@ def rft_sample(
     ),
     checked: Path = typer.Option(Path("data/rft/checked.jsonl")),
     judged: Path = typer.Option(Path("data/rft/judged_llama-3b.jsonl")),
+    only: list[str] = typer.Option(
+        None, help="Only prompts of this format/misconception kind, e.g. standard/misconception (repeatable)"
+    ),
 ) -> None:
     """Sample items from the base model for SFT train-split prompts."""
     import random
@@ -412,6 +415,9 @@ def rft_sample(
         passed = {r["id"] for r in merged if r["passed"]}
         prompts = [p for p in prompts if p["id"] not in passed]
         console.print(f"top-up: {len(prompts)} prompts without a passing sample")
+    if only:
+        prompts = [p for p in prompts if next(iter(rft.mix([p["id"]], {p["id"]: p}))) in only]
+        console.print(f"{len(prompts)} prompts of kind {', '.join(only)}")
     backend = MLXBackend(model_path(model), adapter, seed=seed)
     ex = fixed_shots(data / "sft" / "train.jsonl") if shots else None
     params = {"model": model, "adapter": str(adapter) if adapter else None, "seed": seed}
