@@ -1,0 +1,29 @@
+# v2 adapter: same base snapshot and prompt as v1, trained on rejection-sampled targets
+# (data/sft_v2, built by `eduai rft ...`) instead of the SciQ source questions.
+# Key names checked against mlx_lm/lora.py CONFIG_DEFAULTS (mlx-lm 0.31.3).
+model: .models/hub/models--mlx-community--Llama-3.2-3B-Instruct-4bit/snapshots/7f0dc925e0d0afb0322d96f9255cfddf2ba5636e
+train: true
+fine_tune_type: lora
+data: data/sft_v2
+seed: 7
+num_layers: 16
+batch_size: 4
+iters: 450            # about 1.1 epochs of the 1,606 build train rows at batch 4
+learning_rate: 2.0e-5
+lr_schedule:
+  name: cosine_decay
+  warmup: 20
+  warmup_init: 1.0e-6
+  arguments: [2.0e-5, 430, 2.0e-6]
+val_batches: 25
+steps_per_report: 10
+steps_per_eval: 150
+save_every: 150
+adapter_path: adapters/llama32-3b-eduai-v2
+max_seq_length: 1024
+grad_checkpoint: true
+mask_prompt: true
+lora_parameters:
+  rank: 8
+  scale: 20.0
+  dropout: 0.05
