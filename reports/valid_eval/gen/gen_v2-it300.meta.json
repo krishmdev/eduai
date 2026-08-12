@@ -1,0 +1,8 @@
+{
+  "arm": "v2-it300",
+  "n": 150,
+  "wall_seconds": 559.3,
+  "shots": 0,
+  "backend": "mlx+adapter",
+  "adapter": "adapters/v2_ckpt/it300"
+}

@@ -1,0 +1,8 @@
+{
+  "arm": "v2-it450",
+  "n": 150,
+  "wall_seconds": 564.7,
+  "shots": 0,
+  "backend": "mlx+adapter",
+  "adapter": "adapters/v2_ckpt/it450"
+}
