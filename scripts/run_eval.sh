@@ -15,6 +15,11 @@ if [[ "$out" == "reports" ]]; then eval_dir=reports/eval; else eval_dir="$out/ge
 mkdir -p "$eval_dir"
 tool=${RUN_MANIFEST_TOOL:-}
 tag=${MANIFEST_TAG:-eval}
+# Don't overwrite another run's manifest (the default tag is the v1 test run's): pick a new MANIFEST_TAG.
+if [[ -n "$tool" && -x "$tool" && -e "$out/${tag}_manifest.json" && -z "${FORCE_MANIFEST:-}" ]]; then
+  echo "$out/${tag}_manifest.json exists; set MANIFEST_TAG to a new tag (or FORCE_MANIFEST=1)" >&2
+  exit 1
+fi
 [[ -n "$tool" && -x "$tool" ]] && python3 "$tool" --out "$out/${tag}_manifest.json" task=eval phase=start device=mps \
   prompts="$prompts" arms="${ARMS:-base-0shot base-2shot finetuned}" \
   model=mlx-community/Llama-3.2-3B-Instruct-4bit judge=mlx-community/Llama-3.2-1B-Instruct-4bit
