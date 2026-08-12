@@ -1,0 +1,33 @@
+{
+  "recorded_at": "2026-09-18T06:13:46-0400",
+  "host": {
+    "chip": "Apple M1 Pro",
+    "ram_gb": 16.0,
+    "os": "Darwin 26.5.1",
+    "python": "3.14.6",
+    "power": "Now drawing from 'AC Power'"
+  },
+  "exclusive_compute": {
+    "held": true,
+    "holder": "eduai"
+  },
+  "load": {
+    "loadavg": [
+      "4.84",
+      "4.36",
+      "3.86"
+    ],
+    "cpu_usage": "CPU usage: 13.92% user, 12.53% sys, 73.53% idle",
+    "docker_containers_running": 0,
+    "swap": "total = 4096.00M  used = 2806.94M  free = 1289.06M  (encrypted)"
+  },
+  "extra": {
+    "task": "eval",
+    "phase": "start",
+    "device": "mps",
+    "prompts": "data/eval/valid_prompts.jsonl",
+    "arms": "finetuned-v2 finetuned-v2-2shot",
+    "model": "mlx-community/Llama-3.2-3B-Instruct-4bit",
+    "judge": "mlx-community/Llama-3.2-1B-Instruct-4bit"
+  }
+}

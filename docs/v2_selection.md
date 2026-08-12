@@ -48,3 +48,12 @@ base-2shot-usable items from valid are pooled, shuffled with the arm hidden, and
 for a correct key and a fit to the target objective. That audit is done on test too at the end.
 No human reviewer is available for this project, so the audit is done by the AI assistant that ran
 the pipeline, reading each passage and item. The report says so next to the numbers.
+
+## Selection (recorded after the valid runs, before any v2 test run)
+
+One training run (configs/lora_llama32_3b_v2.yaml, 450 iters). Valid usable, 0-shot, 150 prompts:
+150 iters 34.7%, 300 iters 38.0%, 450 iters 36.0%. The 300-iter checkpoint is the adapter
+(adapters/llama32-3b-eduai-v2). With the two fixed examples it scored 34.0%, so the headline v2
+arm is finetuned-v2 (0-shot). Against base 2-shot (32.0%) on valid that is +6.0 points, 95%
+interval -4.7 to +16.0. The val loss was flat after 150 iters and the key letters did not
+collapse, so the second training run the budget allows was not used.
