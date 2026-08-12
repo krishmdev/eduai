@@ -1,0 +1,30 @@
+{
+  "recorded_at": "2026-09-18T05:37:57-0400",
+  "host": {
+    "chip": "Apple M1 Pro",
+    "ram_gb": 16.0,
+    "os": "Darwin 26.5.1",
+    "python": "3.14.6",
+    "power": "Now drawing from 'AC Power'"
+  },
+  "exclusive_compute": {
+    "held": true,
+    "holder": "eduai"
+  },
+  "load": {
+    "loadavg": [
+      "8.11",
+      "5.40",
+      "3.74"
+    ],
+    "cpu_usage": "CPU usage: 22.88% user, 17.91% sys, 59.20% idle",
+    "docker_containers_running": 0,
+    "swap": "total = 3072.00M  used = 2145.31M  free = 926.69M  (encrypted)"
+  },
+  "extra": {
+    "config": "configs/lora_llama32_3b_v2.yaml",
+    "phase": "training_v2",
+    "wall_seconds": "4792",
+    "exit": "0"
+  }
+}
