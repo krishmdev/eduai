@@ -24,6 +24,12 @@ fi
   prompts="$prompts" arms="${ARMS:-base-0shot base-2shot finetuned}" \
   model=mlx-community/Llama-3.2-3B-Instruct-4bit judge=mlx-community/Llama-3.2-1B-Instruct-4bit
 start=$(date +%s)
+# Every test-split run is logged before it starts, so crashed attempts count too (reports/eval/test_runs.jsonl).
+ledger="$eval_dir/test_runs.jsonl"
+if [[ "$out" == "reports" ]]; then
+  printf '{"event": "start", "at": "%s", "arms": "%s", "judges": "%s", "tag": "%s"}\n' \
+    "$(date +%Y-%m-%dT%H:%M:%S%z)" "${ARMS:-base-0shot base-2shot finetuned}" "${JUDGES:-llama-1b llama-3b}" "$tag" >> "$ledger"
+fi
 for arm in ${ARMS:-base-0shot base-2shot finetuned}; do
   # NAME=ADAPTER_DIR[:shots] defines a sweep arm; plain names are the fixed arms.
   if [[ "$arm" == *=* ]]; then
@@ -41,5 +47,9 @@ for judge in ${JUDGES:-llama-1b llama-3b}; do
   uv run eduai eval judge --judge "$judge" --prompts "$prompts" --eval-dir "$eval_dir" ${judge_args[@]+"${judge_args[@]}"}
 done
 end=$(date +%s)
+if [[ "$out" == "reports" ]]; then
+  printf '{"event": "finish", "at": "%s", "tag": "%s", "wall_seconds": %d}\n' \
+    "$(date +%Y-%m-%dT%H:%M:%S%z)" "$tag" "$((end - start))" >> "$ledger"
+fi
 [[ -n "$tool" && -x "$tool" ]] && python3 "$tool" --out "$out/${tag}_manifest_end.json" task=eval wall_seconds=$((end - start))
 echo "eval generation+judging took $((end - start)) s"

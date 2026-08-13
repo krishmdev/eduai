@@ -53,6 +53,14 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
             f"{lf['dropped_same_answer_qa']} for a same-answer question with Q+A cosine >= 0.88. "
             f"Manifest: `{manifest_name}`.",
         ]
+        if runs := res.get("test_runs"):
+            intro += [
+                "",
+                f"Test runs for v2: {runs['started']}"
+                + (f" ({runs['unfinished']} did not finish)" if runs["unfinished"] else "")
+                + ". Every run of scripts/run_eval.sh on the test prompts is logged in "
+                "`reports/eval/test_runs.jsonl` before it starts; the v1 arms were run before that log existed.",
+            ]
     L = [
         *intro,
         "",

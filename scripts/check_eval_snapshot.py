@@ -74,6 +74,11 @@ def main() -> None:
             expected = {r["id"] for r in per_item[arm] if r["schema"]}
             require(seen.get(arm) == expected, f"{judge} {arm} schema-valid IDs")
 
+    runs = compare.test_runs(ROOT / "reports/eval")
+    require(result.get("test_runs") == runs, "test-run count vs reports/eval/test_runs.jsonl")
+    if any(a.startswith("finetuned-v2") for a in GEN_ARMS):
+        require(runs is not None and runs["started"] >= 1, "v2 test arms without a logged test run")
+
     card = json.loads((ROOT / "reports/eval_prompts_card.json").read_text())
     expected_report = report.render(result, "eval_manifest.json", card)
     require((ROOT / "reports/eval_report.md").read_text() == expected_report, "rendered report")

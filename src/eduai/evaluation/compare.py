@@ -470,3 +470,15 @@ def bootstrap_diffs(
                 "ci95": [float(np.percentile(boots, 2.5)), float(np.percentile(boots, 97.5))],
             }
     return out
+
+
+def test_runs(eval_dir: Path) -> dict | None:
+    """Count the logged test-split runs (scripts/run_eval.sh writes a start and a finish line per run).
+
+    Runs started but never finished (crashes, kills) count as runs. None when there is no ledger."""
+    path = eval_dir / "test_runs.jsonl"
+    if not path.exists():
+        return None
+    events = [json.loads(line) for line in path.read_text().splitlines() if line.strip()]
+    started = sum(e["event"] == "start" for e in events)
+    return {"started": started, "unfinished": started - sum(e["event"] == "finish" for e in events)}

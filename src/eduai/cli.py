@@ -362,6 +362,8 @@ def eval_score(
     res = compare.score(
         compare.load_prompts(prompts), build_tagger(default_taxonomy()), _novelty_index(), out_dir=eval_dir
     )
+    if (runs := compare.test_runs(eval_dir)) is not None:
+        res["test_runs"] = runs
     (out / "eval.json").write_text(json.dumps(res, indent=2) + "\n")
     manifest = out / "eval_manifest.json"
     if not manifest.exists():

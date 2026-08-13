@@ -184,3 +184,9 @@ def test_report_labels_versions_and_valid_split_intro(tmp_path):
     # no 3B judge rows, so no all-n/a secondary table; the speed note doesn't quote the test-run load
     assert "3B judge" not in md and "6 running containers" not in md
     assert "v2 caveat" in md
+
+
+def test_test_runs_counts_unfinished_attempts(tmp_path):
+    assert compare.test_runs(tmp_path) is None
+    (tmp_path / "test_runs.jsonl").write_text('{"event": "start"}\n{"event": "finish"}\n{"event": "start"}\n')
+    assert compare.test_runs(tmp_path) == {"started": 2, "unfinished": 1}
