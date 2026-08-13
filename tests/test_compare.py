@@ -131,6 +131,12 @@ def test_generate_rejects_an_unknown_arm_without_an_adapter():
         compare.generate_arm("no-such-arm", [])
 
 
+def test_generate_refuses_to_overwrite_existing_generations(tmp_path):
+    (tmp_path / "gen_finetuned-v2.jsonl").write_text("{}\n")
+    with pytest.raises(FileExistsError, match="--force"):
+        compare.generate_arm("finetuned-v2", [], tmp_path)
+
+
 def test_judge_only_named_arms_keeps_other_rows(tmp_path, monkeypatch):
     prompts, data, out = _setup(tmp_path)
     before = {

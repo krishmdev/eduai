@@ -94,11 +94,18 @@ def generate_arm(
     limit: int | None = None,
     adapter: Path | None = None,
     shots: bool | None = None,
+    force: bool = False,
 ) -> Path:
-    """Greedy, one request at a time. Named arms use ARM_SPECS; sweep arms pass `adapter` and `shots`."""
+    """Greedy, one request at a time. Named arms use ARM_SPECS; sweep arms pass `adapter` and `shots`.
+
+    Refuses to replace an existing gen_<arm>.jsonl unless `force`, so committed generations aren't
+    overwritten by a rerun."""
     from eduai.generation.generator import Generator
     from eduai.llm.mlx_backend import MLXBackend
 
+    out = out_dir / f"gen_{arm}.jsonl"
+    if out.exists() and not force:
+        raise FileExistsError(f"{out} exists; pass force=True (--force) to regenerate it")
     spec_adapter, spec_shots = ARM_SPECS.get(arm, (None, False))
     if arm not in ARM_SPECS and adapter is None:
         raise ValueError(f"unknown arm {arm!r}: pass an adapter for a sweep arm")
@@ -124,7 +131,6 @@ def generate_arm(
                 "peak_memory_gb": backend.last_stats.get("peak_memory_gb"),
             }
         )
-    out = out_dir / f"gen_{arm}.jsonl"
     write_jsonl(out, rows)
     (out_dir / f"gen_{arm}.meta.json").write_text(
         json.dumps(

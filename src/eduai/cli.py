@@ -325,10 +325,13 @@ def eval_generate(
     eval_dir: Path = typer.Option(Path("reports/eval"), help="Where gen_<arm>.jsonl is written"),
     adapter: Path = typer.Option(None, help="Adapter dir for a sweep arm (named arms have their own)"),
     shots: bool = typer.Option(None, "--shots/--no-shots", help="Override the arm's fixed examples"),
+    force: bool = typer.Option(False, help="Overwrite an existing gen_<arm>.jsonl"),
 ) -> None:
     from eduai.evaluation.compare import generate_arm, load_prompts
 
-    out = generate_arm(arm, load_prompts(prompts), eval_dir, limit=limit, adapter=adapter, shots=shots)
+    out = generate_arm(
+        arm, load_prompts(prompts), eval_dir, limit=limit, adapter=adapter, shots=shots, force=force
+    )
     console.print(f"wrote {out}")
 
 
