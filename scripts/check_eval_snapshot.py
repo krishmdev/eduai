@@ -24,6 +24,15 @@ def rows(path: Path) -> list[dict]:
     return [json.loads(line) for line in path.read_text().splitlines() if line]
 
 
+V1_ARMS = ("reference", "base-0shot", "base-2shot", "finetuned")
+
+
+def v1_rows_sha256(path: Path) -> str:
+    """Hash of the v1 arms' rows only, order-independent, so adding v2 rows to the file doesn't change it."""
+    keep = sorted(json.dumps(r, sort_keys=True) for r in rows(path) if r["arm"] in V1_ARMS)
+    return hashlib.sha256("\n".join(keep).encode()).hexdigest()
+
+
 def require(condition: bool, message: str) -> None:
     if not condition:
         raise SystemExit(f"eval snapshot mismatch: {message}")
@@ -44,6 +53,9 @@ def main() -> None:
 
     for name, expected in index["raw_sha256"].items():
         require(hashlib.sha256((ROOT / name).read_bytes()).hexdigest() == expected, name)
+    # Judge and per-item files gain v2 rows after the v2 test run; the v1 rows in them must not change.
+    for name, expected in index["v1_rows_sha256"].items():
+        require(v1_rows_sha256(ROOT / name) == expected, f"{name} v1 rows")
 
     result = json.loads((ROOT / "reports/eval.json").read_text())
     require(result["n_prompts"] == len(ids), "report prompt count")

@@ -916,8 +916,11 @@
   "raw_sha256": {
     "reports/eval/gen_base-0shot.jsonl": "f4f7a2c51a8ac370dd176aca1a6af5889f6487735e545d0e35e088b0b11bb1ab",
     "reports/eval/gen_base-2shot.jsonl": "9121bee470fca9a347ddcbd27d03f4ded914f0f05d27cff8067074bda641046c",
-    "reports/eval/gen_finetuned.jsonl": "e8361fac96773e819de10f99fd39ee0de639e6d7a28a7f50f1747c827cd63a81",
-    "reports/eval/judge_llama-1b.jsonl": "6a4c670f566bb30486e25363874bf0ce0e18f4c282e7a03af444ac0b3b944da1",
-    "reports/eval/judge_llama-3b.jsonl": "cc269eb930f9db2e0cfa64f03084e43506e9296b05e16e7ce257e58896887021"
+    "reports/eval/gen_finetuned.jsonl": "e8361fac96773e819de10f99fd39ee0de639e6d7a28a7f50f1747c827cd63a81"
+  },
+  "v1_rows_sha256": {
+    "reports/eval/judge_llama-1b.jsonl": "27f69c6b8f7e30c1fdefdbcfd23b60979d27e2612d6847d3830e8d548964f1b6",
+    "reports/eval/judge_llama-3b.jsonl": "f3c36b27e7a9707080e4b0c514486681a0834c426760342a5dad6d4e843a8b9f",
+    "reports/eval/per_item.jsonl": "a94f3d45f4a42f91bfe45eb1a210444ba30d2769f63563f7e295a57c108670e2"
   }
 }
