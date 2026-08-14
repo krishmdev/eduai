@@ -85,7 +85,8 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
                 "- v2 caveat: the v2 adapters' training targets are base 3B samples kept only when they passed "
                 "these same checks (structure, tagger alignment, novelty, not a source copy), with the base 3B "
                 "as the key judge. Usable is partly what v2 was trained to pass, so it overstates v2 more than "
-                "the other arms; the blind audit in the README is the check on that. Memorized is measured "
+                "the other arms. The only planned check on that is an automated audit by two other LLM judges "
+                "(Qwen3.5-9B and Gemma 4 12B); no person has rated these items. Memorized is measured "
                 "against the v1 SFT train stems, which the v2 targets were screened against at build time.",
             ]
             if rft_arms

@@ -11,7 +11,7 @@ Every percentage uses all prompts as the denominator. Checks are scored independ
 - Novel: stem cosine < 0.92 against the whole SciQ bank, excluding the prompt's own source item and its near-duplicate group. Closeness to the source is reported separately as source copy.
 - Usable: all checks and not a copy of the source question. This is the bank-promotion criterion.
 - Memorized: stem cosine >= 0.92 with an SFT training stem. Reported only; it doesn't reject items.
-- v2 caveat: the v2 adapters' training targets are base 3B samples kept only when they passed these same checks (structure, tagger alignment, novelty, not a source copy), with the base 3B as the key judge. Usable is partly what v2 was trained to pass, so it overstates v2 more than the other arms; the blind audit in the README is the check on that. Memorized is measured against the v1 SFT train stems, which the v2 targets were screened against at build time.
+- v2 caveat: the v2 adapters' training targets are base 3B samples kept only when they passed these same checks (structure, tagger alignment, novelty, not a source copy), with the base 3B as the key judge. Usable is partly what v2 was trained to pass, so it overstates v2 more than the other arms. The only planned check on that is an automated audit by two other LLM judges (Qwen3.5-9B and Gemma 4 12B); no person has rated these items. Memorized is measured against the v1 SFT train stems, which the v2 targets were screened against at build time.
 
 - Key agreement (valid): the same judge result over schema-valid items only, which removes the effect of JSON failures. Items whose key text also appears as a distractor never count as agreeing.
 
