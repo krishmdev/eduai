@@ -57,3 +57,23 @@ One training run (configs/lora_llama32_3b_v2.yaml, 450 iters). Valid usable, 0-s
 arm is finetuned-v2 (0-shot). Against base 2-shot (32.0%) on valid that is +6.0 points, 95%
 interval -4.7 to +16.0. The val loss was flat after 150 iters and the key letters did not
 collapse, so the second training run the budget allows was not used.
+
+## Amendment (2026-09-18, before any v2 test run)
+
+Written after the valid runs and a pre-test code review, and committed before the test set is run.
+
+- The blind audit on valid described above was not done. No human reviewer is available, and it
+  was replaced by an automated audit with two LLM judges from outside the pipeline (Qwen3.5-9B and
+  Gemma 4 12B, thinking on), built separately and run on valid and then on test. Nobody validated
+  items by hand. The report says so next to the audit numbers.
+- Two test prompts share a passage with a v2 training prompt: test-00916, and train-02955 (the
+  fungi/chitin passage, where the v2 training item asks the reversed question). The leak screen
+  checked passage containment in one direction only and matched question-answer pairs by
+  same-answer similarity, so a reversed question/answer got through. The two prompts stay in the
+  test set so the paired comparison with the committed arms keeps its 150 prompts. Removing them
+  moves the usable rate by at most about 1.3 points. The report adds one sensitivity row: the
+  finetuned-v2 minus base-2shot usable difference and its paired bootstrap interval with those
+  two IDs excluded. The headline number is still the full 150.
+- The test results split by whether the reference question is tagger-aligned are exploratory.
+  They are not used to decide whether v2 beat base 2-shot. That decision stays with the full-set
+  interval rule above.
