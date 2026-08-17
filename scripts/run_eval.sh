@@ -20,7 +20,14 @@ if [[ -n "$tool" && -x "$tool" && -e "$out/${tag}_manifest.json" && -z "${FORCE_
   echo "$out/${tag}_manifest.json exists; set MANIFEST_TAG to a new tag (or FORCE_MANIFEST=1)" >&2
   exit 1
 fi
+# The v2 named arms must use the pinned adapter (the 300-iter checkpoint chosen on valid).
+adapter_pin=()
+if [[ " ${ARMS:-} " == *" finetuned-v2"* ]]; then
+  shasum -a 256 -c configs/adapter_v2.sha256 >&2
+  adapter_pin=(adapter_v2_sha256="$(awk '{printf "%s%s=%s", sep, $2, $1; sep=","}' configs/adapter_v2.sha256)")
+fi
 [[ -n "$tool" && -x "$tool" ]] && python3 "$tool" --out "$out/${tag}_manifest.json" task=eval phase=start device=mps \
+  ${adapter_pin[@]+"${adapter_pin[@]}"} \
   prompts="$prompts" arms="${ARMS:-base-0shot base-2shot finetuned}" \
   model=mlx-community/Llama-3.2-3B-Instruct-4bit judge=mlx-community/Llama-3.2-1B-Instruct-4bit
 start=$(date +%s)
