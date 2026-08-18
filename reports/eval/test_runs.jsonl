@@ -1,0 +1,2 @@
+{"event": "start", "at": "2026-09-18T09:30:55-0400", "arms": "finetuned-v2 finetuned-v2-2shot", "judges": "llama-1b llama-3b", "tag": "v2_test"}
+{"event": "finish", "at": "2026-09-18T10:08:35-0400", "tag": "v2_test", "wall_seconds": 2260}

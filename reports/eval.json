@@ -107,6 +107,64 @@
         "C": 0.6666666666666666,
         "D": 0.4444444444444444
       }
+    },
+    "finetuned-v2": {
+      "n": 150,
+      "json": 1.0,
+      "first_try_json": 1.0,
+      "schema": 1.0,
+      "structure": 0.66,
+      "key": 0.7533333333333333,
+      "aligned": 0.7933333333333333,
+      "novel": 0.9933333333333333,
+      "source_copy": 0.08666666666666667,
+      "memorized": 0.0,
+      "all_checks": 0.38,
+      "usable": 0.32,
+      "key_on_valid": 0.7533333333333333,
+      "n_schema_valid": 150,
+      "key_secondary": 0.78,
+      "key_letters": {
+        "A": 61,
+        "B": 44,
+        "C": 30,
+        "D": 15
+      },
+      "key_agreement_by_letter": {
+        "A": 0.7377049180327869,
+        "B": 0.6818181818181818,
+        "C": 0.9,
+        "D": 0.7333333333333333
+      }
+    },
+    "finetuned-v2-2shot": {
+      "n": 150,
+      "json": 0.9933333333333333,
+      "first_try_json": 0.9933333333333333,
+      "schema": 0.9933333333333333,
+      "structure": 0.7333333333333333,
+      "key": 0.7666666666666667,
+      "aligned": 0.78,
+      "novel": 0.9933333333333333,
+      "source_copy": 0.09333333333333334,
+      "memorized": 0.0,
+      "all_checks": 0.44,
+      "usable": 0.37333333333333335,
+      "key_on_valid": 0.7718120805369127,
+      "n_schema_valid": 149,
+      "key_secondary": 0.8266666666666667,
+      "key_letters": {
+        "A": 33,
+        "B": 52,
+        "C": 23,
+        "D": 41
+      },
+      "key_agreement_by_letter": {
+        "A": 0.5757575757575758,
+        "B": 0.8461538461538461,
+        "C": 0.8695652173913043,
+        "D": 0.7804878048780488
+      }
     }
   },
   "structure_problems": {
@@ -127,6 +185,18 @@
       "stem gives away the answer": 12,
       "all four options identical": 9,
       "target misconception missing": 1
+    },
+    "finetuned-v2": {
+      "stem gives away the answer": 27,
+      "near-identical options": 22,
+      "target misconception missing": 6,
+      "all four options identical": 2
+    },
+    "finetuned-v2-2shot": {
+      "stem gives away the answer": 29,
+      "near-identical options": 9,
+      "target misconception missing": 2,
+      "all four options identical": 1
     }
   },
   "timing": {
@@ -144,6 +214,16 @@
       "mean_generation_tps": 47.961358660153635,
       "mean_seconds_per_item": 3.5972866666666663,
       "peak_memory_gb": 3.051781476
+    },
+    "finetuned-v2": {
+      "mean_generation_tps": 46.40072694858191,
+      "mean_seconds_per_item": 3.9399933333333337,
+      "peak_memory_gb": 3.051781476
+    },
+    "finetuned-v2-2shot": {
+      "mean_generation_tps": 44.8724480354657,
+      "mean_seconds_per_item": 5.013006666666667,
+      "peak_memory_gb": 3.236824248
     }
   },
   "rejections": {
@@ -168,6 +248,19 @@
       "structure": 69,
       "key_disagreement": 11,
       "duplicate": 3
+    },
+    "finetuned-v2": {
+      "not_aligned": 19,
+      "accepted": 57,
+      "key_disagreement": 23,
+      "structure": 51
+    },
+    "finetuned-v2-2shot": {
+      "structure": 39,
+      "key_disagreement": 27,
+      "accepted": 66,
+      "not_aligned": 17,
+      "bad_json": 1
     }
   },
   "bootstrap": {
@@ -289,8 +382,201 @@
         0.0,
         0.0
       ]
+    },
+    "finetuned-v2 - base-0shot | usable": {
+      "diff": 0.08666666666666667,
+      "ci95": [
+        -0.013333333333333334,
+        0.18666666666666668
+      ]
+    },
+    "finetuned-v2 - base-0shot | all_checks": {
+      "diff": 0.11333333333333333,
+      "ci95": [
+        0.013333333333333334,
+        0.20666666666666667
+      ]
+    },
+    "finetuned-v2 - base-0shot | aligned": {
+      "diff": 0.04666666666666667,
+      "ci95": [
+        -0.02666666666666667,
+        0.12
+      ]
+    },
+    "finetuned-v2 - base-0shot | key": {
+      "diff": 0.04666666666666667,
+      "ci95": [
+        -0.04666666666666667,
+        0.14
+      ]
+    },
+    "finetuned-v2 - base-0shot | json": {
+      "diff": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    "finetuned-v2 - base-2shot | usable": {
+      "diff": -0.02666666666666667,
+      "ci95": [
+        -0.13333333333333333,
+        0.08
+      ]
+    },
+    "finetuned-v2 - base-2shot | all_checks": {
+      "diff": 0.013333333333333334,
+      "ci95": [
+        -0.09333333333333334,
+        0.12
+      ]
+    },
+    "finetuned-v2 - base-2shot | aligned": {
+      "diff": 0.15333333333333332,
+      "ci95": [
+        0.06666666666666667,
+        0.24
+      ]
+    },
+    "finetuned-v2 - base-2shot | key": {
+      "diff": 0.14666666666666667,
+      "ci95": [
+        0.04666666666666667,
+        0.24666666666666667
+      ]
+    },
+    "finetuned-v2 - base-2shot | json": {
+      "diff": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    "finetuned-v2 - finetuned | usable": {
+      "diff": 0.10666666666666667,
+      "ci95": [
+        0.013333333333333334,
+        0.2
+      ]
+    },
+    "finetuned-v2 - finetuned | all_checks": {
+      "diff": 0.07333333333333333,
+      "ci95": [
+        -0.02666666666666667,
+        0.17333333333333334
+      ]
+    },
+    "finetuned-v2 - finetuned | aligned": {
+      "diff": 0.07333333333333333,
+      "ci95": [
+        0.0,
+        0.14
+      ]
+    },
+    "finetuned-v2 - finetuned | key": {
+      "diff": 0.09333333333333334,
+      "ci95": [
+        0.0,
+        0.18666666666666668
+      ]
+    },
+    "finetuned-v2 - finetuned | json": {
+      "diff": 0.0,
+      "ci95": [
+        0.0,
+        0.0
+      ]
+    },
+    "finetuned-v2 - reference | aligned": {
+      "diff": 0.08666666666666667,
+      "ci95": [
+        0.006666666666666667,
+        0.17333333333333334
+      ]
+    },
+    "finetuned-v2 - reference | key": {
+      "diff": -0.18,
+      "ci95": [
+        -0.25333333333333335,
+        -0.1
+      ]
+    },
+    "finetuned-v2-2shot - base-2shot | usable": {
+      "diff": 0.02666666666666667,
+      "ci95": [
+        -0.06666666666666667,
+        0.12
+      ]
+    },
+    "finetuned-v2-2shot - base-2shot | all_checks": {
+      "diff": 0.07333333333333333,
+      "ci95": [
+        -0.02,
+        0.16
+      ]
+    },
+    "finetuned-v2-2shot - base-2shot | aligned": {
+      "diff": 0.14,
+      "ci95": [
+        0.06666666666666667,
+        0.21333333333333335
+      ]
+    },
+    "finetuned-v2-2shot - base-2shot | key": {
+      "diff": 0.16,
+      "ci95": [
+        0.06666666666666667,
+        0.25333333333333335
+      ]
+    },
+    "finetuned-v2-2shot - base-2shot | json": {
+      "diff": -0.006666666666666667,
+      "ci95": [
+        -0.02,
+        0.0
+      ]
+    },
+    "finetuned-v2-2shot - finetuned-v2 | usable": {
+      "diff": 0.05333333333333334,
+      "ci95": [
+        -0.04666666666666667,
+        0.16
+      ]
+    },
+    "finetuned-v2-2shot - finetuned-v2 | all_checks": {
+      "diff": 0.06,
+      "ci95": [
+        -0.04,
+        0.16
+      ]
+    },
+    "finetuned-v2-2shot - finetuned-v2 | aligned": {
+      "diff": -0.013333333333333334,
+      "ci95": [
+        -0.08,
+        0.05333333333333334
+      ]
+    },
+    "finetuned-v2-2shot - finetuned-v2 | key": {
+      "diff": 0.013333333333333334,
+      "ci95": [
+        -0.08666666666666667,
+        0.11333333333333333
+      ]
+    },
+    "finetuned-v2-2shot - finetuned-v2 | json": {
+      "diff": -0.006666666666666667,
+      "ci95": [
+        -0.02,
+        0.0
+      ]
     }
   },
   "judge": "llama-1b",
-  "secondary_judge": "llama-3b"
+  "secondary_judge": "llama-3b",
+  "test_runs": {
+    "started": 1,
+    "unfinished": 0
+  }
 }

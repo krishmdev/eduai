@@ -916,7 +916,9 @@
   "raw_sha256": {
     "reports/eval/gen_base-0shot.jsonl": "f4f7a2c51a8ac370dd176aca1a6af5889f6487735e545d0e35e088b0b11bb1ab",
     "reports/eval/gen_base-2shot.jsonl": "9121bee470fca9a347ddcbd27d03f4ded914f0f05d27cff8067074bda641046c",
-    "reports/eval/gen_finetuned.jsonl": "e8361fac96773e819de10f99fd39ee0de639e6d7a28a7f50f1747c827cd63a81"
+    "reports/eval/gen_finetuned.jsonl": "e8361fac96773e819de10f99fd39ee0de639e6d7a28a7f50f1747c827cd63a81",
+    "reports/eval/gen_finetuned-v2.jsonl": "ba757096e06268e6016e858f05959e5c9815a2882b2b50bf1d82ade0fd7073cf",
+    "reports/eval/gen_finetuned-v2-2shot.jsonl": "aff622b5bae8777d40d37351eeb3a786e423bded06e381c609dfaea715c48f17"
   },
   "v1_rows_sha256": {
     "reports/eval/judge_llama-1b.jsonl": "27f69c6b8f7e30c1fdefdbcfd23b60979d27e2612d6847d3830e8d548964f1b6",
