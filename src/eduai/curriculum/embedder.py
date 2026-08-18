@@ -58,7 +58,8 @@ class SentenceTransformerEmbedder:
             raise EmbedderError(f"{pin.repo} not found at {path}; run `make models`")
         self.key = key
         self.query_prefix = BGE_QUERY_PREFIX if key.startswith("bge") and query_prefix else ""
-        self.model = SentenceTransformer(str(path), device=device or _default_device(), local_files_only=True)
+        self.device = device or _default_device()
+        self.model = SentenceTransformer(str(path), device=self.device, local_files_only=True)
         self.dim = int(self.model.get_embedding_dimension())
         self.batch_size = batch_size
         prep = f"normalize=1;query_prefix={self.query_prefix!r}"
@@ -77,6 +78,7 @@ class HashingEmbedder:
 
     def __init__(self, dim: int = 512):
         self.dim = dim
+        self.device = "cpu"
         self.embedder_id = f"hash/bow/v1/{dim}/{_prep_hash('lower;alnum;uni+bigram')}"
 
     @staticmethod
@@ -115,8 +117,15 @@ def cached_encode(
 ) -> np.ndarray:
     if cache_dir is None:
         cache_dir = Path(os.environ.get("EDUAI_CACHE_DIR", CACHE_DIR))
-    key = hashlib.sha256(f"{embedder.embedder_id}|{int(query)}|{text_hash(texts)}".encode()).hexdigest()[:24]
-    path = cache_dir / f"{key}.npy"
+    # embedder_id carries the model repo and revision; the device is keyed too, because MPS results
+    # under GPU contention have differed from CPU ones.
+    device = getattr(embedder, "device", "cpu")
+    base = f"{embedder.embedder_id}|{int(query)}|{text_hash(texts)}"
+    path = cache_dir / f"{hashlib.sha256(f'{base}|device={device}'.encode()).hexdigest()[:24]}.npy"
+    # Entries written before the device was keyed all came from the default MPS device: move them over.
+    legacy = cache_dir / f"{hashlib.sha256(base.encode()).hexdigest()[:24]}.npy"
+    if device == "mps" and not path.exists() and legacy.exists():
+        os.replace(legacy, path)
     if path.exists():
         vecs = np.load(path)
         if vecs.shape == (len(texts), embedder.dim):
