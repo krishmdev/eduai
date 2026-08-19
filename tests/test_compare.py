@@ -190,3 +190,19 @@ def test_test_runs_counts_unfinished_attempts(tmp_path):
     assert compare.test_runs(tmp_path) is None
     (tmp_path / "test_runs.jsonl").write_text('{"event": "start"}\n{"event": "finish"}\n{"event": "start"}\n')
     assert compare.test_runs(tmp_path) == {"started": 2, "unfinished": 1}
+
+
+def test_v2_extras_drops_overlap_ids_and_splits_by_reference_alignment():
+    ids = ["test-00916", "train-02955", "p1", "p2"]
+    ref = [{"id": i, "aligned": i != "p2"} for i in ids]
+    v2 = [{"id": i, "usable": True} for i in ids]
+    b2 = [{"id": i, "usable": i in ("test-00916", "train-02955")} for i in ids]
+    per_item = {"reference": ref, "finetuned-v2": v2, "base-2shot": b2}
+    out = compare.v2_extras(per_item)
+    sens = out["v2_sensitivity"]
+    assert sens["n"] == 2
+    assert sens["bootstrap"]["finetuned-v2 - base-2shot | usable"]["diff"] == 1.0
+    split = out["v2_aligned_split_exploratory"]
+    assert split["reference_aligned"]["n"] == 3 and split["reference_not_aligned"]["n"] == 1
+    assert split["reference_not_aligned"]["usable"] == {"finetuned-v2": 1.0, "base-2shot": 0.0}
+    assert compare.v2_extras({"reference": ref, "base-2shot": b2}) == {}

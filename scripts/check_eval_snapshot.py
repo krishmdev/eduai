@@ -69,6 +69,8 @@ def main() -> None:
 
     require(compare.summarize(per_item) == result["summary"], "summary rates")
     require(compare.bootstrap_diffs(per_item) == result["bootstrap"], "paired bootstrap")
+    extras = compare.v2_extras(per_item)
+    require({k: result.get(k) for k in extras} == extras, "v2 sensitivity row and aligned split")
 
     for arm in GEN_ARMS:
         gen = rows(ROOT / f"reports/eval/gen_{arm}.jsonl")

@@ -75,6 +75,25 @@ Paired bootstrap (5,000 resamples over prompts), difference in rate with 95% CI.
 | finetuned-v2-2shot - finetuned-v2 | key | +1.3% | [-8.7%, +11.3%] |
 | finetuned-v2-2shot - finetuned-v2 | json | -0.7% | [-2.0%, +0.0%] |
 
+Sensitivity (pre-registered): the same usable differences on the 148 prompts left after dropping test-00916, train-02955, whose passages are also v2 training passages.
+
+| Comparison | Difference | 95% CI |
+|---|---|---|
+| finetuned-v2 - base-2shot | -4.1% | [-14.9%, +6.8%] |
+| finetuned-v2-2shot - base-2shot | +2.7% | [-6.8%, +12.2%] |
+
+Exploratory, not used to judge v2: usable rate split by whether the tagger aligns the SciQ reference item with the target objective (reference aligned / not aligned; n = 106 / 44).
+
+| Arm | Reference aligned | Reference not aligned |
+|---|---|---|
+| Base 3B, 0-shot | 26.4% | 15.9% |
+| Base 3B, 2-shot | 39.6% | 22.7% |
+| Base 3B + EduAI LoRA v1 | 21.7% | 20.5% |
+| Base 3B + EduAI LoRA v2 | 33.0% | 29.5% |
+| Base 3B + EduAI LoRA v2, 2-shot | 40.6% | 29.5% |
+| finetuned-v2 - base-2shot | -6.6% [-18.9%, +6.6%] | +6.8% [-11.4%, +27.3%] |
+| finetuned-v2-2shot - base-2shot | +0.9% [-10.4%, +12.3%] | +6.8% [-11.4%, +25.0%] |
+
 Secondary key agreement with the base 3B as judge (self-judged for the base arms, so biased in their favor; the 3B also picked the v2 training data, so it favors v2 too):
 
 | | Key agreement (3B judge) |
@@ -117,7 +136,7 @@ Structure problems among schema-valid items (an item can have several):
 | Base 3B + EduAI LoRA v2 | 2 | 22 | 27 | 0 | 6 | 0 |
 | Base 3B + EduAI LoRA v2, 2-shot | 1 | 9 | 29 | 0 | 2 | 0 |
 
-Generation speed (greedy, one request at a time, MLX on the M1 Pro). No other training or benchmark job ran at the same time, but the machine wasn't idle: `eval_manifest.json` records a load average of 7 to 9.5, 6 running containers and about 12 GB of swap in use. Treat these speeds, and the gap between the adapter and base arms, as rough.
+Generation speed (greedy, one request at a time, MLX on the M1 Pro). No other training or benchmark job ran at the same time, but the machine wasn't idle: `eval_manifest.json` records a load average of 7 to 9.5, 6 running containers and about 12 GB of swap in use. Treat these speeds, and the gap between the adapter and base arms, as rough. The v2 arms were generated later, under the compute lease; `v2_test_manifest.json` records a load average of about 4.3 and no running containers, so their speeds aren't directly comparable with the v1 arms' either.
 
 | Arm | Mean generation tok/s | Mean seconds per item | Peak memory (GB) |
 |---|---|---|---|

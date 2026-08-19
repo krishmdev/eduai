@@ -123,6 +123,40 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
     for k, v in res["bootstrap"].items():
         pair, metric = k.split(" | ")
         L.append(f"| {pair} | {metric} | {v['diff']:+.1%} | [{v['ci95'][0]:+.1%}, {v['ci95'][1]:+.1%}] |")
+    if sens := res.get("v2_sensitivity"):
+        L += [
+            "",
+            f"Sensitivity (pre-registered): the same usable differences on the {sens['n']} prompts left after "
+            f"dropping {', '.join(sens['excluded'])}, whose passages are also v2 training passages.",
+            "",
+            "| Comparison | Difference | 95% CI |",
+            "|---|---|---|",
+        ]
+        for k, v in sens["bootstrap"].items():
+            L.append(
+                f"| {k.split(' | ')[0]} | {v['diff']:+.1%} | [{v['ci95'][0]:+.1%}, {v['ci95'][1]:+.1%}] |"
+            )
+    if split := res.get("v2_aligned_split_exploratory"):
+        parts = list(split.values())
+        L += [
+            "",
+            "Exploratory, not used to judge v2: usable rate split by whether the tagger aligns the SciQ "
+            "reference item with the target objective (reference aligned / not aligned; "
+            f"n = {parts[0]['n']} / {parts[1]['n']}).",
+            "",
+            "| Arm | Reference aligned | Reference not aligned |",
+            "|---|---|---|",
+        ]
+        for arm in parts[0]["usable"]:
+            L.append(f"| {label(arm)} | {_p(parts[0]['usable'][arm])} | {_p(parts[1]['usable'][arm])} |")
+
+        def cell(v: dict | None) -> str:
+            return "n/a" if v is None else f"{v['diff']:+.1%} [{v['ci95'][0]:+.1%}, {v['ci95'][1]:+.1%}]"
+
+        for k in dict.fromkeys(k for x in parts for k in x["bootstrap"]):
+            L.append(
+                f"| {k.split(' | ')[0]} | " + " | ".join(cell(x["bootstrap"].get(k)) for x in parts) + " |"
+            )
     if any(s[a].get("key_secondary") is not None for a in ("reference", *arms)):
         L += [
             "",
@@ -191,6 +225,12 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
             "of 7 to 9.5, 6 running containers and about 12 GB of swap in use. Treat these speeds, and the gap "
             "between the adapter and base arms, as rough."
         )
+        if rft_arms:
+            load += (
+                " The v2 arms were generated later, under the compute lease; `v2_test_manifest.json` records a "
+                "load average of about 4.3 and no running containers, so their speeds aren't directly comparable "
+                "with the v1 arms' either."
+            )
     L += [
         "",
         load,

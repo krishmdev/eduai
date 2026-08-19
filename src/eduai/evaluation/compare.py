@@ -388,6 +388,7 @@ def score(
         ),
         "judge": judge_key,
         "secondary_judge": secondary_key,
+        **v2_extras(per_item),
     }
     write_jsonl(out_dir / "per_item.jsonl", [{"arm": a, **r} for a, rs in per_item.items() for r in rs])
     return result
@@ -455,7 +456,7 @@ def bootstrap_diffs(
     rng = np.random.default_rng(seed)
     out = {}
     for a, b in pairs:
-        if a not in per_item or b not in per_item:
+        if not per_item.get(a) or not per_item.get(b):
             continue
         for metric in ("usable", "all_checks", "aligned", "key", "json"):
             if metric not in per_item[a][0] or metric not in per_item[b][0]:
@@ -470,6 +471,48 @@ def bootstrap_diffs(
                 "ci95": [float(np.percentile(boots, 2.5)), float(np.percentile(boots, 97.5))],
             }
     return out
+
+
+# Test prompts whose passage is also a v2 training passage (docs/v2_selection.md, amendment of 2026-09-18).
+V2_PASSAGE_OVERLAP = ("test-00916", "train-02955")
+
+
+def v2_extras(per_item: dict[str, list[dict]]) -> dict:
+    """The analyses pre-registered for the v2 test run: the headline pair without the two prompts
+    that share a v2 training passage, and (exploratory) usable rates split by whether the SciQ
+    reference item is tagger-aligned. Empty without v2 arms."""
+    pairs = tuple((a, "base-2shot") for a in ("finetuned-v2", "finetuned-v2-2shot") if a in per_item)
+    if not pairs:
+        return {}
+
+    def subset(keep) -> dict[str, list[dict]]:
+        ok = {r["id"] for r in per_item["reference"] if keep(r)}
+        return {a: [r for r in rs if r["id"] in ok] for a, rs in per_item.items()}
+
+    def usable_only(d: dict) -> dict:
+        return {k: v for k, v in d.items() if k.endswith("| usable")}
+
+    split = {}
+    for name, flag in (("reference_aligned", True), ("reference_not_aligned", False)):
+        sub = subset(lambda r, flag=flag: bool(r["aligned"]) == flag)
+        split[name] = {
+            "n": len(sub["reference"]),
+            "usable": {
+                a: (float(np.mean([bool(r["usable"]) for r in rs])) if rs else None)
+                for a, rs in sub.items()
+                if a != "reference"
+            },
+            "bootstrap": usable_only(bootstrap_diffs(sub, pairs=pairs)),
+        }
+    excl = subset(lambda r: r["id"] not in V2_PASSAGE_OVERLAP)
+    return {
+        "v2_sensitivity": {
+            "excluded": list(V2_PASSAGE_OVERLAP),
+            "n": len(excl["reference"]),
+            "bootstrap": usable_only(bootstrap_diffs(excl, pairs=pairs)),
+        },
+        "v2_aligned_split_exploratory": split,
+    }
 
 
 def test_runs(eval_dir: Path) -> dict | None:
