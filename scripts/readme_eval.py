@@ -10,7 +10,9 @@ START, END = "<!-- eval:start -->", "<!-- eval:end -->"
 ARMS = (
     ("Base 3B, 0-shot", "base-0shot"),
     ("Base 3B, 2-shot", "base-2shot"),
-    ("Base 3B + EduAI LoRA", "finetuned"),
+    ("Base 3B + EduAI LoRA v1", "finetuned"),
+    ("Base 3B + EduAI LoRA v2", "finetuned-v2"),
+    ("Base 3B + EduAI LoRA v2, 2-shot", "finetuned-v2-2shot"),
 )
 
 
@@ -27,9 +29,10 @@ def render(r: dict, card: dict) -> str:
     lf = card["leakage_filter"]
     ft = s["finetuned"]
     sp = r["structure_problems"]["finetuned"]
+    arms = [(label, a) for label, a in ARMS if a in s]
     L = [
         f"There are {r['n_prompts']} prompts from groups assigned to the held-out test split "
-        "(including SciQ rows originally labeled train or valid), and all three arms get the same "
+        "(including SciQ rows originally labeled train or valid), and every arm gets the same "
         "prompts ([reports/eval_report.md](reports/eval_report.md), raw generations in `reports/eval/`). "
         "This section is written by `scripts/readme_eval.py`.",
         "",
@@ -51,7 +54,7 @@ def render(r: dict, card: dict) -> str:
         "|---|---|---|---|---|---|---|---|---|---|",
         f"| SciQ reference item (ceiling) | | | {pct(s['reference']['key'])} | {pct(s['reference']['aligned'])} | | | | | |",
     ]
-    for label, a in ARMS:
+    for label, a in arms:
         x = s[a]
         L.append(
             f"| {label} | {pct(x['schema'])} | {pct(x['structure'])} | {pct(x['key_on_valid'])} | {pct(x['aligned'])} | "
@@ -62,14 +65,14 @@ def render(r: dict, card: dict) -> str:
     n_valid = sum(kl.values())
     L += [
         "",
-        "The fine-tuned model does not generate better questions overall. The paired bootstrap over prompts "
+        "The v1 fine-tuned model does not generate better questions overall. The paired bootstrap over prompts "
         "gives these differences:",
         "",
-        f"- Fine-tuned vs 2-shot on usable items: {ci(b['finetuned - base-2shot | usable'])}.",
-        f"- Fine-tuned vs 0-shot on usable items: {ci(b['finetuned - base-0shot | usable'])}.",
+        f"- v1 fine-tuned vs 2-shot on usable items: {ci(b['finetuned - base-2shot | usable'])}.",
+        f"- v1 fine-tuned vs 0-shot on usable items: {ci(b['finetuned - base-0shot | usable'])}.",
         f"- 2-shot vs 0-shot on usable items: {ci(b['base-2shot - base-0shot | usable'])}.",
         "",
-        "Fine-tuning fixed the output format:",
+        "v1 fine-tuning fixed the output format:",
         "",
         f"- It produced schema-valid JSON on {pct(ft['schema'])} of prompts, against {pct(s['base-2shot']['schema'])} "
         "for 2-shot.",
@@ -95,11 +98,62 @@ def render(r: dict, card: dict) -> str:
         "for the base model, on a machine with other background load (see the eval manifest), so treat the "
         "speeds as rough.",
         "",
-        "In short, the LoRA fine-tune of Llama 3.2 3B taught format reliability, but the 3,000 SciQ-derived targets also taught "
-        "copying and a key-position bias. With these data, 2-shot prompting of the base model produces the "
-        "most usable items.",
+        "In short, the v1 LoRA fine-tune of Llama 3.2 3B taught format reliability, but the 3,000 SciQ-derived "
+        "targets also taught copying and a key-position bias.",
     ]
+    if "finetuned-v2" in s:
+        L += ["", *v2_section(r)]
     return "\n".join(L)
+
+
+def v2_section(r: dict) -> list[str]:
+    s, b = r["summary"], r["bootstrap"]
+    v2, v2s, b2, v1 = s["finetuned-v2"], s["finetuned-v2-2shot"], s["base-2shot"], s["finetuned"]
+    sp = r["structure_problems"]["finetuned-v2"]
+    head = b["finetuned-v2 - base-2shot | usable"]
+    won = head["ci95"][0] > 0
+    sens = r["v2_sensitivity"]
+    runs = r["test_runs"]["started"]
+    kl = v2["key_letters"]
+    return [
+        "### v2 adapter",
+        "",
+        "The v2 LoRA was trained on items the base 3B wrote itself: samples drawn with the eval's two fixed "
+        "examples, kept only when they passed the checks above with the base 3B as the key judge, one per "
+        "training prompt (1,606 train rows; [reports/rft_card.json](reports/rft_card.json)). The checkpoint, and "
+        "the choice between v2 with and without the two examples, were made on the valid split and written down "
+        "before the test run ([docs/v2_selection.md](docs/v2_selection.md)). "
+        f"The v2 arms were run on the test set {'once' if runs == 1 else f'{runs} times'}. The base and v1 rows above "
+        "are the committed ones from before v2.",
+        "",
+        f"- Pre-registered headline, v2 0-shot vs 2-shot base on usable items: {ci(head)}. "
+        + (
+            "The interval excludes zero, so v2 beat 2-shot prompting."
+            if won
+            else "The interval includes zero, so v2 did not beat 2-shot prompting of the base model."
+        ),
+        f"- Without the {len(sens['excluded'])} test prompts whose passages are also v2 training passages "
+        f"({', '.join(sens['excluded'])}): {ci(sens['bootstrap']['finetuned-v2 - base-2shot | usable'])}.",
+        f"- v2 with the two fixed examples ({pct(v2s['usable'])} usable) vs 2-shot base: {ci(b['finetuned-v2-2shot - base-2shot | usable'])}. "
+        "This arm scored higher than v2 0-shot on test but lower on valid, where the choice was made, so it "
+        "isn't the headline.",
+        f"- v2 vs v1 on usable items: {ci(b['finetuned-v2 - finetuned | usable'])}.",
+        "",
+        f"Compared with v1, v2 copies the source question less ({pct(v2['source_copy'])} against "
+        f"{pct(v1['source_copy'])}), puts the key at A less often ({kl['A']} of {sum(kl.values())} valid items, against "
+        f"{v1['key_letters']['A']}), "
+        f"and writes near-identical options on {sp.get('near-identical options', 0)} items instead of "
+        f"{r['structure_problems']['finetuned'].get('near-identical options', 0)}. It keeps v1's schema-valid "
+        f"rate ({pct(v2['schema'])}). Its key agreement on schema-valid items ({pct(v2['key_on_valid'])}) is about "
+        f"the same as 2-shot base ({pct(b2['key_on_valid'])}). Its most common structure problem is a stem that "
+        f"gives away the answer ({sp.get('stem gives away the answer', 0)} items, against "
+        f"{r['structure_problems']['base-2shot'].get('stem gives away the answer', 0)} for 2-shot base).",
+        "",
+        "Usable overstates v2 more than the other arms. v2's targets were picked with these same checks and "
+        "with the base 3B as key judge, and the 3B agrees closely with the 1B eval judge. The manual blind "
+        "audit planned in the protocol was not done. An automated audit by two other LLM judges is being built "
+        "separately. No person has checked these items.",
+    ]
 
 
 def main() -> None:

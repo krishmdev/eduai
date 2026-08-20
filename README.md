@@ -1,7 +1,7 @@
 # EduAI
 
 EduAI generates AP-style multiple-choice science questions with Llama 3.2 3B, either the base
-model with two fixed examples or a LoRA adapter trained here (the eval compares both).
+model with two fixed examples or one of two LoRA adapters trained here (the eval compares them).
 An embedding-based tagger maps questions to learning objectives, and an adaptive test chooses
 each next question from the student's earlier responses. It covers Biology, Chemistry,
 Physics 1 and Environmental Science using SciQ source material. The pipeline runs on one
@@ -67,7 +67,8 @@ make test
 ```
 
 The app tries backends in this order: the MLX base model with the eval's two fixed examples
-(the arm that produced the most usable items), then MLX with the LoRA adapter, then Ollama
+(it beat the v1 adapter on usable items, and the v2 adapter didn't beat it; v2 isn't released),
+then MLX with the v1 LoRA adapter, then Ollama
 (`llama3.2:3b`, base only; Ollama can't load the MLX adapter), then bank-only. You can force one
 with `EDUAI_BACKEND=mlx|adapter|ollama|bank`.
 
@@ -167,7 +168,7 @@ labeling pass that never saw tagger output. They still need a human spot-check.
 ## Generation eval
 
 <!-- eval:start -->
-There are 150 prompts from groups assigned to the held-out test split (including SciQ rows originally labeled train or valid), and all three arms get the same prompts ([reports/eval_report.md](reports/eval_report.md), raw generations in `reports/eval/`). This section is written by `scripts/readme_eval.py`.
+There are 150 prompts from groups assigned to the held-out test split (including SciQ rows originally labeled train or valid), and every arm gets the same prompts ([reports/eval_report.md](reports/eval_report.md), raw generations in `reports/eval/`). This section is written by `scripts/readme_eval.py`.
 
 - **Target objectives are independent.** Each prompt's target LO comes from an independent labeling pass, not from the tagger. 59 off-curriculum candidates were dropped.
 - **Leaky prompts are filtered out.** A prompt was dropped if its passage shares 50% or more of its 8-grams with a training passage, or if a training item has the same answer and a question-plus-answer cosine of 0.88 or more. That removed 14 of 244 screened candidates.
@@ -180,15 +181,17 @@ There are 150 prompts from groups assigned to the held-out test split (including
 | SciQ reference item (ceiling) | | | 93.3% | 70.7% | | | | | |
 | Base 3B, 0-shot | 93.3% | 40.7% | 75.7% | 74.7% | 92.7% | 26.7% | 4.7% | 23.3% | 80.3 |
 | Base 3B, 2-shot | 80.7% | 60.7% | 75.2% | 64.0% | 80.0% | 36.7% | 2.7% | 34.7% | 76.1 |
-| Base 3B + EduAI LoRA | 100.0% | 54.0% | 66.0% | 72.0% | 96.0% | 30.7% | 25.3% | 21.3% | 48.0 |
+| Base 3B + EduAI LoRA v1 | 100.0% | 54.0% | 66.0% | 72.0% | 96.0% | 30.7% | 25.3% | 21.3% | 48.0 |
+| Base 3B + EduAI LoRA v2 | 100.0% | 66.0% | 75.3% | 79.3% | 99.3% | 38.0% | 8.7% | 32.0% | 46.4 |
+| Base 3B + EduAI LoRA v2, 2-shot | 99.3% | 73.3% | 77.2% | 78.0% | 99.3% | 44.0% | 9.3% | 37.3% | 44.9 |
 
-The fine-tuned model does not generate better questions overall. The paired bootstrap over prompts gives these differences:
+The v1 fine-tuned model does not generate better questions overall. The paired bootstrap over prompts gives these differences:
 
-- Fine-tuned vs 2-shot on usable items: -13.3 points (95% CI -23.3 to -3.3).
-- Fine-tuned vs 0-shot on usable items: -2.0 points (95% CI -12.0 to +7.3).
+- v1 fine-tuned vs 2-shot on usable items: -13.3 points (95% CI -23.3 to -3.3).
+- v1 fine-tuned vs 0-shot on usable items: -2.0 points (95% CI -12.0 to +7.3).
 - 2-shot vs 0-shot on usable items: +11.3 points (95% CI +1.3 to +20.7).
 
-Fine-tuning fixed the output format:
+v1 fine-tuning fixed the output format:
 
 - It produced schema-valid JSON on 100.0% of prompts, against 80.7% for 2-shot.
 - It almost never drops the requested misconception.
@@ -203,7 +206,20 @@ It also learned the wrong things from its targets, which were the SciQ source qu
 
 Before items enter the bank, their options are reshuffled and the key is remapped. Alignment is at the reference ceiling (70.7%) for 0-shot and fine-tuned; 2-shot is lower at 64.0%. Generation with the unfused adapter ran at 48 tok/s, against 80 for the base model, on a machine with other background load (see the eval manifest), so treat the speeds as rough.
 
-In short, the LoRA fine-tune of Llama 3.2 3B taught format reliability, but the 3,000 SciQ-derived targets also taught copying and a key-position bias. With these data, 2-shot prompting of the base model produces the most usable items.
+In short, the v1 LoRA fine-tune of Llama 3.2 3B taught format reliability, but the 3,000 SciQ-derived targets also taught copying and a key-position bias.
+
+### v2 adapter
+
+The v2 LoRA was trained on items the base 3B wrote itself: samples drawn with the eval's two fixed examples, kept only when they passed the checks above with the base 3B as the key judge, one per training prompt (1,606 train rows; [reports/rft_card.json](reports/rft_card.json)). The checkpoint, and the choice between v2 with and without the two examples, were made on the valid split and written down before the test run ([docs/v2_selection.md](docs/v2_selection.md)). The v2 arms were run on the test set once. The base and v1 rows above are the committed ones from before v2.
+
+- Pre-registered headline, v2 0-shot vs 2-shot base on usable items: -2.7 points (95% CI -13.3 to +8.0). The interval includes zero, so v2 did not beat 2-shot prompting of the base model.
+- Without the 2 test prompts whose passages are also v2 training passages (test-00916, train-02955): -4.1 points (95% CI -14.9 to +6.8).
+- v2 with the two fixed examples (37.3% usable) vs 2-shot base: +2.7 points (95% CI -6.7 to +12.0). This arm scored higher than v2 0-shot on test but lower on valid, where the choice was made, so it isn't the headline.
+- v2 vs v1 on usable items: +10.7 points (95% CI +1.3 to +20.0).
+
+Compared with v1, v2 copies the source question less (8.7% against 25.3%), puts the key at A less often (61 of 150 valid items, against 104), and writes near-identical options on 22 items instead of 63. It keeps v1's schema-valid rate (100.0%). Its key agreement on schema-valid items (75.3%) is about the same as 2-shot base (75.2%). Its most common structure problem is a stem that gives away the answer (27 items, against 11 for 2-shot base).
+
+Usable overstates v2 more than the other arms. v2's targets were picked with these same checks and with the base 3B as key judge, and the 3B agrees closely with the 1B eval judge. The manual blind audit planned in the protocol was not done. An automated audit by two other LLM judges is being built separately. No person has checked these items.
 <!-- eval:end -->
 
 `make eval-check` audits the committed evaluation snapshot without models: it checks the 150
@@ -303,9 +319,11 @@ unfinished practice session's report is marked as in progress, with a link back 
 - The data is narrow. SciQ questions are short crowdworker recall items, Physics 1 and APES
   coverage is thin, and many items are off-curriculum (astronomy, anatomy trivia). "AP-style"
   describes the prompt and format; the source material isn't at AP level.
-- The fine-tune didn't beat 2-shot prompting on usable items (see the eval). It copies source
-  questions, often repeats options, and favors key A. More varied targets than the SciQ source
-  questions would be the next thing to try.
+- Neither fine-tune beat 2-shot prompting on usable items (see the eval). v1 copies source
+  questions, often repeats options, and favors key A. v2, trained on the base model's own
+  checked samples, fixed much of that, but on test it was 2.7 points behind 2-shot base, with an
+  interval that includes zero. Its targets were chosen with the eval's own checks, so usable
+  flatters it, and no independent audit of its items has been done yet.
 - Explanations are extracted passage sentences, not reasoning.
 - All judges are small: Llama 3.2 1B for the key check and the noisy tagger for alignment.
   Neither replaces human review.
