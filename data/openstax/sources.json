@@ -1,0 +1,49 @@
+{
+  "note": "OpenStax CNXML bundles, pinned to the commits openstax.org served on 2026-09-18 (rex/release.json defaultVersion). scripts/fetch_openstax.py downloads only the collection file and the listed modules' index.cnxml.",
+  "books": [
+    {
+      "key": "bio",
+      "subject": "BIO",
+      "role": "passages",
+      "title": "Biology for AP Courses",
+      "repo": "openstax/osbooks-biology-bundle",
+      "sha": "63f8b6f8d129dd1582989bb755011e9a6d523471",
+      "collection": "biology-ap-courses",
+      "book_uuid": "6c322e32-9fb0-4c4d-a1d7-20c95c5c7af2",
+      "license": "CC BY-NC-SA 4.0"
+    },
+    {
+      "key": "bio2e",
+      "subject": "BIO",
+      "role": "references",
+      "title": "Biology 2e",
+      "repo": "openstax/osbooks-biology-bundle",
+      "sha": "63f8b6f8d129dd1582989bb755011e9a6d523471",
+      "collection": "biology-2e",
+      "book_uuid": "8d50a0af-948b-4204-a71d-4826cba765b8",
+      "license": "CC BY-NC-SA 4.0"
+    },
+    {
+      "key": "phys",
+      "subject": "PHYS1",
+      "role": "passages+references",
+      "title": "College Physics for AP Courses 2e",
+      "repo": "openstax/osbooks-college-physics-bundle",
+      "sha": "fd1b25dfd5d8c6580c6e2b2b34a19e29cc69ada9",
+      "collection": "college-physics-ap-courses-2e",
+      "book_uuid": "fc65697b-5a9e-4dfe-ac03-035129f7be28",
+      "license": "CC BY-NC-SA 4.0"
+    },
+    {
+      "key": "chem",
+      "subject": "CHEM",
+      "role": "passages+references",
+      "title": "Chemistry 2e",
+      "repo": "openstax/osbooks-chemistry-bundle",
+      "sha": "3be4b60ff501f29a445f0cacf003e5f5cc16244d",
+      "collection": "chemistry-2e",
+      "book_uuid": "7fccc9cf-9b71-44f6-800b-f9457fd64335",
+      "license": "CC BY-NC-SA 4.0"
+    }
+  ]
+}
