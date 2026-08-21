@@ -151,13 +151,32 @@ def generate_arm(
 
 # -- phase 2 ------------------------------------------------------------------------------------
 def reference_items(prompts: list[dict], data_dir: Path) -> dict[str, dict]:
-    """SciQ source items as MCQs (same fixed letter shuffle), used as the ceiling row."""
+    """SciQ source items as MCQs (same fixed letter shuffle), used as the ceiling row.
+
+    A prompt whose reference already carries "choices" and "key" (the OpenStax set) uses those
+    as they are; a prompt with no reference has no ceiling row.
+    """
     import random
 
-    tagged = {d["id"]: d for d in read_jsonl(data_dir / "items_tagged.jsonl")}
+    tagged = None
     rng = random.Random(0)
     out = {}
     for p in prompts:
+        ref = p.get("reference")
+        if ref is None:
+            continue
+        if "choices" in ref:
+            out[p["id"]] = {
+                "stem": ref["question"],
+                "choices": dict(ref["choices"]),
+                "answer": ref["key"],
+                "lo_id": p["request"]["lo_id"],
+                "difficulty": p["request"]["difficulty"],
+                "explanation": "reference",
+            }
+            continue
+        if tagged is None:
+            tagged = {d["id"]: d for d in read_jsonl(data_dir / "items_tagged.jsonl")}
         src = tagged[p["id"]]
         opts = [src["correct"], *src["distractors"]]
         order = list(range(4))
@@ -238,9 +257,10 @@ def score(
     per_item: dict[str, list[dict]] = {}
     reasons: dict[str, dict[str, int]] = {}
     ids = [p["id"] for p in prompts]
+    ref_ids = [i for i in ids if i in refs]
     ref_align = tagger.is_aligned(
-        [tag_text(refs[i]["stem"], refs[i]["choices"][refs[i]["answer"]]) for i in ids],
-        [by_id[i]["request"]["lo_id"] for i in ids],
+        [tag_text(refs[i]["stem"], refs[i]["choices"][refs[i]["answer"]]) for i in ref_ids],
+        [by_id[i]["request"]["lo_id"] for i in ref_ids],
     )
     per_item["reference"] = [
         {
@@ -250,7 +270,7 @@ def score(
             "key_secondary": secondary.get(("reference", i), {}).get("agrees"),
             "key_letter": refs[i]["answer"],
         }
-        for i, a in zip(ids, ref_align, strict=True)
+        for i, a in zip(ref_ids, ref_align, strict=True)
     ]
     timing = {}
     arms = arms_present(out_dir)
@@ -318,7 +338,7 @@ def score(
                         item,
                         exclude_ids=[f"sciq-{pid}"],
                         exclude_group=by_id[pid]["group"],
-                        source_stem=by_id[pid]["reference"]["question"],
+                        source_stem=(by_id[pid].get("reference") or {}).get("question"),
                     )
                     novelty.accepted.clear()  # arms are compared independently
                     r["novel"] = ok
@@ -461,8 +481,15 @@ def bootstrap_diffs(
         for metric in ("usable", "all_checks", "aligned", "key", "json"):
             if metric not in per_item[a][0] or metric not in per_item[b][0]:
                 continue
-            xa = np.array([bool(r[metric]) for r in per_item[a]], float)
-            xb = np.array([bool(r[metric]) for r in per_item[b]], float)
+            ra, rb = per_item[a], per_item[b]
+            if len(ra) != len(rb):
+                # The reference row can cover only some prompts; pair on the shared ids.
+                ids_b = {r["id"] for r in rb}
+                ra = [r for r in ra if r["id"] in ids_b]
+                ids_a = {r["id"] for r in ra}
+                rb = [r for r in rb if r["id"] in ids_a]
+            xa = np.array([bool(r[metric]) for r in ra], float)
+            xb = np.array([bool(r[metric]) for r in rb], float)
             d = xa - xb
             idx = rng.integers(0, len(d), size=(n_boot, len(d)))
             boots = d[idx].mean(axis=1)

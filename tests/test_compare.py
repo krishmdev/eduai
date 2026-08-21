@@ -206,3 +206,25 @@ def test_v2_extras_drops_overlap_ids_and_splits_by_reference_alignment():
     assert split["reference_aligned"]["n"] == 3 and split["reference_not_aligned"]["n"] == 1
     assert split["reference_not_aligned"]["usable"] == {"finetuned-v2": 1.0, "base-2shot": 0.0}
     assert compare.v2_extras({"reference": ref, "base-2shot": b2}) == {}
+
+
+def test_explicit_and_missing_references_score_on_their_own_ids(tmp_path):
+    prompts, data, out = _setup(tmp_path)
+    # OpenStax-style rows: one reference with its own choices and key, one prompt without any.
+    prompts[0]["reference"] = {
+        "question": "Which organelle is the site of most ATP synthesis?",
+        "answer": "mitochondrion",
+        "choices": {"A": "nucleus", "B": "mitochondrion", "C": "ribosome", "D": "vacuole"},
+        "key": "B",
+    }
+    prompts[1]["reference"] = None
+    for p in prompts:
+        p["group"] = None
+    (data / "items_tagged.jsonl").unlink()  # must not be needed
+    refs = compare.reference_items(prompts, data)
+    assert list(refs) == [prompts[0]["id"]] and refs[prompts[0]["id"]]["answer"] == "B"
+    nov = NoveltyIndex(HashingEmbedder(64), ["unrelated stem about rocks"], ["sciq-train-00001"], [99], [])
+    res = compare.score(prompts, AlignAll(), nov, data_dir=data, out_dir=out)
+    assert res["summary"]["reference"]["n"] == 1
+    assert res["summary"]["finetuned"]["n"] == 2
+    assert "finetuned - reference | key" in res["bootstrap"]
