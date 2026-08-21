@@ -16,6 +16,32 @@ SciQ-derived material is for non-commercial use and must keep this attribution:
 
 The raw dataset is not committed. `make data` builds everything from a local copy.
 
+## OpenStax (secondary out-of-distribution check)
+
+`data/openstax/prompts.jsonl` holds passages and multiple-choice questions adapted from these
+OpenStax textbooks, downloaded as CNXML from the commits pinned in `data/openstax/sources.json`:
+
+- Biology for AP Courses, Julianne Zedalis and John Eggebrecht, OpenStax (Rice University).
+  https://openstax.org/details/books/biology-ap-courses
+- Biology 2e, Mary Ann Clark, Matthew Douglas and Jung Choi, OpenStax (Rice University). Used only
+  for its review questions and their answer letters. https://openstax.org/details/books/biology-2e
+- College Physics for AP Courses 2e, Gregg Wolfe, Erika Gasper, John Stoke, Julie Kretchman, David
+  Anderson, Nathan Czuba, Sudhi Oberoi, Liza Pujji, Irina Lyublinskaya and Douglas Ingram, OpenStax
+  (Rice University). https://openstax.org/details/books/college-physics-ap-courses-2e
+- Chemistry 2e, Paul Flowers, Klaus Theopold, Richard Langley and William R. Robinson, OpenStax
+  (Rice University). https://openstax.org/details/books/chemistry-2e
+
+The pinned sources are licensed Creative Commons Attribution-NonCommercial-ShareAlike 4.0
+International (CC BY-NC-SA 4.0), as stated in each collection file and repository LICENSE.
+Changes: paragraphs were extracted from the section text, figures, equations, cross-references and
+most math were removed or flattened to plain text, and paragraphs were merged or cut at sentence
+boundaries. Questions keep their wording; the answer letter comes from the book's solution. The
+derived prompt file is shared under the same license. The raw CNXML is not committed;
+`scripts/fetch_openstax.py` downloads it.
+
+Generated items and reports produced from these prompts are also derived from CC BY-NC-SA material
+and stay non-commercial, like everything derived from SciQ.
+
 ## Llama 3.2
 
 The base model is `mlx-community/Llama-3.2-3B-Instruct-4bit`, a 4-bit MLX conversion of Meta's

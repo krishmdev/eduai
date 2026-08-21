@@ -173,6 +173,67 @@ def data_valid_prompts(
     console.print(stats)
 
 
+@data_app.command("openstax-prompts")
+def data_openstax_prompts(
+    data: Path = typer.Option(Path("data")),
+    out: Path = typer.Option(Path("reports/openstax_ood")),
+    n_per_subject: int = 50,
+    seed: int = 20260918,
+) -> None:
+    """Secondary OOD prompts from pinned OpenStax AP textbooks (run scripts/fetch_openstax.py first)."""
+    from eduai.curriculum.embedder import get_embedder
+    from eduai.curriculum.tagger import build_tagger
+    from eduai.curriculum.taxonomy import default_taxonomy
+    from eduai.data import openstax as ox
+    from eduai.data.eval_prompts import sft_passage, sft_qa
+    from eduai.data.sciq import read_jsonl, write_jsonl
+
+    ox_dir = data / "openstax"
+    books = ox.load_sources(ox_dir / "sources.json")
+    modules = {b["key"]: ox.load_book(ox_dir / "raw", b) for b in books}
+    # Every row either adapter saw in training or validation.
+    sft_rows = [
+        r for d in ("sft", "sft_v2") for f in ("train.jsonl", "valid.jsonl") for r in read_jsonl(data / d / f)
+    ]
+    sciq = [d["support"] for d in read_jsonl(data / "items_tagged.jsonl") if d.get("support")]
+    lengths = [
+        len(p["request"]["passage"])
+        for f in ("prompts.jsonl", "valid_prompts.jsonl")
+        for p in read_jsonl(data / "eval" / f)
+    ]
+    tax = default_taxonomy()
+    selected, screen = ox.screen_and_select(
+        books,
+        modules,
+        build_tagger(tax),
+        get_embedder("bge-small"),
+        [sft_passage(r) for r in sft_rows],
+        sciq,
+        [sft_qa(r) for r in sft_rows],
+        n_per_subject=n_per_subject,
+        seed=seed,
+        target_lengths=lengths,
+    )
+    rows, quota = ox.build_rows(selected, books, tax, seed=seed)
+    write_jsonl(ox_dir / "prompts.jsonl", rows)
+    plen = sorted(len(r["request"]["passage"]) for r in rows)
+    card = {
+        "n": len(rows),
+        "seed": seed,
+        "sft_rows_screened_against": len(sft_rows),
+        "sciq_supports_screened_against": len(sciq),
+        "screen": screen,
+        "quota": quota,
+        "passage_chars_quartiles": [plen[len(plen) // 4], plen[len(plen) // 2], plen[3 * len(plen) // 4]],
+        "sciq_eval_passage_chars_quartiles": [sorted(lengths)[len(lengths) * q // 4] for q in (1, 2, 3)],
+        "difficulty": "assigned by a seeded balanced shuffle, not measured",
+        "label_source": "tagger top-1 over the passage text, in-subject and >= tau",
+    }
+    out.mkdir(parents=True, exist_ok=True)
+    (out / "prompts_card.json").write_text(json.dumps(card, indent=2) + "\n")
+    console.print(card)
+
+
 @tagger_app.command("sample-gold")
 def tagger_sample_gold(
     sciq: Path = typer.Option(..., help="Directory with SciQ train/valid/test.json"),

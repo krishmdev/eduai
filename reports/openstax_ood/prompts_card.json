@@ -1,0 +1,82 @@
+{
+  "n": 150,
+  "seed": 20260918,
+  "sft_rows_screened_against": 5001,
+  "sciq_supports_screened_against": 12252,
+  "screen": {
+    "BIO": {
+      "modules": 167,
+      "chunks": 2526,
+      "screened": 113,
+      "dropped_tag_off_subject": 25,
+      "dropped_sciq_containment": 27,
+      "dropped_sft_containment": 11,
+      "ref_dropped_same_answer_qa": 2,
+      "with_reference": 42,
+      "no_section_mcq": 3,
+      "ref_below_min_cos": 5,
+      "kept": 50,
+      "mcqs_parsed_in_reference_book": 800
+    },
+    "PHYS1": {
+      "modules": 242,
+      "chunks": 1021,
+      "screened": 124,
+      "dropped_tag_off_subject": 56,
+      "dropped_sciq_containment": 14,
+      "dropped_sft_containment": 4,
+      "no_section_mcq": 20,
+      "ref_dropped_same_answer_qa": 0,
+      "with_reference": 20,
+      "ref_below_min_cos": 10,
+      "kept": 50,
+      "mcqs_parsed_in_reference_book": 177
+    },
+    "CHEM": {
+      "modules": 114,
+      "chunks": 957,
+      "screened": 71,
+      "dropped_sciq_containment": 5,
+      "dropped_tag_off_subject": 4,
+      "dropped_sft_containment": 12,
+      "no_section_mcq": 50,
+      "kept": 50,
+      "mcqs_parsed_in_reference_book": 1
+    }
+  },
+  "quota": {
+    "BIO": {
+      "n": 50,
+      "stimulus": 20,
+      "misconception": 15,
+      "misconception_target": 15,
+      "with_reference": 42
+    },
+    "PHYS1": {
+      "n": 50,
+      "stimulus": 20,
+      "misconception": 15,
+      "misconception_target": 15,
+      "with_reference": 20
+    },
+    "CHEM": {
+      "n": 50,
+      "stimulus": 20,
+      "misconception": 0,
+      "misconception_target": 15,
+      "with_reference": 0
+    }
+  },
+  "passage_chars_quartiles": [
+    203,
+    268,
+    375
+  ],
+  "sciq_eval_passage_chars_quartiles": [
+    174,
+    297,
+    524
+  ],
+  "difficulty": "assigned by a seeded balanced shuffle, not measured",
+  "label_source": "tagger top-1 over the passage text, in-subject and >= tau"
+}
