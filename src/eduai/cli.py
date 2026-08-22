@@ -181,6 +181,8 @@ def data_openstax_prompts(
     seed: int = 20260918,
 ) -> None:
     """Secondary OOD prompts from pinned OpenStax AP textbooks (run scripts/fetch_openstax.py first)."""
+    from collections import Counter
+
     from eduai.curriculum.embedder import get_embedder
     from eduai.curriculum.tagger import build_tagger
     from eduai.curriculum.taxonomy import default_taxonomy
@@ -227,7 +229,9 @@ def data_openstax_prompts(
         "passage_chars_quartiles": [plen[len(plen) // 4], plen[len(plen) // 2], plen[3 * len(plen) // 4]],
         "sciq_eval_passage_chars_quartiles": [sorted(lengths)[len(lengths) * q // 4] for q in (1, 2, 3)],
         "difficulty": "assigned by a seeded balanced shuffle, not measured",
-        "label_source": "tagger top-1 over the passage text, in-subject and >= tau",
+        "label_source": dict(Counter(r["label_source"] for r in rows)),
+        "label_rule": "tagger top-1, in-subject and >= tau, over the book question and answer where the "
+        "prompt has one (as on the valid split), else over the passage",
     }
     out.mkdir(parents=True, exist_ok=True)
     (out / "prompts_card.json").write_text(json.dumps(card, indent=2) + "\n")

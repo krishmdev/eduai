@@ -13,6 +13,7 @@
       "dropped_sft_containment": 11,
       "ref_dropped_same_answer_qa": 2,
       "with_reference": 42,
+      "labeled_from_reference": 28,
       "no_section_mcq": 3,
       "ref_below_min_cos": 5,
       "kept": 50,
@@ -28,6 +29,7 @@
       "no_section_mcq": 20,
       "ref_dropped_same_answer_qa": 0,
       "with_reference": 20,
+      "labeled_from_reference": 15,
       "ref_below_min_cos": 10,
       "kept": 50,
       "mcqs_parsed_in_reference_book": 177
@@ -78,5 +80,9 @@
     524
   ],
   "difficulty": "assigned by a seeded balanced shuffle, not measured",
-  "label_source": "tagger top-1 over the passage text, in-subject and >= tau"
+  "label_source": {
+    "tagger-reference": 43,
+    "tagger-passage": 107
+  },
+  "label_rule": "tagger top-1, in-subject and >= tau, over the book question and answer where the prompt has one (as on the valid split), else over the passage"
 }

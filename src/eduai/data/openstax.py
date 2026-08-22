@@ -9,9 +9,10 @@ same schema as data/eval/prompts.jsonl:
    a sentence boundary so lengths fall in the SciQ passage range (150 to 1,200 characters).
 2. Screens, in order: 8-gram containment >= 0.5 against any passage the v1 or v2 adapters were
    trained or validated on, then the same against every SciQ support passage, then the tagger.
-3. Target LOs: the tagger's own top-1 objective over the passage text, kept only when that objective
-   is in the book's subject and its score clears tau. The valid split was labeled the same way,
-   except that it tagged the SciQ question and answer, which don't exist here.
+3. Target LOs: the tagger's own top-1 objective, kept only when it is in the book's subject and its
+   score clears tau. The valid split tagged each SciQ question and answer; here a prompt with a book
+   reference question (step 4) is tagged the same way from that question, and the rest, which have
+   no question, from the passage text. Passages are screened on the passage tag.
 4. References: human-written multiple-choice questions from the same section (Biology 2e review
    questions for biology, since the AP edition's embedded exercises don't publish keys; AP test prep
    questions for physics; end-of-chapter exercises for chemistry), keyed by the book's own solution.
@@ -30,6 +31,7 @@ from pathlib import Path
 
 import numpy as np
 
+from eduai.curriculum.tagger import tag_text
 from eduai.data import explain, leakage
 
 MIN_CHARS = 150
@@ -430,6 +432,7 @@ def screen_and_select(
                             "passage": passage,
                             "lo_id": tag.lo_id,
                             "tag_score": round(float(tag.score), 4),
+                            "label_source": "tagger-passage",
                         }
                     )
                     break  # one passage per section per round
@@ -479,6 +482,12 @@ def screen_and_select(
                 },
             }
             st["with_reference"] += 1
+            # As on the valid split, a prompt with a source question is labeled from that question
+            # and its answer, when the tagger keeps it in the subject and above tau.
+            rt = tagger.tag_texts([tag_text(q["stem"], q["choices"][q["key"]])])[0]
+            if rt.subject == b["subject"] and rt.aligned:
+                k.update(lo_id=rt.lo_id, tag_score=round(float(rt.score), 4), label_source="tagger-reference")
+                st["labeled_from_reference"] += 1
         st["kept"] = len(kept)
         st["mcqs_parsed_in_reference_book"] = sum(len(x.mcqs) for x in modules[ref_book_for[b["key"]]])
         stats[b["subject"]] = dict(st)
@@ -541,7 +550,7 @@ def build_rows(
                     "request": req.__dict__,
                     "group": None,
                     "reference": ref,
-                    "label_source": "tagger-passage",
+                    "label_source": s["label_source"],
                     "tag_score": s["tag_score"],
                     "source": {
                         "book": b["title"],
