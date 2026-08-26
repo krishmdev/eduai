@@ -1,0 +1,322 @@
+{
+ "a000": {
+  "arm": "finetuned-v2",
+  "id": "train-09694"
+ },
+ "a001": {
+  "arm": "base-2shot",
+  "id": "valid-00796"
+ },
+ "a002": {
+  "arm": "base-2shot",
+  "id": "train-09433"
+ },
+ "a003": {
+  "arm": "finetuned-v2",
+  "id": "train-01440"
+ },
+ "a004": {
+  "arm": "base-2shot",
+  "id": "valid-00888"
+ },
+ "a005": {
+  "arm": "base-2shot",
+  "id": "valid-00484"
+ },
+ "a006": {
+  "arm": "finetuned-v2",
+  "id": "valid-00383"
+ },
+ "a007": {
+  "arm": "base-2shot",
+  "id": "valid-00700"
+ },
+ "a008": {
+  "arm": "finetuned-v2",
+  "id": "valid-00206"
+ },
+ "a009": {
+  "arm": "base-2shot",
+  "id": "valid-00227"
+ },
+ "a010": {
+  "arm": "base-2shot",
+  "id": "valid-00377"
+ },
+ "a011": {
+  "arm": "finetuned-v2",
+  "id": "train-06995"
+ },
+ "a012": {
+  "arm": "finetuned-v2",
+  "id": "valid-00869"
+ },
+ "a013": {
+  "arm": "finetuned-v2",
+  "id": "valid-00003"
+ },
+ "a014": {
+  "arm": "finetuned-v2",
+  "id": "valid-00680"
+ },
+ "a015": {
+  "arm": "base-2shot",
+  "id": "train-06995"
+ },
+ "a016": {
+  "arm": "finetuned-v2",
+  "id": "valid-00915"
+ },
+ "a017": {
+  "arm": "finetuned-v2",
+  "id": "valid-00633"
+ },
+ "a018": {
+  "arm": "finetuned-v2",
+  "id": "valid-00486"
+ },
+ "a019": {
+  "arm": "base-2shot",
+  "id": "valid-00299"
+ },
+ "a020": {
+  "arm": "base-2shot",
+  "id": "valid-00985"
+ },
+ "a021": {
+  "arm": "finetuned-v2",
+  "id": "valid-00349"
+ },
+ "a022": {
+  "arm": "finetuned-v2",
+  "id": "valid-00440"
+ },
+ "a023": {
+  "arm": "base-2shot",
+  "id": "train-10309"
+ },
+ "a024": {
+  "arm": "base-2shot",
+  "id": "valid-00557"
+ },
+ "a025": {
+  "arm": "base-2shot",
+  "id": "train-09742"
+ },
+ "a026": {
+  "arm": "finetuned-v2",
+  "id": "valid-00755"
+ },
+ "a027": {
+  "arm": "finetuned-v2",
+  "id": "valid-00453"
+ },
+ "a028": {
+  "arm": "base-2shot",
+  "id": "train-05995"
+ },
+ "a029": {
+  "arm": "base-2shot",
+  "id": "valid-00349"
+ },
+ "a030": {
+  "arm": "base-2shot",
+  "id": "valid-00170"
+ },
+ "a031": {
+  "arm": "finetuned-v2",
+  "id": "valid-00150"
+ },
+ "a032": {
+  "arm": "base-2shot",
+  "id": "train-07773"
+ },
+ "a033": {
+  "arm": "base-2shot",
+  "id": "valid-00659"
+ },
+ "a034": {
+  "arm": "base-2shot",
+  "id": "train-04183"
+ },
+ "a035": {
+  "arm": "base-2shot",
+  "id": "valid-00426"
+ },
+ "a036": {
+  "arm": "finetuned-v2",
+  "id": "valid-00299"
+ },
+ "a037": {
+  "arm": "finetuned-v2",
+  "id": "train-02388"
+ },
+ "a038": {
+  "arm": "finetuned-v2",
+  "id": "train-08888"
+ },
+ "a039": {
+  "arm": "finetuned-v2",
+  "id": "train-01385"
+ },
+ "a040": {
+  "arm": "finetuned-v2",
+  "id": "valid-00426"
+ },
+ "a041": {
+  "arm": "finetuned-v2",
+  "id": "train-02365"
+ },
+ "a042": {
+  "arm": "finetuned-v2",
+  "id": "valid-00549"
+ },
+ "a043": {
+  "arm": "base-2shot",
+  "id": "valid-00312"
+ },
+ "a044": {
+  "arm": "finetuned-v2",
+  "id": "train-09883"
+ },
+ "a045": {
+  "arm": "base-2shot",
+  "id": "train-08888"
+ },
+ "a046": {
+  "arm": "finetuned-v2",
+  "id": "valid-00419"
+ },
+ "a047": {
+  "arm": "base-2shot",
+  "id": "valid-00423"
+ },
+ "a048": {
+  "arm": "finetuned-v2",
+  "id": "valid-00848"
+ },
+ "a049": {
+  "arm": "finetuned-v2",
+  "id": "valid-00254"
+ },
+ "a050": {
+  "arm": "base-2shot",
+  "id": "valid-00014"
+ },
+ "a051": {
+  "arm": "finetuned-v2",
+  "id": "valid-00524"
+ },
+ "a052": {
+  "arm": "base-2shot",
+  "id": "train-04159"
+ },
+ "a053": {
+  "arm": "base-2shot",
+  "id": "valid-00117"
+ },
+ "a054": {
+  "arm": "base-2shot",
+  "id": "valid-00383"
+ },
+ "a055": {
+  "arm": "finetuned-v2",
+  "id": "train-04488"
+ },
+ "a056": {
+  "arm": "finetuned-v2",
+  "id": "train-04159"
+ },
+ "a057": {
+  "arm": "finetuned-v2",
+  "id": "valid-00173"
+ },
+ "a058": {
+  "arm": "finetuned-v2",
+  "id": "valid-00924"
+ },
+ "a059": {
+  "arm": "finetuned-v2",
+  "id": "valid-00202"
+ },
+ "a060": {
+  "arm": "base-2shot",
+  "id": "valid-00246"
+ },
+ "a061": {
+  "arm": "base-2shot",
+  "id": "valid-00150"
+ },
+ "a062": {
+  "arm": "finetuned-v2",
+  "id": "valid-00790"
+ },
+ "a063": {
+  "arm": "base-2shot",
+  "id": "valid-00440"
+ },
+ "a064": {
+  "arm": "base-2shot",
+  "id": "valid-00755"
+ },
+ "a065": {
+  "arm": "base-2shot",
+  "id": "valid-00254"
+ },
+ "a066": {
+  "arm": "base-2shot",
+  "id": "train-02817"
+ },
+ "a067": {
+  "arm": "finetuned-v2",
+  "id": "valid-00700"
+ },
+ "a068": {
+  "arm": "finetuned-v2",
+  "id": "valid-00117"
+ },
+ "a069": {
+  "arm": "base-2shot",
+  "id": "valid-00772"
+ },
+ "a070": {
+  "arm": "base-2shot",
+  "id": "train-06477"
+ },
+ "a071": {
+  "arm": "base-2shot",
+  "id": "train-05975"
+ },
+ "a072": {
+  "arm": "base-2shot",
+  "id": "valid-00713"
+ },
+ "a073": {
+  "arm": "base-2shot",
+  "id": "train-03600"
+ },
+ "a074": {
+  "arm": "finetuned-v2",
+  "id": "train-09742"
+ },
+ "a075": {
+  "arm": "base-2shot",
+  "id": "valid-00549"
+ },
+ "a076": {
+  "arm": "finetuned-v2",
+  "id": "train-09940"
+ },
+ "a077": {
+  "arm": "finetuned-v2",
+  "id": "valid-00130"
+ },
+ "a078": {
+  "arm": "finetuned-v2",
+  "id": "train-06477"
+ },
+ "a079": {
+  "arm": "base-2shot",
+  "id": "valid-00934"
+ }
+}
