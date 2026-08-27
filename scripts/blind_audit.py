@@ -155,6 +155,7 @@ VERDICT_SCHEMA = {
 }
 # Markers that end a reasoning block: Qwen's </think>, Gemma 4's thought channel.
 REASONING_END = ("</think>", "<channel|>")
+UNMARKED_REASONING_CHARS = 200
 SHEET_FIELDS = ("passage", "lo_id", "lo_text", "target_misconception", "item")
 
 
@@ -198,7 +199,11 @@ def extract_verdict(text: str) -> dict | None:
         except json.JSONDecodeError:
             continue
         if isinstance(obj, dict) and all(type(obj.get(k)) is bool for k in VERDICT_KEYS):
-            return {**{k: obj[k] for k in VERDICT_KEYS}, "notes": str(obj.get("notes", ""))[:500]}
+            return {
+                **{k: obj[k] for k in VERDICT_KEYS},
+                "notes": str(obj.get("notes", ""))[:500],
+                "_start": s,
+            }
     return None
 
 
@@ -251,9 +256,15 @@ def judge_row(client, row: dict, thinking: bool, max_tokens: int, thinking_budge
         reasoning = msg.get("reasoning_content")
         final, stripped = (content, "") if reasoning is not None else strip_reasoning(content)
         verdict = extract_verdict(final)
+        start = verdict.pop("_start") if verdict else len(final)
+        source = "server" if reasoning is not None else ("client" if stripped else "none")
+        if source == "none" and start > UNMARKED_REASONING_CHARS:
+            # The server dropped the markers as special tokens; the text before the JSON is the reasoning.
+            source, stripped = "unmarked", final[:start]
         out.update(
-            reasoning_chars=len(reasoning if reasoning is not None else stripped),
-            reasoning_from="server" if reasoning is not None else ("client" if stripped else "none"),
+            reasoning_chars=out.get("reasoning_chars", 0)
+            + len(reasoning if reasoning is not None else stripped),
+            reasoning_from=source if out.get("reasoning_from", "none") == "none" else out["reasoning_from"],
             completion_tokens=(resp.get("usage") or {}).get("completion_tokens"),
             finish_reason=resp["choices"][0].get("finish_reason"),
             content=final[-2000:],
@@ -321,8 +332,16 @@ def llm_judge(
         raise SystemExit(f"{jdir} already has verdicts; this audit runs once (pass --force after a crash)")
     jdir.mkdir(parents=True, exist_ok=True)
     t0 = time.time()
+    first = judge_row(client, sheet[0], thinking, max_tokens, thinking_budget)
+    if thinking and first.get("reasoning_from") == "none":
+        raise SystemExit(
+            "thinking was requested but the reply has no reasoning; the server ignored enable_thinking"
+        )
     with ThreadPoolExecutor(max(1, concurrency)) as ex:
-        verdicts = list(ex.map(lambda r: judge_row(client, r, thinking, max_tokens, thinking_budget), sheet))
+        verdicts = [
+            first,
+            *ex.map(lambda r: judge_row(client, r, thinking, max_tokens, thinking_budget), sheet[1:]),
+        ]
     (jdir / "verdicts.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False) + "\n" for v in verdicts))
     n = len(verdicts)
     manifest = {
@@ -340,7 +359,8 @@ def llm_judge(
         "first_try_parse_failure_rate": sum(v["first_parse_failed"] for v in verdicts) / n if n else None,
         "unparsed_after_retry": sum(not v["parsed"] for v in verdicts),
         "reasoning_from": {
-            k: sum(v.get("reasoning_from") == k for v in verdicts) for k in ("server", "client", "none")
+            k: sum(v.get("reasoning_from") == k for v in verdicts)
+            for k in ("server", "client", "unmarked", "none")
         },
         "mean_completion_tokens": (
             float(np.mean([v["completion_tokens"] for v in verdicts if v.get("completion_tokens")]))

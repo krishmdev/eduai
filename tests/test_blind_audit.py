@@ -150,6 +150,13 @@ def test_llm_judge_against_a_stub_server(tmp_path):
     assert seen[1]["messages"][-1]["role"] == "user" and len(seen[1]["messages"]) == 4
     with pytest.raises(SystemExit, match="runs once"):
         llm_judge(out, "stub", client)
+    srv, _ = _stub_server([{"role": "assistant", "content": ok}])
+    try:
+        port = srv.server_port
+        with pytest.raises(SystemExit, match="ignored enable_thinking"):
+            llm_judge(out, "nothink", ChatClient(f"http://127.0.0.1:{port}/v1", "m"), thinking=True)
+    finally:
+        srv.shutdown()
 
     res = llm_score(out, gen)
     j = res["judges"]["stub"]
@@ -158,5 +165,6 @@ def test_llm_judge_against_a_stub_server(tmp_path):
 
     assert strip_reasoning("<think>a</think>b") == ("b", "<think>a</think>")
     assert extract_verdict('x {"key_correct": "yes", "lo_fit": true, "distractors_plausible": true}') is None
+    assert extract_verdict("r " + ok)["_start"] == 2
     assert kappa([True, False, True, False], [True, False, True, False]) == 1.0
     assert kappa([True, True], [True, False]) is None
