@@ -80,9 +80,10 @@ def _stub_server(replies):
             body = json.loads(self.rfile.read(int(self.headers["Content-Length"])))
             with lock:
                 seen.append(body)
-                msg = replies.pop(0)
+                msg = dict(replies.pop(0))
+            usage = {"completion_tokens": 42, **msg.pop("_usage", {})}
             data = json.dumps(
-                {"choices": [{"message": msg, "finish_reason": "stop"}], "usage": {"completion_tokens": 42}}
+                {"choices": [{"message": msg, "finish_reason": "stop"}], "usage": usage}
             ).encode()
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -168,3 +169,36 @@ def test_llm_judge_against_a_stub_server(tmp_path):
     assert extract_verdict("r " + ok)["_start"] == 2
     assert kappa([True, False, True, False], [True, False, True, False]) == 1.0
     assert kappa([True, True], [True, False]) is None
+
+
+def test_pilot_keeps_lengths_only_and_sets_the_cap(tmp_path):
+    from scripts.blind_audit import ChatClient, pilot, pilot_cap, thinking_stats
+
+    assert pilot_cap([100] * 10) == 1024
+    assert pilot_cap([1000] * 9 + [3000]) == 1280  # p90 = 1200 -> 1280
+    assert pilot_cap([2049] * 10) == 2304
+    out = tmp_path / "pilot"
+    out.mkdir()
+    sheet = [
+        {"audit_id": f"a{i}", "passage": "p", "lo_id": "x", "lo_text": "y", "item": {}} for i in range(3)
+    ]
+    _write(out / "sheet.jsonl", sheet)
+    ok = '{"key_correct": true, "lo_fit": true, "distractors_plausible": true, "notes": "n"}'
+    replies = [
+        {"role": "assistant", "content": ok, "reasoning_content": "r", "_usage": {"thinking_tokens": t}}
+        for t in (500, 2000, 6000)
+    ]
+    srv, seen = _stub_server(replies)
+    try:
+        rec = pilot(out, "stub", ChatClient(f"http://127.0.0.1:{srv.server_port}/v1", "m"), concurrency=1)
+    finally:
+        srv.shutdown()
+    assert sorted(rec["thinking_tokens"]) == [500, 2000, 6000] and rec["at_safety_cap"] == 1
+    assert rec["cap"] == pilot_cap([500, 2000, 6000])
+    assert all(b["max_thinking_tokens"] == 6000 for b in seen)
+    saved = (out / "pilot_stub.json").read_text()
+    assert "key_correct" not in saved and "notes" not in saved
+    with pytest.raises(SystemExit, match="runs once"):
+        pilot(out, "stub", None)
+    st = thinking_stats([{"thinking_tokens": [1024]}, {"thinking_tokens": [10, 1024]}, {}], 1024)
+    assert st["items_at_cap"] == 2 and st["n_reported"] == 3

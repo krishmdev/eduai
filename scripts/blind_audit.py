@@ -210,7 +210,7 @@ def extract_verdict(text: str) -> dict | None:
 class ChatClient:
     """Minimal OpenAI-compatible /chat/completions client (stdlib only)."""
 
-    def __init__(self, base_url: str, model: str, timeout: float = 900.0):
+    def __init__(self, base_url: str, model: str, timeout: float = 1800.0):
         self.url = base_url.rstrip("/") + "/chat/completions"
         self.model = model
         self.timeout = timeout
@@ -266,6 +266,10 @@ def judge_row(client, row: dict, thinking: bool, max_tokens: int, thinking_budge
             + len(reasoning if reasoning is not None else stripped),
             reasoning_from=source if out.get("reasoning_from", "none") == "none" else out["reasoning_from"],
             completion_tokens=(resp.get("usage") or {}).get("completion_tokens"),
+            thinking_tokens=[
+                *out.get("thinking_tokens", []),
+                (resp.get("usage") or {}).get("thinking_tokens"),
+            ],
             finish_reason=resp["choices"][0].get("finish_reason"),
             content=final[-2000:],
         )
@@ -310,6 +314,72 @@ def git_state(repo: Path | None) -> dict:
         "commit": g("rev-parse", "HEAD"),
         "dirty": bool(g("status", "--porcelain", "--untracked-files=no")),
     }
+
+
+def thinking_stats(verdicts: list[dict], cap: int | None) -> dict:
+    """Thinking-token lengths reported by the server (usage.thinking_tokens), per request, and how
+    many items had a request that used the whole budget."""
+    per_item = [[t for t in v.get("thinking_tokens", []) if t is not None] for v in verdicts]
+    flat = [t for ts in per_item for t in ts]
+    hits = sum(bool(cap) and any(t >= cap for t in ts) for ts in per_item)
+    return {
+        "n_reported": len(flat),
+        "p50": float(np.percentile(flat, 50)) if flat else None,
+        "p90": float(np.percentile(flat, 90)) if flat else None,
+        "max": max(flat) if flat else None,
+        "items_at_cap": hits,
+        "share_at_cap": hits / len(verdicts) if verdicts and cap else None,
+    }
+
+
+def pilot_cap(lengths: list[int]) -> int:
+    """The amended budget rule: max(1024, p90 of the pilot thinking lengths), rounded up to 256."""
+    p90 = float(np.percentile(lengths, 90))
+    return max(1024, -(-int(np.ceil(p90)) // 256) * 256)
+
+
+def pilot(
+    out: Path,
+    judge: str,
+    client,
+    safety_cap: int = 6000,
+    max_tokens: int = 6600,
+    concurrency: int = 4,
+    meta: dict | None = None,
+) -> dict:
+    """Thinking-length pilot on items outside the audit draw. Only lengths are kept; the verdicts
+    are dropped without being written or printed."""
+    sheet = rows(out / "sheet.jsonl")
+    dest = out / f"pilot_{judge}.json"
+    if dest.exists():
+        raise SystemExit(f"{dest} exists; the pilot runs once per judge")
+    t0 = time.time()
+    first = judge_row(client, sheet[0], True, max_tokens, safety_cap)
+    if first.get("reasoning_from") == "none":
+        raise SystemExit("thinking was requested but the reply has no reasoning")
+    with ThreadPoolExecutor(max(1, concurrency)) as ex:
+        res = [first, *ex.map(lambda r: judge_row(client, r, True, max_tokens, safety_cap), sheet[1:])]
+    lengths = [v["thinking_tokens"][0] for v in res]
+    if any(t is None for t in lengths):
+        raise SystemExit("the server did not report usage.thinking_tokens")
+    rec = {
+        "judge": judge,
+        "model": getattr(client, "model", None),
+        "safety_cap": safety_cap,
+        "max_tokens": max_tokens,
+        "concurrency": concurrency,
+        "n": len(res),
+        "thinking_tokens": lengths,
+        "finish_reason": [v["finish_reason"] for v in res],
+        "at_safety_cap": sum(t >= safety_cap for t in lengths),
+        "p90": float(np.percentile(lengths, 90)),
+        "cap": pilot_cap(lengths),
+        "wall_seconds": round(time.time() - t0, 1),
+        **(meta or {}),
+    }
+    dest.write_text(json.dumps(rec, indent=2) + "\n")
+    print(json.dumps({k: rec[k] for k in ("judge", "n", "p90", "cap", "at_safety_cap", "wall_seconds")}))
+    return rec
 
 
 def llm_judge(
@@ -367,6 +437,7 @@ def llm_judge(
             if any(v.get("completion_tokens") for v in verdicts)
             else None
         ),
+        "thinking_tokens": thinking_stats(verdicts, thinking_budget if thinking else None),
         "wall_seconds": round(time.time() - t0, 1),
         **(meta or {}),
     }
@@ -521,6 +592,16 @@ def main() -> None:
     j.add_argument("--models-yaml", type=Path, help="Localhost AI models.yaml, to record repo and revision")
     j.add_argument("--server-repo", type=Path, help="Localhost AI checkout, to record its commit")
     j.add_argument("--force", action="store_true")
+    pl = sub.add_parser("pilot", help="Thinking-length pilot for one judge; keeps lengths only")
+    pl.add_argument("--out", type=Path, required=True)
+    pl.add_argument("--judge", required=True)
+    pl.add_argument("--model", required=True)
+    pl.add_argument("--base-url", default="http://127.0.0.1:8011/v1")
+    pl.add_argument("--safety-cap", type=int, default=6000)
+    pl.add_argument("--max-tokens", type=int, default=6600)
+    pl.add_argument("--concurrency", type=int, default=4)
+    pl.add_argument("--models-yaml", type=Path)
+    pl.add_argument("--server-repo", type=Path)
     ls = sub.add_parser("llm-score")
     ls.add_argument("--out", type=Path, required=True)
     ls.add_argument("--eval-dir", type=Path)
@@ -545,6 +626,17 @@ def main() -> None:
             a.concurrency,
             meta,
             a.force,
+        )
+    elif a.cmd == "pilot":
+        meta = {"preset": preset_info(a.models_yaml, a.model), "server": git_state(a.server_repo)}
+        pilot(
+            a.out,
+            a.judge,
+            ChatClient(a.base_url, a.model),
+            a.safety_cap,
+            a.max_tokens,
+            a.concurrency,
+            meta,
         )
     else:
         llm_score(a.out, a.eval_dir)
