@@ -1,0 +1,42 @@
+{
+ "a000": {
+  "arm": "base-0shot",
+  "id": "valid-00888"
+ },
+ "a001": {
+  "arm": "finetuned",
+  "id": "valid-00888"
+ },
+ "a002": {
+  "arm": "base-0shot",
+  "id": "train-04183"
+ },
+ "a003": {
+  "arm": "base-0shot",
+  "id": "train-06477"
+ },
+ "a004": {
+  "arm": "finetuned",
+  "id": "valid-00535"
+ },
+ "a005": {
+  "arm": "finetuned",
+  "id": "valid-00170"
+ },
+ "a006": {
+  "arm": "base-0shot",
+  "id": "train-05167"
+ },
+ "a007": {
+  "arm": "finetuned",
+  "id": "train-07773"
+ },
+ "a008": {
+  "arm": "base-0shot",
+  "id": "valid-00355"
+ },
+ "a009": {
+  "arm": "finetuned",
+  "id": "train-02388"
+ }
+}

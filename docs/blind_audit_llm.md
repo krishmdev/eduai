@@ -88,3 +88,27 @@ both judges. It asks for three verdicts:
 
 Estimated, not measured: about 1.3 hours for Qwen3.5 9B and 1.5 to 2 hours for Gemma 4 12B per
 split, with reasoning on, for 80 items.
+
+## Amendment, 2026-09-18 (before any audit item was judged)
+
+Committed before either judge has seen an audit item or a pilot item. It replaces the fixed budget,
+the dry run and the Qwen concurrency above; everything else stands.
+
+- Thinking budget from a pilot, per judge. Each judge first runs with a 6,000-token safety cap on
+  thinking (`max_tokens` 6,600) over 10 items that are not in either audit draw:
+  `reports/valid_eval/audit_pilot/sheet.jsonl`, 5 usable items each from the valid `base-0shot`
+  and `finetuned` (v1) arms, seed 20260905. Six of them come from prompts that also appear in the
+  valid draw, but they are other arms' items. Only the thinking-token lengths
+  (`usage.thinking_tokens`) and finish reasons are kept; the verdicts are dropped unseen
+  (`blind_audit.py pilot`). The judge's cap is max(1024, p90 of its 10 pilot lengths), rounded up
+  to a multiple of 256, and `max_tokens` is the cap plus 600. The pilot lengths and caps are
+  committed before any audit item is judged, and the same caps are used on valid and test.
+- The dry run on 4 `v2-it450`/`finetuned` items is dropped; the pilot replaces it.
+- Concurrency: Qwen3.5 9B at 8 (it ran cleanly at batch 16), Gemma 4 12B at 2 or less because of
+  memory. Localhost AI runs with `LHAI_MAX_CONTEXT=9216` so prompt, thinking and answer fit.
+- Batched greedy decoding drifts with the batch size, so a verdict is not bitwise reproducible if
+  the same item is judged again at another concurrency. The audit is a judgment, not a
+  batch-invariance check; the concurrency used is in each manifest.
+- Reported with the audit: per judge, the share of audit items whose thinking reached the cap.
+- Run order: valid audit (both judges), then the test audit, which is allowed now because the single
+  v2 test run has happened (`reports/eval/test_runs.jsonl`, 1 run).
