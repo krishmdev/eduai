@@ -1,0 +1,322 @@
+{
+ "a000": {
+  "arm": "base-2shot",
+  "id": "train-07539"
+ },
+ "a001": {
+  "arm": "base-2shot",
+  "id": "test-00367"
+ },
+ "a002": {
+  "arm": "base-2shot",
+  "id": "test-00725"
+ },
+ "a003": {
+  "arm": "finetuned-v2",
+  "id": "test-00447"
+ },
+ "a004": {
+  "arm": "base-2shot",
+  "id": "test-00944"
+ },
+ "a005": {
+  "arm": "finetuned-v2",
+  "id": "train-06123"
+ },
+ "a006": {
+  "arm": "finetuned-v2",
+  "id": "train-11239"
+ },
+ "a007": {
+  "arm": "base-2shot",
+  "id": "test-00881"
+ },
+ "a008": {
+  "arm": "base-2shot",
+  "id": "train-05107"
+ },
+ "a009": {
+  "arm": "finetuned-v2",
+  "id": "test-00380"
+ },
+ "a010": {
+  "arm": "finetuned-v2",
+  "id": "train-00176"
+ },
+ "a011": {
+  "arm": "base-2shot",
+  "id": "train-03382"
+ },
+ "a012": {
+  "arm": "base-2shot",
+  "id": "test-00068"
+ },
+ "a013": {
+  "arm": "finetuned-v2",
+  "id": "test-00584"
+ },
+ "a014": {
+  "arm": "finetuned-v2",
+  "id": "test-00463"
+ },
+ "a015": {
+  "arm": "finetuned-v2",
+  "id": "test-00258"
+ },
+ "a016": {
+  "arm": "base-2shot",
+  "id": "train-09147"
+ },
+ "a017": {
+  "arm": "finetuned-v2",
+  "id": "test-00213"
+ },
+ "a018": {
+  "arm": "finetuned-v2",
+  "id": "test-00609"
+ },
+ "a019": {
+  "arm": "base-2shot",
+  "id": "train-01055"
+ },
+ "a020": {
+  "arm": "base-2shot",
+  "id": "train-03140"
+ },
+ "a021": {
+  "arm": "base-2shot",
+  "id": "test-00086"
+ },
+ "a022": {
+  "arm": "finetuned-v2",
+  "id": "train-09236"
+ },
+ "a023": {
+  "arm": "base-2shot",
+  "id": "test-00196"
+ },
+ "a024": {
+  "arm": "base-2shot",
+  "id": "train-07003"
+ },
+ "a025": {
+  "arm": "finetuned-v2",
+  "id": "test-00510"
+ },
+ "a026": {
+  "arm": "base-2shot",
+  "id": "test-00532"
+ },
+ "a027": {
+  "arm": "base-2shot",
+  "id": "test-00145"
+ },
+ "a028": {
+  "arm": "finetuned-v2",
+  "id": "train-03140"
+ },
+ "a029": {
+  "arm": "finetuned-v2",
+  "id": "test-00397"
+ },
+ "a030": {
+  "arm": "base-2shot",
+  "id": "test-00959"
+ },
+ "a031": {
+  "arm": "base-2shot",
+  "id": "test-00420"
+ },
+ "a032": {
+  "arm": "finetuned-v2",
+  "id": "test-00196"
+ },
+ "a033": {
+  "arm": "finetuned-v2",
+  "id": "test-00610"
+ },
+ "a034": {
+  "arm": "finetuned-v2",
+  "id": "test-00532"
+ },
+ "a035": {
+  "arm": "finetuned-v2",
+  "id": "train-01371"
+ },
+ "a036": {
+  "arm": "finetuned-v2",
+  "id": "test-00190"
+ },
+ "a037": {
+  "arm": "finetuned-v2",
+  "id": "test-00412"
+ },
+ "a038": {
+  "arm": "base-2shot",
+  "id": "test-00245"
+ },
+ "a039": {
+  "arm": "finetuned-v2",
+  "id": "train-00181"
+ },
+ "a040": {
+  "arm": "base-2shot",
+  "id": "train-11442"
+ },
+ "a041": {
+  "arm": "finetuned-v2",
+  "id": "train-06903"
+ },
+ "a042": {
+  "arm": "finetuned-v2",
+  "id": "test-00933"
+ },
+ "a043": {
+  "arm": "base-2shot",
+  "id": "test-00781"
+ },
+ "a044": {
+  "arm": "finetuned-v2",
+  "id": "train-03448"
+ },
+ "a045": {
+  "arm": "base-2shot",
+  "id": "test-00968"
+ },
+ "a046": {
+  "arm": "base-2shot",
+  "id": "test-00484"
+ },
+ "a047": {
+  "arm": "base-2shot",
+  "id": "test-00564"
+ },
+ "a048": {
+  "arm": "finetuned-v2",
+  "id": "test-00203"
+ },
+ "a049": {
+  "arm": "finetuned-v2",
+  "id": "train-02955"
+ },
+ "a050": {
+  "arm": "finetuned-v2",
+  "id": "valid-00876"
+ },
+ "a051": {
+  "arm": "finetuned-v2",
+  "id": "test-00715"
+ },
+ "a052": {
+  "arm": "base-2shot",
+  "id": "test-00031"
+ },
+ "a053": {
+  "arm": "base-2shot",
+  "id": "test-00319"
+ },
+ "a054": {
+  "arm": "base-2shot",
+  "id": "train-07732"
+ },
+ "a055": {
+  "arm": "finetuned-v2",
+  "id": "test-00097"
+ },
+ "a056": {
+  "arm": "finetuned-v2",
+  "id": "valid-00922"
+ },
+ "a057": {
+  "arm": "base-2shot",
+  "id": "test-00436"
+ },
+ "a058": {
+  "arm": "finetuned-v2",
+  "id": "test-00007"
+ },
+ "a059": {
+  "arm": "base-2shot",
+  "id": "train-11383"
+ },
+ "a060": {
+  "arm": "finetuned-v2",
+  "id": "test-00683"
+ },
+ "a061": {
+  "arm": "finetuned-v2",
+  "id": "test-00633"
+ },
+ "a062": {
+  "arm": "base-2shot",
+  "id": "test-00465"
+ },
+ "a063": {
+  "arm": "finetuned-v2",
+  "id": "train-02442"
+ },
+ "a064": {
+  "arm": "base-2shot",
+  "id": "train-09786"
+ },
+ "a065": {
+  "arm": "base-2shot",
+  "id": "test-00751"
+ },
+ "a066": {
+  "arm": "base-2shot",
+  "id": "test-00364"
+ },
+ "a067": {
+  "arm": "base-2shot",
+  "id": "train-06844"
+ },
+ "a068": {
+  "arm": "base-2shot",
+  "id": "train-04775"
+ },
+ "a069": {
+  "arm": "finetuned-v2",
+  "id": "test-00703"
+ },
+ "a070": {
+  "arm": "base-2shot",
+  "id": "test-00759"
+ },
+ "a071": {
+  "arm": "finetuned-v2",
+  "id": "test-00465"
+ },
+ "a072": {
+  "arm": "finetuned-v2",
+  "id": "train-11442"
+ },
+ "a073": {
+  "arm": "finetuned-v2",
+  "id": "test-00284"
+ },
+ "a074": {
+  "arm": "base-2shot",
+  "id": "test-00277"
+ },
+ "a075": {
+  "arm": "base-2shot",
+  "id": "train-11239"
+ },
+ "a076": {
+  "arm": "base-2shot",
+  "id": "test-00312"
+ },
+ "a077": {
+  "arm": "finetuned-v2",
+  "id": "test-00916"
+ },
+ "a078": {
+  "arm": "finetuned-v2",
+  "id": "train-03382"
+ },
+ "a079": {
+  "arm": "base-2shot",
+  "id": "test-00703"
+ }
+}
