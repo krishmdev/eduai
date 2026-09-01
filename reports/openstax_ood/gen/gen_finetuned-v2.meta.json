@@ -1,0 +1,8 @@
+{
+  "arm": "finetuned-v2",
+  "n": 150,
+  "wall_seconds": 597.7,
+  "shots": 0,
+  "backend": "mlx+adapter",
+  "adapter": "/Users/krish/Developer/portfolio/eduai/adapters/llama32-3b-eduai-v2"
+}

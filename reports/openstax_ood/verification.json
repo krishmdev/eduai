@@ -1,0 +1,7 @@
+{
+  "what": "A verification of the single OpenStax run, not a second run. Another process briefly used the GPU without the compute lease between about 18:02 and 18:05 on 2026-09-18, overlapping the start of base-2shot generation (lease acquired 18:02:50; scoring ran at about 18:24-18:27).",
+  "embedding_cache": "No .cache/embeddings entries were written between 17:59 and 18:07 (worktree and main tree), so none were deleted.",
+  "cpu_rescore": "All 362 per-item rows (150 per arm plus 62 references) rescored from the committed generations and judge file with EDUAI_EMBED_DEVICE=cpu and an empty embedding cache. Every alignment, novelty, source-copy and usable verdict matched the MPS scoring; only source_cos differed, by at most 2.4e-7. Summary and per-subject tables identical.",
+  "regeneration": "The first 10 base-2shot prompts (the ones generated during the overlap) regenerated under the lease: 10 of 10 byte-identical to the committed generations.",
+  "checked_at": "2026-09-18T18:29"
+}

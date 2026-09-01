@@ -1,0 +1,287 @@
+{
+  "n_prompts": 150,
+  "summary": {
+    "reference": {
+      "n": 62,
+      "key": 0.41935483870967744,
+      "aligned": 0.7419354838709677,
+      "key_on_valid": 0.41935483870967744,
+      "n_schema_valid": 62,
+      "key_secondary": null,
+      "key_letters": {
+        "A": 11,
+        "B": 14,
+        "C": 21,
+        "D": 16
+      },
+      "key_agreement_by_letter": {
+        "A": 0.5454545454545454,
+        "B": 0.42857142857142855,
+        "C": 0.47619047619047616,
+        "D": 0.25
+      }
+    },
+    "base-2shot": {
+      "n": 150,
+      "json": 0.98,
+      "first_try_json": 0.9466666666666667,
+      "schema": 0.7733333333333333,
+      "structure": 0.6466666666666666,
+      "key": 0.49333333333333335,
+      "aligned": 0.5933333333333334,
+      "novel": 0.7733333333333333,
+      "source_copy": 0.0,
+      "memorized": 0.0,
+      "all_checks": 0.26666666666666666,
+      "usable": 0.26666666666666666,
+      "key_on_valid": 0.6379310344827587,
+      "n_schema_valid": 116,
+      "key_secondary": null,
+      "key_letters": {
+        "A": 22,
+        "B": 54,
+        "C": 22,
+        "D": 18
+      },
+      "key_agreement_by_letter": {
+        "A": 0.6363636363636364,
+        "B": 0.6481481481481481,
+        "C": 0.7272727272727273,
+        "D": 0.5
+      }
+    },
+    "finetuned-v2": {
+      "n": 150,
+      "json": 1.0,
+      "first_try_json": 1.0,
+      "schema": 1.0,
+      "structure": 0.6733333333333333,
+      "key": 0.62,
+      "aligned": 0.8066666666666666,
+      "novel": 0.9866666666666667,
+      "source_copy": 0.0,
+      "memorized": 0.0,
+      "all_checks": 0.3333333333333333,
+      "usable": 0.3333333333333333,
+      "key_on_valid": 0.62,
+      "n_schema_valid": 150,
+      "key_secondary": null,
+      "key_letters": {
+        "A": 51,
+        "B": 56,
+        "C": 23,
+        "D": 20
+      },
+      "key_agreement_by_letter": {
+        "A": 0.6078431372549019,
+        "B": 0.6071428571428571,
+        "C": 0.7391304347826086,
+        "D": 0.55
+      }
+    }
+  },
+  "structure_problems": {
+    "base-2shot": {
+      "stem gives away the answer": 10,
+      "near-identical options": 6,
+      "target misconception missing": 4,
+      "stimulus format without a stimulus": 2,
+      "uses all/none of the above": 1
+    },
+    "finetuned-v2": {
+      "stem gives away the answer": 34,
+      "near-identical options": 17,
+      "target misconception missing": 5,
+      "all four options identical": 2,
+      "uses all/none of the above": 1
+    }
+  },
+  "timing": {
+    "base-2shot": {
+      "mean_generation_tps": 76.53002262716737,
+      "mean_seconds_per_item": 3.954533333333332,
+      "peak_memory_gb": 2.739113154
+    },
+    "finetuned-v2": {
+      "mean_generation_tps": 47.88272661089449,
+      "mean_seconds_per_item": 3.984213333333333,
+      "peak_memory_gb": 3.30588226
+    }
+  },
+  "rejections": {
+    "base-2shot": {
+      "key_disagreement": 37,
+      "accepted": 40,
+      "schema": 31,
+      "not_aligned": 20,
+      "structure": 19,
+      "no_json": 3
+    },
+    "finetuned-v2": {
+      "structure": 49,
+      "accepted": 50,
+      "key_disagreement": 38,
+      "not_aligned": 11,
+      "duplicate": 2
+    }
+  },
+  "bootstrap": {
+    "finetuned-v2 - base-2shot | usable": {
+      "diff": 0.06666666666666667,
+      "ci95": [
+        -0.02666666666666667,
+        0.16
+      ]
+    },
+    "finetuned-v2 - base-2shot | all_checks": {
+      "diff": 0.06666666666666667,
+      "ci95": [
+        -0.02666666666666667,
+        0.16
+      ]
+    },
+    "finetuned-v2 - base-2shot | aligned": {
+      "diff": 0.21333333333333335,
+      "ci95": [
+        0.12666666666666668,
+        0.3
+      ]
+    },
+    "finetuned-v2 - base-2shot | key": {
+      "diff": 0.12666666666666668,
+      "ci95": [
+        0.02666666666666667,
+        0.22
+      ]
+    },
+    "finetuned-v2 - base-2shot | json": {
+      "diff": 0.02,
+      "ci95": [
+        0.0,
+        0.04666666666666667
+      ]
+    },
+    "finetuned-v2 - reference | aligned": {
+      "diff": 0.06451612903225806,
+      "ci95": [
+        -0.0967741935483871,
+        0.20967741935483872
+      ]
+    },
+    "finetuned-v2 - reference | key": {
+      "diff": 0.0967741935483871,
+      "ci95": [
+        -0.06451612903225806,
+        0.27419354838709675
+      ]
+    }
+  },
+  "judge": "llama-1b",
+  "secondary_judge": "llama-3b",
+  "v2_sensitivity": {
+    "excluded": [
+      "test-00916",
+      "train-02955"
+    ],
+    "n": 62,
+    "bootstrap": {
+      "finetuned-v2 - base-2shot | usable": {
+        "diff": 0.0967741935483871,
+        "ci95": [
+          -0.04838709677419355,
+          0.24193548387096775
+        ]
+      }
+    }
+  },
+  "v2_aligned_split_exploratory": {
+    "reference_aligned": {
+      "n": 46,
+      "usable": {
+        "base-2shot": 0.2391304347826087,
+        "finetuned-v2": 0.2826086956521739
+      },
+      "bootstrap": {
+        "finetuned-v2 - base-2shot | usable": {
+          "diff": 0.043478260869565216,
+          "ci95": [
+            -0.13043478260869565,
+            0.21739130434782608
+          ]
+        }
+      }
+    },
+    "reference_not_aligned": {
+      "n": 16,
+      "usable": {
+        "base-2shot": 0.0625,
+        "finetuned-v2": 0.3125
+      },
+      "bootstrap": {
+        "finetuned-v2 - base-2shot | usable": {
+          "diff": 0.25,
+          "ci95": [
+            0.0625,
+            0.4375
+          ]
+        }
+      }
+    }
+  },
+  "arm": "finetuned-v2",
+  "by_subject": {
+    "BIO": {
+      "n": 50,
+      "finetuned-v2_usable": 0.4,
+      "base-2shot_usable": 0.18,
+      "diff": {
+        "n": 50,
+        "diff": 0.22,
+        "ci95": [
+          0.08,
+          0.38
+        ]
+      }
+    },
+    "PHYS1": {
+      "n": 50,
+      "finetuned-v2_usable": 0.3,
+      "base-2shot_usable": 0.34,
+      "diff": {
+        "n": 50,
+        "diff": -0.04,
+        "ci95": [
+          -0.22,
+          0.14
+        ]
+      }
+    },
+    "CHEM": {
+      "n": 50,
+      "finetuned-v2_usable": 0.3,
+      "base-2shot_usable": 0.28,
+      "diff": {
+        "n": 50,
+        "diff": 0.02,
+        "ci95": [
+          -0.14,
+          0.18
+        ]
+      }
+    },
+    "pooled": {
+      "n": 150,
+      "finetuned-v2_usable": 0.3333333333333333,
+      "base-2shot_usable": 0.26666666666666666,
+      "diff": {
+        "n": 150,
+        "diff": 0.06666666666666667,
+        "ci95": [
+          -0.02666666666666667,
+          0.16
+        ]
+      }
+    }
+  },
+  "runs_of_this_check": 1
+}
