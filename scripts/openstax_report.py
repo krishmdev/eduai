@@ -73,7 +73,7 @@ def _p(x: float) -> str:
     return f"{100 * x:.1f}%"
 
 
-def render(res: dict, card: dict) -> str:
+def render(res: dict, card: dict, verification: dict | None = None) -> str:
     arm = res["arm"]
     s = res["summary"]
     lines = [
@@ -118,6 +118,13 @@ def render(res: dict, card: dict) -> str:
         f"Prompt build: {json.dumps(card['screen'])}",
         "",
     ]
+    if verification:
+        lines += [
+            "## Verification (not a second run)",
+            "",
+            *(f"- {verification[k]}" for k in ("what", "embedding_cache", "cpu_rescore", "regeneration")),
+            "",
+        ]
     return "\n".join(lines)
 
 
@@ -149,7 +156,8 @@ def score(prompts_path: Path = PROMPTS, out: Path = OUT) -> dict:
     res["runs_of_this_check"] = 1
     card = json.loads((out / "prompts_card.json").read_text())
     (out / "eval.json").write_text(json.dumps(res, indent=2) + "\n")
-    (out / "report.md").write_text(render(res, card))
+    ver = out / "verification.json"
+    (out / "report.md").write_text(render(res, card, json.loads(ver.read_text()) if ver.exists() else None))
     return res
 
 
