@@ -28,6 +28,7 @@ import json
 import random
 import re
 import subprocess
+import threading
 import time
 import urllib.error
 import urllib.request
@@ -407,11 +408,24 @@ def llm_judge(
         raise SystemExit(
             "thinking was requested but the reply has no reasoning; the server ignored enable_thinking"
         )
+    # Each verdict is appended to verdicts.partial.jsonl as it arrives, so a run stopped for time
+    # keeps what finished (with a timestamp, for the time projection).
+    partial = jdir / "verdicts.partial.jsonl"
+    lock = threading.Lock()
+
+    def log(v: dict) -> dict:
+        with lock, partial.open("a") as f:
+            f.write(json.dumps({**v, "done_at": round(time.time() - t0, 1)}, ensure_ascii=False) + "\n")
+        return v
+
+    partial.write_text("")
+    log(first)
     with ThreadPoolExecutor(max(1, concurrency)) as ex:
         verdicts = [
             first,
-            *ex.map(lambda r: judge_row(client, r, thinking, max_tokens, thinking_budget), sheet[1:]),
+            *ex.map(lambda r: log(judge_row(client, r, thinking, max_tokens, thinking_budget)), sheet[1:]),
         ]
+    partial.unlink()
     (jdir / "verdicts.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False) + "\n" for v in verdicts))
     n = len(verdicts)
     manifest = {
