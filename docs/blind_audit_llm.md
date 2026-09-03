@@ -112,3 +112,33 @@ the dry run and the Qwen concurrency above; everything else stands.
 - Reported with the audit: per judge, the share of audit items whose thinking reached the cap.
 - Run order: valid audit (both judges), then the test audit, which is allowed now because the single
   v2 test run has happened (`reports/eval/test_runs.jsonl`, 1 run).
+
+## Amendment 2, 2026-09-18 (after the pilots, before any audit item was judged)
+
+The pilots ran as registered above; their lengths are committed in full in
+`reports/valid_eval/audit_pilot/pilot_{qwen3.5-9b,gemma-4-12b}.json` (thinking tokens per item,
+6,000-token safety cap):
+
+- Qwen3.5 9B: 6000, 6000, 6000, 5514, 5339, 6000, 6000, 6000, 6000, 5615. 7 of 10 at the safety
+  cap; 2,012 s for 10 items at concurrency 8.
+- Gemma 4 12B: 1576, 6000, 1618, 2313, 1537, 6000, 6000, 6000, 6000, 342. 5 of 10 at the safety
+  cap; 2,325 s for 10 items at concurrency 2.
+
+Both p90s equal the safety cap, so the p90 rule gives 6,144 for both judges. At the measured speed
+that is about 2.5 hours per split for Qwen alone, which doesn't fit the GPU time available. This
+amendment replaces the first one's cap rule and split plan:
+
+- Split: the audit runs on the test draw only (`reports/eval/audit_llm/`), with both judges. The
+  headline v2 claim is on test. The valid audit is dropped for GPU time; the valid draw stays
+  committed and unjudged.
+- Thinking cap: fixed at 3,072 tokens for Qwen3.5 9B and 2,048 for Gemma 4 12B (`max_tokens` is
+  the cap plus 600). Gemma's is lower because it runs about half as fast at concurrency 2 or less.
+  Most audit items will likely reach the cap, so the verdicts come from truncated reasoning: when
+  the budget runs out the server closes the thinking block and the model must answer.
+- Reported per judge: the share of audit items whose thinking reached the cap, and, separately,
+  the first-try parse failures and items still unparsed after the retry (a forced close still
+  normally yields a verdict).
+- If Gemma's first 10 items project its run past 3 hours, it is stopped, the verdicts that
+  finished (`verdicts.partial.jsonl`) are reported as a partial run, and the report says so.
+- Everything else is unchanged: rubric, blindness, seed, the test draw, one run per judge,
+  Qwen at concurrency 8 and Gemma at 2.

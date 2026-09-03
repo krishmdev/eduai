@@ -1,0 +1,48 @@
+{
+  "judge": "qwen3.5-9b",
+  "model": "qwen3.5-9b-mlx4",
+  "safety_cap": 6000,
+  "max_tokens": 6600,
+  "concurrency": 8,
+  "n": 10,
+  "thinking_tokens": [
+    6000,
+    6000,
+    6000,
+    5514,
+    5339,
+    6000,
+    6000,
+    6000,
+    6000,
+    5615
+  ],
+  "finish_reason": [
+    "stop",
+    "stop",
+    "stop",
+    "stop",
+    "stop",
+    "stop",
+    "stop",
+    "stop",
+    "stop",
+    "stop"
+  ],
+  "at_safety_cap": 7,
+  "p90": 6000.0,
+  "cap": 6144,
+  "wall_seconds": 2011.9,
+  "preset": {
+    "repo": "mlx-community/Qwen3.5-9B-MLX-4bit",
+    "revision": "938d8919941c6e7efd3c7150eff7fe9d12afa631",
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    },
+    "max_new_tokens": 256
+  },
+  "server": {
+    "commit": "30fcd76ecf4cff7ea9b6bb2ac613f35105b77675",
+    "dirty": false
+  }
+}

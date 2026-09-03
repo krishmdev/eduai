@@ -1,0 +1,45 @@
+{
+  "judge": "gemma-4-12b",
+  "model": "gemma-4-12b-mlx4",
+  "safety_cap": 6000,
+  "max_tokens": 6600,
+  "concurrency": 2,
+  "n": 10,
+  "thinking_tokens": [
+    1576,
+    6000,
+    1618,
+    2313,
+    1537,
+    6000,
+    6000,
+    6000,
+    6000,
+    342
+  ],
+  "finish_reason": [
+    "stop",
+    "stop",
+    "stop",
+    "stop",
+    "stop",
+    "stop",
+    "stop",
+    "stop",
+    "stop",
+    "stop"
+  ],
+  "at_safety_cap": 5,
+  "p90": 6000.0,
+  "cap": 6144,
+  "wall_seconds": 2324.6,
+  "preset": {
+    "repo": "mlx-community/gemma-4-12B-it-4bit",
+    "revision": "73bcf09092aa277861d5a191b989b666f7f32e8f",
+    "max_new_tokens": 256
+  },
+  "server": {
+    "commit": "847dbd849125ab5f90b293b58efe116117c82f21",
+    "dirty": false
+  }
+}
