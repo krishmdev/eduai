@@ -142,3 +142,16 @@ amendment replaces the first one's cap rule and split plan:
   finished (`verdicts.partial.jsonl`) are reported as a partial run, and the report says so.
 - Everything else is unchanged: rubric, blindness, seed, the test draw, one run per judge,
   Qwen at concurrency 8 and Gemma at 2.
+
+## Amendment 3, 2026-09-18 (while Qwen judged the test draw, before Gemma judged anything)
+
+Qwen3.5 9B judges all 80 test items as planned; its results are the primary audit numbers. At the
+measured Gemma speed (about 16 tokens/s at concurrency 2), 80 items would take about 3.5 hours, so:
+
+- Gemma 4 12B judges a fixed 40-item subset: the first 20 items of each arm in the committed
+  blinded sheet order (`blind_audit.py llm --per-arm 20`). The rule reads `key.json` only to split
+  by arm; the judge sees sheet rows alone. It depends neither on any verdict nor on Qwen's results.
+- Same 2,048-token cap, concurrency 2.
+- Reported for Gemma: per-arm precision on n = 20 + 20, and Qwen-vs-Gemma kappa on those 40 items.
+- Hard stop at 2.25 hours of Gemma judging. If it triggers, the report says exactly how many items
+  were judged, from `verdicts.partial.jsonl`.
