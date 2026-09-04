@@ -159,7 +159,24 @@ def test_llm_judge_against_a_stub_server(tmp_path):
     finally:
         srv.shutdown()
 
+    srv, seen = _stub_server([{"role": "assistant", "content": ok, "reasoning_content": "r"}] * 2)
+    try:
+        port = srv.server_port
+        m = llm_judge(out, "sub", ChatClient(f"http://127.0.0.1:{port}/v1", "m"), concurrency=1, per_arm=1)
+    finally:
+        srv.shutdown()
+    key = json.loads((out / "key.json").read_text())
+    judged = [json.loads(line)["audit_id"] for line in (out / "llm_sub" / "verdicts.jsonl").open()]
+    assert m["n"] == 2 and m["subset_first_per_arm"] == 1
+    assert sorted(key[a]["arm"] for a in judged) == sorted(arms)
+    first = {}
+    for r in (json.loads(line) for line in (out / "sheet.jsonl").open()):
+        first.setdefault(key[r["audit_id"]]["arm"], r["audit_id"])
+    assert sorted(judged) == sorted(first.values())
+    assert not any(a in json.dumps(seen) for a in arms)
+
     res = llm_score(out, gen)
+    assert res["kappa"]["stub vs sub"]["n"] == 2
     j = res["judges"]["stub"]
     assert sum(r["n"] for r in j["by_arm"].values()) == 4
     assert j["agreement_with_llama-1b_key"]["n"] == 4 and j["agreement_with_llama-1b_key"]["agree"] == 0.75

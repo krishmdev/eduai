@@ -393,8 +393,21 @@ def llm_judge(
     concurrency: int = 4,
     meta: dict | None = None,
     force: bool = False,
+    per_arm: int | None = None,
 ) -> dict:
     sheet = rows(out / "sheet.jsonl")
+    if per_arm:
+        # A fixed subset: the first per_arm items of each arm in sheet order. key.json is read only
+        # to pick the rows; the judge still sees sheet rows alone.
+        key = json.loads((out / "key.json").read_text())
+        taken: dict[str, int] = {}
+        subset = []
+        for r in sheet:
+            arm = key[r["audit_id"]]["arm"]
+            if taken.get(arm, 0) < per_arm:
+                taken[arm] = taken.get(arm, 0) + 1
+                subset.append(r)
+        sheet = subset
     for r in sheet:
         if set(r) & {"arm", "id"}:
             raise SystemExit("the audit sheet must not carry the arm or prompt id")
@@ -439,6 +452,7 @@ def llm_judge(
         "response_format": None if thinking else "json_schema (dropped if the server rejects it)",
         "rubric_sha256_16": rubric_sha(),
         "concurrency": concurrency,
+        "subset_first_per_arm": per_arm,
         "n": n,
         "first_try_parse_failure_rate": sum(v["first_parse_failed"] for v in verdicts) / n if n else None,
         "unparsed_after_retry": sum(not v["parsed"] for v in verdicts),
@@ -606,6 +620,7 @@ def main() -> None:
     j.add_argument("--models-yaml", type=Path, help="Localhost AI models.yaml, to record repo and revision")
     j.add_argument("--server-repo", type=Path, help="Localhost AI checkout, to record its commit")
     j.add_argument("--force", action="store_true")
+    j.add_argument("--per-arm", type=int, help="Judge only the first N items of each arm, in sheet order")
     pl = sub.add_parser("pilot", help="Thinking-length pilot for one judge; keeps lengths only")
     pl.add_argument("--out", type=Path, required=True)
     pl.add_argument("--judge", required=True)
@@ -640,6 +655,7 @@ def main() -> None:
             a.concurrency,
             meta,
             a.force,
+            a.per_arm,
         )
     elif a.cmd == "pilot":
         meta = {"preset": preset_info(a.models_yaml, a.model), "server": git_state(a.server_repo)}

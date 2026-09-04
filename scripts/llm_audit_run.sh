@@ -7,7 +7,8 @@
 # Env: LHAI_DIR (Localhost AI checkout), PORT (8011), CONCURRENCY (4), THINKING_BUDGET (3000),
 # MAX_TOKENS (3600), READY_TIMEOUT seconds (1200), LHAI_MAX_CONTEXT (9216; the server default of
 # 2048 is too short for prompt + thinking + answer). MODE=pilot runs the thinking-length pilot
-# (blind_audit.py pilot, safety cap 6000) instead of the audit.
+# (blind_audit.py pilot, safety cap 6000) instead of the audit. PER_ARM=N judges only the first N
+# items of each arm in sheet order.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 preset=$1 judge=$2 audit=$3
@@ -36,10 +37,10 @@ done
 if [[ $mode == pilot ]]; then
   uv run python scripts/blind_audit.py pilot --out "$audit" --judge "$judge" --model "$preset" \
     --base-url "http://127.0.0.1:$port/v1" --concurrency "${CONCURRENCY:-4}" \
-    --models-yaml "$lhai/models.yaml" --server-repo "$lhai"
+    --models-yaml "$lhai/models.yaml" --server-repo "$lhai" ${PER_ARM:+--per-arm "$PER_ARM"}
   exit
 fi
 uv run python scripts/blind_audit.py llm --out "$audit" --judge "$judge" --model "$preset" \
   --base-url "http://127.0.0.1:$port/v1" --thinking --thinking-budget "${THINKING_BUDGET:-3000}" \
   --max-tokens "${MAX_TOKENS:-3600}" --concurrency "${CONCURRENCY:-4}" \
-  --models-yaml "$lhai/models.yaml" --server-repo "$lhai"
+  --models-yaml "$lhai/models.yaml" --server-repo "$lhai" ${PER_ARM:+--per-arm "$PER_ARM"}
