@@ -512,6 +512,8 @@ def llm_score(
     agreement with the eval's key judge."""
     key = json.loads((out / "key.json").read_text())
     arms = list(dict.fromkeys(v["arm"] for v in key.values()))
+    # The registered difference is v2 minus base-2shot, whatever order the draw put them in.
+    arms.sort(key=lambda a: a == "base-2shot")
     judges = sorted(p.name[len("llm_") :] for p in out.glob("llm_*") if (p / "verdicts.jsonl").exists())
     eval_key = {}
     if eval_dir is not None and (eval_dir / f"judge_{judge_key}.jsonl").exists():
