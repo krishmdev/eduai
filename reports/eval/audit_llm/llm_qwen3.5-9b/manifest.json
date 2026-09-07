@@ -1,0 +1,44 @@
+{
+  "judge": "qwen3.5-9b",
+  "model": "qwen3.5-9b-mlx4",
+  "thinking": true,
+  "max_thinking_tokens": 3072,
+  "max_tokens": 3672,
+  "temperature": 0.0,
+  "seed": 0,
+  "response_format": null,
+  "rubric_sha256_16": "3dd2fbda1e71c86b",
+  "concurrency": 8,
+  "n": 80,
+  "first_try_parse_failure_rate": 0.0125,
+  "unparsed_after_retry": 0,
+  "reasoning_from": {
+    "server": 80,
+    "client": 0,
+    "unmarked": 0,
+    "none": 0
+  },
+  "mean_completion_tokens": 3132.0875,
+  "thinking_tokens": {
+    "n_reported": 81,
+    "p50": 3072.0,
+    "p90": 3072.0,
+    "max": 3072,
+    "items_at_cap": 79,
+    "share_at_cap": 0.9875
+  },
+  "wall_seconds": 8447.9,
+  "preset": {
+    "repo": "mlx-community/Qwen3.5-9B-MLX-4bit",
+    "revision": "938d8919941c6e7efd3c7150eff7fe9d12afa631",
+    "chat_template_kwargs": {
+      "enable_thinking": false
+    },
+    "max_new_tokens": 256
+  },
+  "server": {
+    "commit": "ce3d03d4f84ff695cbf52bf506ba07dfe4d31ba6",
+    "dirty": false
+  },
+  "base_url": "http://127.0.0.1:8011/v1"
+}
