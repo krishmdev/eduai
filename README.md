@@ -232,6 +232,31 @@ Full `make eval-score` recomputation requires the ignored SciQ-derived data and 
 models described in the full pipeline. Neither audit validates the AI-generated gold labels;
 they still need human review.
 
+### OpenStax out-of-distribution check
+
+A secondary check, run once as pre-registered in [docs/openstax_ood.md](docs/openstax_ood.md):
+150 prompts built from passages of pinned OpenStax textbooks (Biology for AP Courses, College
+Physics for AP Courses 2e, Chemistry 2e; 50 per subject), none of which the models trained on.
+It compares 2-shot base with v2 (0-shot), judged by the 1B key judge only, with the same checks as
+the main eval. Full table: [reports/openstax_ood/report.md](reports/openstax_ood/report.md).
+
+| Subject | n | 2-shot base usable | v2 usable | v2 minus base | 95% CI |
+|---|---|---|---|---|---|
+| Biology | 50 | 18.0% | 40.0% | +22.0 | +8.0 to +38.0 |
+| Physics 1 | 50 | 34.0% | 30.0% | -4.0 | -22.0 to +14.0 |
+| Chemistry | 50 | 28.0% | 30.0% | +2.0 | -14.0 to +18.0 |
+| Pooled | 150 | 26.7% | 33.3% | +6.7 | -2.7 to +16.0 |
+
+Intervals are paired bootstraps over prompts (5,000 resamples). The pre-registered reading uses
+the pooled interval, and it includes zero, so this check didn't show a difference between v2 and
+2-shot base out of distribution. The per-subject intervals are descriptive only. Biology's is
+the one that excludes zero. v2 had higher key agreement (62.0% vs 49.3%) and alignment (80.7% vs
+59.3%) but failed the structure checks more often (49 items vs 19 rejected there first). The run
+briefly overlapped another process using the GPU without the lease, so the scores were checked
+again on CPU and 10 generations were regenerated: every verdict matched, and all 10 generations
+were byte-identical ([verification.json](reports/openstax_ood/verification.json)). That was a
+check, not a second run.
+
 ## Adaptive testing and feedback
 
 The whole system uses one response model, p = c + (1 − c)·σ(θ − b) with c = 0.25 for four
@@ -343,3 +368,8 @@ non-commercial. The models are Llama 3.2 under the Llama 3.2 Community License (
 Llama"). The embedders are bge-small (MIT) and MiniLM (Apache-2.0). See
 [DATA_LICENSES.md](DATA_LICENSES.md). AP is a registered trademark of the College Board, which
 isn't affiliated with this project.
+
+The OpenStax prompts for the out-of-distribution check are adapted from OpenStax textbooks
+(Rice University) under CC BY-NC-SA 4.0, so the prompt file and everything generated from it are
+shared under that license. The raw book files aren't committed. Attribution and the list of
+changes are in [DATA_LICENSES.md](DATA_LICENSES.md).
