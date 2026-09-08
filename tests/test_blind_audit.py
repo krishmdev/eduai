@@ -219,3 +219,26 @@ def test_pilot_keeps_lengths_only_and_sets_the_cap(tmp_path):
         pilot(out, "stub", None)
     st = thinking_stats([{"thinking_tokens": [1024]}, {"thinking_tokens": [10, 1024]}, {}], 1024)
     assert st["items_at_cap"] == 2 and st["n_reported"] == 3
+
+
+def test_finalize_partial_keeps_finished_verdicts_in_sheet_order(tmp_path):
+    from scripts.blind_audit import finalize_partial
+
+    out = tmp_path / "a"
+    (out / "llm_j").mkdir(parents=True)
+    _write(out / "sheet.jsonl", [{"audit_id": f"a{i}"} for i in range(4)])
+    (out / "key.json").write_text(
+        json.dumps({f"a{i}": {"arm": "v2" if i % 2 else "base", "id": f"p{i}"} for i in range(4)})
+    )
+    v = {"first_parse_failed": False, "parsed": True, "reasoning_from": "server", "thinking_tokens": [8]}
+    _write(
+        out / "llm_j" / "verdicts.partial.jsonl",
+        [{**v, "audit_id": a, "done_at": t} for a, t in (("a2", 5.0), ("a0", 9.0))],
+    )
+    m = finalize_partial(out, "j", "hard stop", {"max_thinking_tokens": 8})
+    assert m["partial"] and m["n"] == 2 and m["n_by_arm"] == {"base": 2, "v2": 0}
+    assert m["thinking_tokens"]["items_at_cap"] == 2 and m["last_done_at_seconds"] == 9.0
+    ids = [json.loads(line)["audit_id"] for line in (out / "llm_j" / "verdicts.jsonl").open()]
+    assert ids == ["a0", "a2"] and not (out / "llm_j" / "verdicts.partial.jsonl").exists()
+    with pytest.raises(SystemExit, match="nothing to finalize"):
+        finalize_partial(out, "j", "x", {})

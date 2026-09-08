@@ -487,6 +487,45 @@ def llm_judge(
     return manifest
 
 
+def finalize_partial(out: Path, judge: str, stopped: str, meta: dict) -> dict:
+    """A run stopped for time: keep the verdicts that finished (verdicts.partial.jsonl) as the
+    judge's verdicts, in sheet order, with a manifest that says it is partial."""
+    jdir = out / f"llm_{judge}"
+    partial = jdir / "verdicts.partial.jsonl"
+    if (jdir / "verdicts.jsonl").exists() or not partial.exists():
+        raise SystemExit(f"{jdir}: nothing to finalize (needs verdicts.partial.jsonl and no verdicts.jsonl)")
+    done = {v["audit_id"]: v for v in rows(partial)}
+    order = [r["audit_id"] for r in rows(out / "sheet.jsonl")]
+    verdicts = [done[a] for a in order if a in done]
+    key = json.loads((out / "key.json").read_text())
+    n = len(verdicts)
+    manifest = {
+        "judge": judge,
+        "partial": True,
+        "stopped": stopped,
+        "n": n,
+        "n_by_arm": {
+            arm: sum(key[v["audit_id"]]["arm"] == arm for v in verdicts)
+            for arm in dict.fromkeys(k["arm"] for k in key.values())
+        },
+        "first_try_parse_failure_rate": sum(v["first_parse_failed"] for v in verdicts) / n if n else None,
+        "unparsed_after_retry": sum(not v["parsed"] for v in verdicts),
+        "reasoning_from": {
+            k: sum(v.get("reasoning_from") == k for v in verdicts)
+            for k in ("server", "client", "unmarked", "none")
+        },
+        "thinking_tokens": thinking_stats(verdicts, meta.get("max_thinking_tokens")),
+        "last_done_at_seconds": max((v["done_at"] for v in verdicts), default=None),
+        "rubric_sha256_16": rubric_sha(),
+        **meta,
+    }
+    (jdir / "verdicts.jsonl").write_text("".join(json.dumps(v, ensure_ascii=False) + "\n" for v in verdicts))
+    partial.unlink()
+    (jdir / "manifest.json").write_text(json.dumps(manifest, indent=2) + "\n")
+    print(json.dumps({k: manifest[k] for k in ("judge", "n", "n_by_arm", "unparsed_after_retry")}))
+    return manifest
+
+
 def kappa(a: list[bool], b: list[bool]) -> float | None:
     n = len(a)
     if n == 0:
@@ -633,6 +672,11 @@ def main() -> None:
     pl.add_argument("--concurrency", type=int, default=4)
     pl.add_argument("--models-yaml", type=Path)
     pl.add_argument("--server-repo", type=Path)
+    fp = sub.add_parser("llm-finalize-partial", help="Keep the finished verdicts of a run stopped for time")
+    fp.add_argument("--out", type=Path, required=True)
+    fp.add_argument("--judge", required=True)
+    fp.add_argument("--stopped", required=True, help="Why and when the run was stopped")
+    fp.add_argument("--meta", type=json.loads, default={}, help="JSON with the run settings for the manifest")
     ls = sub.add_parser("llm-score")
     ls.add_argument("--out", type=Path, required=True)
     ls.add_argument("--eval-dir", type=Path)
@@ -670,6 +714,8 @@ def main() -> None:
             a.concurrency,
             meta,
         )
+    elif a.cmd == "llm-finalize-partial":
+        finalize_partial(a.out, a.judge, a.stopped, a.meta)
     else:
         llm_score(a.out, a.eval_dir)
 
