@@ -1,0 +1,42 @@
+{
+  "judge": "gemma-4-12b",
+  "model": "gemma-4-12b-mlx4",
+  "thinking": true,
+  "max_thinking_tokens": 2048,
+  "max_tokens": 2648,
+  "temperature": 0.0,
+  "seed": 0,
+  "response_format": null,
+  "rubric_sha256_16": "3dd2fbda1e71c86b",
+  "concurrency": 1,
+  "subset_first_per_arm": 20,
+  "n": 40,
+  "first_try_parse_failure_rate": 0.025,
+  "unparsed_after_retry": 1,
+  "reasoning_from": {
+    "server": 40,
+    "client": 0,
+    "unmarked": 0,
+    "none": 0
+  },
+  "mean_completion_tokens": 1968.5,
+  "thinking_tokens": {
+    "n_reported": 41,
+    "p50": 2048.0,
+    "p90": 2048.0,
+    "max": 2048,
+    "items_at_cap": 34,
+    "share_at_cap": 0.85
+  },
+  "wall_seconds": 8041.5,
+  "preset": {
+    "repo": "mlx-community/gemma-4-12B-it-4bit",
+    "revision": "73bcf09092aa277861d5a191b989b666f7f32e8f",
+    "max_new_tokens": 256
+  },
+  "server": {
+    "commit": "fdb4fbeb361e6244300b999ed1fdaeaef1fb1599",
+    "dirty": false
+  },
+  "base_url": "http://127.0.0.1:8011/v1"
+}

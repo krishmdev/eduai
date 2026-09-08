@@ -1,0 +1,183 @@
+{
+  "arms": [
+    "finetuned-v2",
+    "base-2shot"
+  ],
+  "judges": {
+    "gemma-4-12b": {
+      "unparsed": 1,
+      "by_arm": {
+        "finetuned-v2": {
+          "n": 19,
+          "key_correct": 0.7894736842105263,
+          "lo_fit": 0.6842105263157895,
+          "distractors_plausible": 1.0,
+          "both": 0.5263157894736842,
+          "both_ci95": [
+            0.3157894736842105,
+            0.7368421052631579
+          ]
+        },
+        "base-2shot": {
+          "n": 20,
+          "key_correct": 0.75,
+          "lo_fit": 0.65,
+          "distractors_plausible": 0.95,
+          "both": 0.45,
+          "both_ci95": [
+            0.25,
+            0.65
+          ]
+        }
+      },
+      "diff_both": {
+        "arms": "finetuned-v2 - base-2shot",
+        "diff": 0.07631578947368417,
+        "ci95": [
+          -0.23157894736842105,
+          0.3868421052631579
+        ]
+      },
+      "agreement_with_llama-1b_key": {
+        "n": 39,
+        "agree": 0.7692307692307693,
+        "kappa": null
+      },
+      "manifest": {
+        "judge": "gemma-4-12b",
+        "model": "gemma-4-12b-mlx4",
+        "thinking": true,
+        "max_thinking_tokens": 2048,
+        "max_tokens": 2648,
+        "temperature": 0.0,
+        "seed": 0,
+        "response_format": null,
+        "rubric_sha256_16": "3dd2fbda1e71c86b",
+        "concurrency": 1,
+        "subset_first_per_arm": 20,
+        "n": 40,
+        "first_try_parse_failure_rate": 0.025,
+        "unparsed_after_retry": 1,
+        "reasoning_from": {
+          "server": 40,
+          "client": 0,
+          "unmarked": 0,
+          "none": 0
+        },
+        "mean_completion_tokens": 1968.5,
+        "thinking_tokens": {
+          "n_reported": 41,
+          "p50": 2048.0,
+          "p90": 2048.0,
+          "max": 2048,
+          "items_at_cap": 34,
+          "share_at_cap": 0.85
+        },
+        "wall_seconds": 8041.5,
+        "preset": {
+          "repo": "mlx-community/gemma-4-12B-it-4bit",
+          "revision": "73bcf09092aa277861d5a191b989b666f7f32e8f",
+          "max_new_tokens": 256
+        },
+        "server": {
+          "commit": "fdb4fbeb361e6244300b999ed1fdaeaef1fb1599",
+          "dirty": false
+        },
+        "base_url": "http://127.0.0.1:8011/v1"
+      }
+    },
+    "qwen3.5-9b": {
+      "unparsed": 0,
+      "by_arm": {
+        "finetuned-v2": {
+          "n": 40,
+          "key_correct": 0.575,
+          "lo_fit": 0.1,
+          "distractors_plausible": 0.7,
+          "both": 0.05,
+          "both_ci95": [
+            0.0,
+            0.125
+          ]
+        },
+        "base-2shot": {
+          "n": 40,
+          "key_correct": 0.575,
+          "lo_fit": 0.075,
+          "distractors_plausible": 0.775,
+          "both": 0.075,
+          "both_ci95": [
+            0.0,
+            0.15
+          ]
+        }
+      },
+      "diff_both": {
+        "arms": "finetuned-v2 - base-2shot",
+        "diff": -0.024999999999999994,
+        "ci95": [
+          -0.125,
+          0.07500000000000001
+        ]
+      },
+      "agreement_with_llama-1b_key": {
+        "n": 80,
+        "agree": 0.575,
+        "kappa": null
+      },
+      "manifest": {
+        "judge": "qwen3.5-9b",
+        "model": "qwen3.5-9b-mlx4",
+        "thinking": true,
+        "max_thinking_tokens": 3072,
+        "max_tokens": 3672,
+        "temperature": 0.0,
+        "seed": 0,
+        "response_format": null,
+        "rubric_sha256_16": "3dd2fbda1e71c86b",
+        "concurrency": 8,
+        "n": 80,
+        "first_try_parse_failure_rate": 0.0125,
+        "unparsed_after_retry": 0,
+        "reasoning_from": {
+          "server": 80,
+          "client": 0,
+          "unmarked": 0,
+          "none": 0
+        },
+        "mean_completion_tokens": 3132.0875,
+        "thinking_tokens": {
+          "n_reported": 81,
+          "p50": 3072.0,
+          "p90": 3072.0,
+          "max": 3072,
+          "items_at_cap": 79,
+          "share_at_cap": 0.9875
+        },
+        "wall_seconds": 8447.9,
+        "preset": {
+          "repo": "mlx-community/Qwen3.5-9B-MLX-4bit",
+          "revision": "938d8919941c6e7efd3c7150eff7fe9d12afa631",
+          "chat_template_kwargs": {
+            "enable_thinking": false
+          },
+          "max_new_tokens": 256
+        },
+        "server": {
+          "commit": "ce3d03d4f84ff695cbf52bf506ba07dfe4d31ba6",
+          "dirty": false
+        },
+        "base_url": "http://127.0.0.1:8011/v1"
+      }
+    }
+  },
+  "kappa": {
+    "gemma-4-12b vs qwen3.5-9b": {
+      "n": 39,
+      "key_correct": 0.6026200873362445,
+      "lo_fit": 0.07999999999999989,
+      "distractors_plausible": 0.14180929095354564,
+      "both": 0.1612903225806453
+    }
+  }
+}

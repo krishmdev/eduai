@@ -1,0 +1,25 @@
+{
+  "protocol": "docs/blind_audit_llm.md with amendments 1-3 (2026-09-18). Test draw only; the valid draw is committed but was not judged.",
+  "judges_are_llms": "Both judges are language models. No person rated these items.",
+  "qwen3.5-9b": {
+    "items": "all 80",
+    "thinking_cap": 3072,
+    "concurrency": 8,
+    "items_at_cap": "79 of 80",
+    "first_try_parse_failures": 1,
+    "unparsed_after_retry": 0,
+    "wall_seconds": 8447.9,
+    "localhost_ai_commit": "ce3d03d4f84ff695cbf52bf506ba07dfe4d31ba6 as recorded; localhost-ai history was later re-dated with identical trees, and this commit is now ca729c47510e137a1361be49d1c6c0c1fc992e42 (localhost-ai docs/commit-map.tsv)"
+  },
+  "gemma-4-12b": {
+    "items": "first 20 of each arm in sheet order (amendment 3); all 40 finished inside the 2.25 h hard stop",
+    "thinking_cap": 2048,
+    "concurrency": "1, for host memory headroom (the amendment allows 2 or less); this is why only a subset fit",
+    "items_at_cap": "34 of 40",
+    "first_try_parse_failures": 1,
+    "unparsed_after_retry": "1 (a finetuned-v2 item), so Gemma's rates are over 19 + 20 items",
+    "wall_seconds": 8041.5,
+    "localhost_ai_commit": "fdb4fbeb361e6244300b999ed1fdaeaef1fb1599 as recorded (caps the MLX buffer cache at 1.5 GB; outputs unchanged); now f7102a1b0861a1fbfc855b3c3caf88d15e8dbcd9 after the re-dating"
+  },
+  "reproducibility": "Batched greedy decoding drifts with batch size, so verdicts are not bitwise reproducible at another concurrency."
+}
