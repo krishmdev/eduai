@@ -16,6 +16,8 @@ class ModelPin:
     revision: str
     allow: tuple[str, ...]
     optional: bool = False
+    # Passed to the tokenizer's apply_chat_template (e.g. to switch a model's thinking mode off).
+    template_kwargs: tuple[tuple[str, object], ...] = ()
 
 
 # Revisions resolved against the Hugging Face API on 2026-09-23. `make models` downloads exactly
@@ -82,6 +84,25 @@ MODEL_PINS: dict[str, ModelPin] = {
             "tokenizer_config.json",
         ),
         optional=True,
+    ),
+    # Answer-key verifier (docs/key_verification.md). Not a generator or eval judge of any arm. The
+    # snapshot is shared with ../localhost-ai; link its .models/hub entry into .models/hub.
+    "qwen3.5-9b": ModelPin(
+        "qwen3.5-9b",
+        "mlx-community/Qwen3.5-9B-MLX-4bit",
+        "938d8919941c6e7efd3c7150eff7fe9d12afa631",
+        (
+            "chat_template.jinja",
+            "config.json",
+            "model-00001-of-00002.safetensors",
+            "model-00002-of-00002.safetensors",
+            "model.safetensors.index.json",
+            "tokenizer.json",
+            "tokenizer_config.json",
+            "vocab.json",
+        ),
+        optional=True,
+        template_kwargs=(("enable_thinking", False),),
     ),
 }
 

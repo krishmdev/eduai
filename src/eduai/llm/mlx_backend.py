@@ -1,4 +1,7 @@
-"""MLX backend: Llama 3.2 4-bit from the pinned snapshot, optionally with the LoRA adapter."""
+"""MLX backend: Llama 3.2 4-bit from the pinned snapshot, optionally with the LoRA adapter.
+
+The same class loads the Qwen3.5 answer-key verifier; `chat_template_kwargs` carries that model's
+enable_thinking=False into the chat template."""
 
 from __future__ import annotations
 
@@ -19,7 +22,15 @@ def shared_prefix_len(prompts: list[list[int]]) -> int:
 
 
 class MLXBackend:
-    def __init__(self, model_dir: Path, adapter_path: Path | None = None, seed: int = 0):
+    chat_template_kwargs: dict | None = None
+
+    def __init__(
+        self,
+        model_dir: Path,
+        adapter_path: Path | None = None,
+        seed: int = 0,
+        chat_template_kwargs: dict | None = None,
+    ):
         try:
             import mlx.core as mx
             from mlx_lm import load
@@ -34,12 +45,15 @@ class MLXBackend:
             str(model_dir), adapter_path=str(adapter_path) if adapter_path else None
         )
         self.adapter = adapter_path
+        self.chat_template_kwargs = dict(chat_template_kwargs) if chat_template_kwargs else None
         self.name = "mlx+adapter" if adapter_path else "mlx-base"
         self._lock = threading.Lock()
         self.last_stats: dict = {}
 
     def _prompt(self, messages: list[dict]) -> list[int]:
-        out = self.tokenizer.apply_chat_template(messages, add_generation_prompt=True, tokenize=True)
+        out = self.tokenizer.apply_chat_template(
+            messages, add_generation_prompt=True, tokenize=True, **(self.chat_template_kwargs or {})
+        )
         # mlx-lm's TokenizerWrapper returns a list of ids; a raw HF tokenizer may return a mapping.
         return list(out["input_ids"] if hasattr(out, "keys") else out)
 

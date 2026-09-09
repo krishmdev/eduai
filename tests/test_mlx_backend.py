@@ -61,3 +61,19 @@ def test_shared_prefix_leaves_every_prompt_a_token():
     assert shared_prefix_len([[1, 2, 3, 4], [1, 2, 3, 5], [1, 2, 3, 4, 6]]) == 3
     assert shared_prefix_len([[1, 2, 3], [1, 2, 3]]) == 2
     assert shared_prefix_len([[7], [7, 8]]) == 0
+
+
+def test_chat_template_kwargs_reach_the_template():
+    seen = {}
+
+    class KwTok(Tok):
+        def apply_chat_template(self, messages, add_generation_prompt=True, tokenize=True, **kw):
+            seen.update(kw)
+            return [1, 2]
+
+    b = MLXBackend.__new__(MLXBackend)
+    b.tokenizer = KwTok()
+    assert b._prompt([{"ids": [1]}]) == [1, 2] and seen == {}
+    b.chat_template_kwargs = {"enable_thinking": False}
+    b._prompt([{"ids": [1]}])
+    assert seen == {"enable_thinking": False}
