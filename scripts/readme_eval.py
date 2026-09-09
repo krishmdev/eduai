@@ -151,8 +151,9 @@ def v2_section(r: dict) -> list[str]:
         "",
         "Usable overstates v2 more than the other arms. v2's targets were picked with these same checks and "
         "with the base 3B as key judge, and the 3B agrees closely with the 1B eval judge. The manual blind "
-        "audit planned in the protocol was not done. An automated audit by two other LLM judges is being built "
-        "separately. No person has checked these items.",
+        "audit planned in the protocol was not done. Instead, two LLM judges from other model families "
+        "audited a sample of usable test items blind (see the blind audit below). No person has checked "
+        "these items.",
     ]
 
 

@@ -219,7 +219,7 @@ The v2 LoRA was trained on items the base 3B wrote itself: samples drawn with th
 
 Compared with v1, v2 copies the source question less (8.7% against 25.3%), puts the key at A less often (61 of 150 valid items, against 104), and writes near-identical options on 22 items instead of 63. It keeps v1's schema-valid rate (100.0%). Its key agreement on schema-valid items (75.3%) is about the same as 2-shot base (75.2%). Its most common structure problem is a stem that gives away the answer (27 items, against 11 for 2-shot base).
 
-Usable overstates v2 more than the other arms. v2's targets were picked with these same checks and with the base 3B as key judge, and the 3B agrees closely with the 1B eval judge. The manual blind audit planned in the protocol was not done. An automated audit by two other LLM judges is being built separately. No person has checked these items.
+Usable overstates v2 more than the other arms. v2's targets were picked with these same checks and with the base 3B as key judge, and the 3B agrees closely with the 1B eval judge. The manual blind audit planned in the protocol was not done. Instead, two LLM judges from other model families audited a sample of usable test items blind (see the blind audit below). No person has checked these items.
 <!-- eval:end -->
 
 `make eval-check` audits the committed evaluation snapshot without models: it checks the 150
@@ -256,6 +256,54 @@ briefly overlapped another process using the GPU without the lease, so the score
 again on CPU and 10 generations were regenerated: every verdict matched, and all 10 generations
 were byte-identical ([verification.json](reports/openstax_ood/verification.json)). That was a
 check, not a second run.
+
+### Blind audit with LLM judges
+
+No person reviewed the generated items. Instead, two language models from families other than
+Llama read usable test items with the arm hidden and judged whether the key is correct, whether
+the item fits its objective, and whether the distractors are plausible. The two judges are
+Qwen3.5 9B and Gemma 4 12B, served locally through Localhost AI with thinking turned on. Their
+verdicts are another machine opinion, and they can be wrong. The plan and its three dated
+amendments are in [docs/blind_audit_llm.md](docs/blind_audit_llm.md). Results are in
+[reports/eval/audit_llm/](reports/eval/audit_llm/).
+
+What the audit covers, and where it departs from the original plan:
+
+- Test split only. The draw is 40 usable items each from v2 (0-shot) and 2-shot base. The
+  valid audit was dropped for lack of GPU time.
+- Truncated thinking. A pilot showed both models wanting more than 6,000 thinking tokens on most
+  items, so the caps were fixed at 3,072 tokens for Qwen and 2,048 for Gemma. Qwen reached its
+  cap on 79 of 80 items and Gemma on 34 of 40, so most verdicts come from cut-off reasoning.
+- Gemma judged a subset, the first 20 items of each arm in the blinded sheet order. It ran at
+  concurrency 1 to leave the host memory headroom. One Gemma verdict never parsed, which leaves
+  39 items.
+
+Precision here means the share of "usable" items a judge rates as both correctly keyed and on
+objective. Intervals are bootstrap 95% intervals, resampling each arm separately.
+
+| Judge | Items | v2 | 2-shot base | v2 minus base |
+|---|---|---|---|---|
+| Qwen3.5 9B | 40 + 40 | 5.0% (0.0 to 12.5) | 7.5% (0.0 to 15.0) | -2.5 (-12.5 to +7.5) |
+| Gemma 4 12B | 19 + 20 | 52.6% (31.6 to 73.7) | 45.0% (25.0 to 65.0) | +7.6 (-23.2 to +38.7) |
+
+| Judge | Key correct, v2 | Key correct, base | On objective, v2 | On objective, base |
+|---|---|---|---|---|
+| Qwen3.5 9B | 57.5% | 57.5% | 10.0% | 7.5% |
+| Gemma 4 12B | 78.9% | 75.0% | 68.4% | 65.0% |
+
+- Neither judge separates the two arms: both intervals for the difference include zero.
+- The judges disagree on the objective much more than on the key. Going by its notes, Qwen
+  reads "fits the objective" narrowly: when an objective lists several ideas, it often rejects a
+  question that tests only one of them. On the 39 items both judges rated, Cohen's kappa is 0.60 for the key, 0.08 for
+  the objective, 0.14 for distractors, and 0.16 for the combined verdict. Raw agreement is 82% on
+  the key and 41% on the objective.
+- Agreement with the eval's Llama 3.2 1B key judge equals each judge's key-correct rate (57.5% for
+  Qwen, 76.9% for Gemma), because every usable item had already passed the 1B check. Kappa against
+  the 1B is undefined for the same reason.
+
+The two judges don't agree on how many usable items are real, so this audit can't put a number on
+how much "usable" overstates either arm. It gives no sign that v2's usable items are better or
+worse than 2-shot base's.
 
 ## Adaptive testing and feedback
 
@@ -348,7 +396,8 @@ unfinished practice session's report is marked as in progress, with a link back 
   questions, often repeats options, and favors key A. v2, trained on the base model's own
   checked samples, fixed much of that, but on test it was 2.7 points behind 2-shot base, with an
   interval that includes zero. Its targets were chosen with the eval's own checks, so usable
-  flatters it, and no independent audit of its items has been done yet.
+  flatters it. The only audit of its items is by two LLM judges, on the test split only and with
+  truncated thinking, and the judges disagree with each other.
 - Explanations are extracted passage sentences, not reasoning.
 - All judges are small: Llama 3.2 1B for the key check and the noisy tagger for alignment.
   Neither replaces human review.
