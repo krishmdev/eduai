@@ -438,6 +438,53 @@ def eval_score(
     console.print((out / "eval_report.md").read_text())
 
 
+@eval_app.command("verify-keys")
+def eval_verify_keys(
+    split: list[str] = typer.Option(["valid", "test"], help="valid and/or test, run in this order"),
+    arms: list[str] = typer.Option(None, help="Arms to verify (default: the pre-registered three)"),
+    model: str = typer.Option("qwen3.5-9b", help="Verifier model key (models.lock)"),
+    force: bool = typer.Option(False, help="Redo arms already in verify_<model>.jsonl"),
+) -> None:
+    """Post-hoc answer-key verification (docs/key_verification.md). Writes verify_<model>.jsonl per
+    split and reports/key_verification.{json,md}; the eval's own files are left alone."""
+    from eduai.data.sciq import read_jsonl
+    from eduai.evaluation import key_verify as kv
+    from eduai.manifest import write_manifest
+
+    unknown = [s for s in split if s not in kv.SPLITS]
+    if unknown:
+        raise typer.BadParameter(f"unknown split {unknown}; use valid or test")
+    arm_list = tuple(arms or kv.VERIFY_ARMS)
+    verifier = kv.load_verifier(model)
+    for s in split:
+        eval_dir, prompts = kv.SPLITS[s]
+        manifest = eval_dir / f"verify_{model}_manifest.json"
+        info = {"task": "verify-keys", "split": s, "arms": list(arm_list), "model": model}
+        info["threshold"] = kv.THRESHOLD
+        write_manifest(manifest, info)
+        out = kv.verify_split(
+            verifier,
+            read_jsonl(prompts),
+            eval_dir,
+            arm_list,
+            force=force,
+            progress=lambda arm, n, s=s: n % 50 == 0 and console.print(f"{s} {arm}: {n}"),
+        )
+        write_manifest(manifest.with_name(f"verify_{model}_manifest_end.json"), info)
+        console.print(f"wrote {out}")
+    kv.write_report(kv.build_report(model))
+    console.print(kv.REPORT_MD.read_text())
+
+
+@eval_app.command("verify-report")
+def eval_verify_report(model: str = typer.Option("qwen3.5-9b")) -> None:
+    """Re-render reports/key_verification.{json,md} from the committed verify and audit files (no model)."""
+    from eduai.evaluation import key_verify as kv
+
+    kv.write_report(kv.build_report(model))
+    console.print(kv.REPORT_MD.read_text())
+
+
 def _rft_prompts(data: Path) -> list[dict]:
     from eduai.data.rft import train_prompts
     from eduai.evaluation.compare import fixed_shots
