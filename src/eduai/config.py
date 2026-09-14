@@ -121,6 +121,10 @@ class Settings(BaseSettings):
     db_path: Path = ROOT / "data" / "eduai.db"
     bank_path: Path | None = None
     egress_canary: bool = False
+    # Bank promotion (`eduai bank add-generated`) also requires the answer-key verifier's pass
+    # (docs/key_verification.md). On by default for new promotions.
+    require_key_verification: bool = True
+    key_verifier: str = "qwen3.5-9b"
 
 
 def models_dir() -> Path:

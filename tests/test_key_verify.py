@@ -163,3 +163,27 @@ def test_wilson_interval():
     assert kv.wilson(0, 0) is None
     lo, hi = kv.wilson(5, 10)
     assert lo < 0.5 < hi and abs((lo + hi) / 2 - 0.5) < 1e-9
+
+
+def test_promotion_gate_requires_verification_when_given():
+    per_item = [
+        {"arm": "a", "id": "p0", "all_checks": True, "source_copy": False},
+        {"arm": "a", "id": "p1", "all_checks": True, "source_copy": False},
+        {"arm": "a", "id": "p2", "all_checks": True, "source_copy": True},
+        {"arm": "a", "id": "p3", "all_checks": False, "source_copy": False},
+        {"arm": "b", "id": "p0", "all_checks": True, "source_copy": False},
+    ]
+    assert kv.promotable(per_item, "a", None) == {"p0", "p1"}
+    verify = [{"arm": "a", "id": "p0", "verified": True}, {"arm": "a", "id": "p1", "verified": False}]
+    assert kv.promotable(per_item, "a", verify) == {"p0"}
+    with pytest.raises(ValueError, match="no verification row"):
+        kv.promotable(per_item, "b", verify)
+
+
+def test_verification_is_on_by_default_for_promotion(monkeypatch):
+    from eduai.config import Settings
+
+    monkeypatch.delenv("EDUAI_REQUIRE_KEY_VERIFICATION", raising=False)
+    assert Settings().require_key_verification and Settings().key_verifier == "qwen3.5-9b"
+    monkeypatch.setenv("EDUAI_REQUIRE_KEY_VERIFICATION", "false")
+    assert not Settings().require_key_verification

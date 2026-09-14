@@ -287,25 +287,41 @@ def tagger_eval(
 
 @bank_app.command("add-generated")
 def bank_add_generated(
-    arm: str = "finetuned", out: Path = typer.Option(Path("data/samples/generated_items.jsonl"))
+    arm: str = "finetuned",
+    out: Path = typer.Option(Path("data/samples/generated_items.jsonl")),
+    require_verified: bool = typer.Option(
+        None,
+        "--require-verified/--no-require-verified",
+        help="Also require the answer-key verifier's pass (default on: EDUAI_REQUIRE_KEY_VERIFICATION)",
+    ),
+    verifier: str = typer.Option(None, help="Verifier model key (default: EDUAI_KEY_VERIFIER)"),
 ) -> None:
-    """Promote eval outputs that passed every check (and aren't a copy of their source) into the bank."""
+    """Promote eval outputs that passed every check (and aren't a copy of their source) into the bank.
+    By default the item's key must also pass the verifier (reports/eval/verify_<model>.jsonl)."""
     import random
     import re
 
+    from eduai.config import get_settings
     from eduai.curriculum.taxonomy import default_taxonomy
     from eduai.data.difficulty import LABEL_B
     from eduai.data.sciq import read_jsonl, write_jsonl
+    from eduai.evaluation.key_verify import promotable, verify_path
     from eduai.generation.validate import parse
 
+    settings = get_settings()
+    if require_verified is None:
+        require_verified = settings.require_key_verification
+    verify = None
+    if require_verified:
+        vp = verify_path(Path("reports/eval"), verifier or settings.key_verifier)
+        if not vp.exists():
+            console.print(f"[red]{vp} not found: run `eduai eval verify-keys` or pass --no-require-verified")
+            raise typer.Exit(1)
+        verify = read_jsonl(vp)
     tax = default_taxonomy()
     rng = random.Random(0)
     prompts = {p["id"]: p for p in read_jsonl(Path("data/eval/prompts.jsonl"))}
-    passed = {
-        r["id"]
-        for r in read_jsonl(Path("reports/eval/per_item.jsonl"))
-        if r["arm"] == arm and r.get("all_checks") and not r.get("source_copy")
-    }
+    passed = promotable(read_jsonl(Path("reports/eval/per_item.jsonl")), arm, verify)
     rows = []
     for g in read_jsonl(Path(f"reports/eval/gen_{arm}.jsonl")):
         if g["id"] not in passed:

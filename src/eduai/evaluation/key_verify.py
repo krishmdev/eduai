@@ -108,6 +108,18 @@ def verify_split(
     return out
 
 
+def promotable(per_item: list[dict], arm: str, verify: list[dict] | None) -> set[str]:
+    """Bank-promotion gate: usable (every check passed, not a copy of its source) and, when `verify`
+    is given, verified. Every usable item of the arm needs a verification row."""
+    ids = {r["id"] for r in per_item if r["arm"] == arm and r.get("all_checks") and not r.get("source_copy")}
+    if verify is None:
+        return ids
+    ver = {r["id"]: r["verified"] for r in verify if r["arm"] == arm}
+    if missing := sorted(ids - set(ver)):
+        raise ValueError(f"{len(missing)} usable {arm} items have no verification row, e.g. {missing[0]}")
+    return {i for i in ids if ver[i]}
+
+
 # -- post-hoc report -----------------------------------------------------------------------------
 def wilson(k: int, n: int, z: float = 1.959964) -> list[float] | None:
     if n == 0:
