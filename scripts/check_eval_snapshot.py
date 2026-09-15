@@ -96,8 +96,22 @@ def main() -> None:
     card = json.loads((ROOT / "reports/eval_prompts_card.json").read_text())
     expected_report = report.render(result, "eval_manifest.json", card)
     require((ROOT / "reports/eval_report.md").read_text() == expected_report, "rendered report")
+    check_key_verification()
     print("eval snapshot: 150 paired prompts, raw hashes, judges, summary, bootstrap and report OK")
     print("full scoring requires ignored source data and pinned local embedding models")
+
+
+def check_key_verification() -> None:
+    """The post-hoc key-verification report, when committed, must match its inputs."""
+    from eduai.evaluation import key_verify
+
+    if not key_verify.REPORT_JSON.exists():
+        return
+    committed = json.loads(key_verify.REPORT_JSON.read_text())
+    res = key_verify.build_report(committed["verifier"])
+    require(json.loads(json.dumps(res)) == committed, "key_verification.json vs verify and audit files")
+    require(key_verify.REPORT_MD.read_text() == key_verify.render(committed), "key_verification.md")
+    print("post-hoc key verification: report matches verify_*.jsonl and the audit verdicts")
 
 
 if __name__ == "__main__":
