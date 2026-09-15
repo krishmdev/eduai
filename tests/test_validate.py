@@ -72,3 +72,17 @@ def test_solver_aligner_novelty_hooks():
         "aligned": True,
         "novel": False,
     }
+
+
+def test_verifier_hook_runs_last_and_rejects_unverified_keys():
+    agree = lambda it: {"agrees": True, "majority": "A"}  # noqa: E731
+    no = lambda it: {"verified": False, "majority": "A", "p_key": 0.4}  # noqa: E731
+    res = validate_item(json.dumps(item()), REQ, solver=agree, verifier=no)
+    assert res.reason == "key_unverified" and res.checks["verified"] is False
+    assert res.metrics["verifier_p_key"] == 0.4
+    yes = lambda it: {"verified": True, "majority": "A", "p_key": 0.9}  # noqa: E731
+    assert validate_item(json.dumps(item()), REQ, solver=agree, verifier=yes).ok
+    called = []
+    dup = lambda it: (False, {"max_bank_cos": 0.97})  # noqa: E731
+    validate_item(json.dumps(item()), REQ, novelty=dup, verifier=lambda it: called.append(1))
+    assert not called

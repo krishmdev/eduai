@@ -120,8 +120,10 @@ def validate_item(
     solver: Callable[[dict], dict] | None = None,
     aligner: Callable[[dict, GenerationRequest], tuple[bool, dict]] | None = None,
     novelty: Callable[[dict], tuple[bool, dict]] | None = None,
+    verifier: Callable[[dict], dict] | None = None,
 ) -> CheckResult:
-    """Run every check in order; stop at the first failure but record which checks ran."""
+    """Run every check in order; stop at the first failure but record which checks ran. The
+    answer-key verifier (the slowest check) runs last."""
     checks: dict[str, bool] = {}
     metrics: dict[str, float] = {}
     item, err = parse(text)
@@ -160,5 +162,14 @@ def validate_item(
         if not ok:
             return CheckResult(
                 False, "duplicate", f"max cosine {info.get('max_bank_cos', 0):.3f}", item, checks, metrics
+            )
+    if verifier is not None:
+        ver = verifier(item)
+        if ver.get("p_key") is not None:
+            metrics["verifier_p_key"] = float(ver["p_key"])
+        checks["verified"] = bool(ver["verified"])
+        if not checks["verified"]:
+            return CheckResult(
+                False, "key_unverified", f"verifier chose {ver.get('majority')}", item, checks, metrics
             )
     return CheckResult(True, None, "", item, checks, metrics)

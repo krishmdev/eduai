@@ -46,12 +46,15 @@ class Pipeline:
         solver=None,
         tagger: Tagger | None = None,
         novelty: NoveltyIndex | None = None,
+        verifier=None,
     ):
         self.generator = generator
         self.tax = taxonomy
         self.solver = solver
         self.aligner = make_aligner(tagger) if tagger is not None else None
         self.novelty = novelty
+        # Optional answer-key verifier (key_verify.KeyVerifier); when set, unverified keys are rejected.
+        self.verifier = verifier
         self.stats = PipelineStats()
 
     def run_one(self, req: GenerationRequest) -> tuple[CheckResult, dict | None, object]:
@@ -62,6 +65,7 @@ class Pipeline:
             solver=(lambda it: self.solver(it, req.passage)) if self.solver else None,
             aligner=self.aligner,
             novelty=self.novelty.check if self.novelty else None,
+            verifier=(lambda it: self.verifier(it, req.passage)) if self.verifier else None,
         )
         self.stats.attempted += 1
         row = None
