@@ -307,7 +307,7 @@ def render(res: dict) -> str:
         else:
             lines += [
                 f"Gemma 4 12B (thinking on) judged {c['n_judged']} usable test items blind "
-                f"({c['n_unparsed']} without a parsed verdict are left out). Its key verdicts, split by "
+                f"(items without a parsed verdict left out: {c['n_unparsed']}). Its key verdicts, split by "
                 "whether the item passes verification:",
                 "",
                 *audit_table(c),
