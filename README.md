@@ -305,6 +305,45 @@ The two judges don't agree on how many usable items are real, so this audit can'
 how much "usable" overstates either arm. It gives no sign that v2's usable items are better or
 worse than 2-shot base's.
 
+### Post-hoc: answer-key verification
+
+This part is exploratory. I planned it after seeing the audit, which found wrong keys among items
+the eval had marked usable, so it doesn't change the registered v2 result above. The plan was
+written down before any item was scored:
+[docs/key_verification.md](docs/key_verification.md). Results are in
+[reports/key_verification.md](reports/key_verification.md).
+
+The verifier is Qwen3.5 9B (4-bit, thinking off) running the eval's own key check: open-book,
+answer-letter probabilities averaged over four rotations of the options. An item passes when the
+verifier's top option is the key and the key gets more than 0.5 of the probability. The threshold
+was fixed in advance. It scored every schema-valid item of the three arms on valid and then on
+test, 841 items in one run.
+
+| Split | Arm | Usable | Usable and verified | Usable items kept |
+|---|---|---|---|---|
+| Valid | 2-shot base | 32.0% | 28.0% | 87.5% |
+| Valid | v2 | 38.0% | 30.7% | 80.7% |
+| Valid | v2, 2-shot | 34.0% | 28.7% | 84.3% |
+| Test | 2-shot base | 34.7% | 28.7% | 82.7% |
+| Test | v2 | 32.0% | 26.7% | 83.3% |
+| Test | v2, 2-shot | 37.3% | 34.0% | 91.1% |
+
+Verification removes 9% to 19% of the usable items, depending on the arm and split. On test,
+v2 minus 2-shot base on verified usable is -2.0 points (95% CI -12.0 to +8.0). These are
+descriptive numbers, not a new test.
+
+Gemma 4 12B is the independent check, since it comes from neither the Llama nor the Qwen family.
+Of the 39 audit items it rated, 35 pass verification and 4 fail. Gemma judged the key correct on
+80.0% of the passing items (95% CI 64% to 90%) and on 2 of the 4 failing ones, against 76.9% for
+all 39. So verification nudges Gemma-judged key correctness up by about three points on this
+subset, but with 4 failures the difference can't be told from chance (Fisher p = 0.22). The Qwen
+audit shows a much larger gap (69% of verified items judged correct against 7% of unverified). The
+verifier and that auditor are the same model family, though, so the gap is expected and doesn't
+count as evidence.
+
+Bank promotion (`eduai bank add-generated`) now requires the verifier's pass by default. Use
+`--no-require-verified` or `EDUAI_REQUIRE_KEY_VERIFICATION=false` to get the old gate back.
+
 ## Adaptive testing and feedback
 
 The whole system uses one response model, p = c + (1 − c)·σ(θ − b) with c = 0.25 for four
