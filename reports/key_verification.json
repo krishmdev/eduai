@@ -1,0 +1,267 @@
+{
+  "post_hoc": true,
+  "exploratory": true,
+  "preregistration": "docs/key_verification.md",
+  "verifier": "qwen3.5-9b",
+  "revision": "938d8919941c6e7efd3c7150eff7fe9d12afa631",
+  "threshold": 0.5,
+  "arms": [
+    "base-2shot",
+    "finetuned-v2",
+    "finetuned-v2-2shot"
+  ],
+  "splits": {
+    "valid": {
+      "arms": {
+        "base-2shot": {
+          "n": 150,
+          "usable": 48,
+          "verified_usable": 42,
+          "usable_rate": 0.32,
+          "verified_usable_rate": 0.28,
+          "survival": 0.875,
+          "n_scored": 125,
+          "verified_rate_on_scored": 0.76
+        },
+        "finetuned-v2": {
+          "n": 150,
+          "usable": 57,
+          "verified_usable": 46,
+          "usable_rate": 0.38,
+          "verified_usable_rate": 0.30666666666666664,
+          "survival": 0.8070175438596491,
+          "n_scored": 149,
+          "verified_rate_on_scored": 0.6778523489932886
+        },
+        "finetuned-v2-2shot": {
+          "n": 150,
+          "usable": 51,
+          "verified_usable": 43,
+          "usable_rate": 0.34,
+          "verified_usable_rate": 0.2866666666666667,
+          "survival": 0.8431372549019608,
+          "n_scored": 147,
+          "verified_rate_on_scored": 0.7346938775510204
+        }
+      },
+      "bootstrap_verified_usable": {
+        "finetuned-v2 - base-2shot | verified_usable": {
+          "diff": 0.02666666666666667,
+          "ci95": [
+            -0.06666666666666667,
+            0.12
+          ]
+        },
+        "finetuned-v2-2shot - base-2shot | verified_usable": {
+          "diff": 0.006666666666666667,
+          "ci95": [
+            -0.08666666666666667,
+            0.1
+          ]
+        }
+      }
+    },
+    "test": {
+      "arms": {
+        "base-2shot": {
+          "n": 150,
+          "usable": 52,
+          "verified_usable": 43,
+          "usable_rate": 0.3466666666666667,
+          "verified_usable_rate": 0.2866666666666667,
+          "survival": 0.8269230769230769,
+          "n_scored": 121,
+          "verified_rate_on_scored": 0.8099173553719008
+        },
+        "finetuned-v2": {
+          "n": 150,
+          "usable": 48,
+          "verified_usable": 40,
+          "usable_rate": 0.32,
+          "verified_usable_rate": 0.26666666666666666,
+          "survival": 0.8333333333333334,
+          "n_scored": 150,
+          "verified_rate_on_scored": 0.68
+        },
+        "finetuned-v2-2shot": {
+          "n": 150,
+          "usable": 56,
+          "verified_usable": 51,
+          "usable_rate": 0.37333333333333335,
+          "verified_usable_rate": 0.34,
+          "survival": 0.9107142857142857,
+          "n_scored": 149,
+          "verified_rate_on_scored": 0.8053691275167785
+        }
+      },
+      "bootstrap_verified_usable": {
+        "finetuned-v2 - base-2shot | verified_usable": {
+          "diff": -0.02,
+          "ci95": [
+            -0.12,
+            0.08
+          ]
+        },
+        "finetuned-v2-2shot - base-2shot | verified_usable": {
+          "diff": 0.05333333333333334,
+          "ci95": [
+            -0.03333333333333333,
+            0.14666666666666667
+          ]
+        }
+      }
+    }
+  },
+  "audit_independent": {
+    "auditor": "gemma-4-12b",
+    "n_judged": 39,
+    "n_unparsed": 1,
+    "pass": {
+      "n": 35,
+      "key_correct": 28,
+      "rate": 0.8,
+      "ci95": [
+        0.6410838679545052,
+        0.8995755358072957
+      ]
+    },
+    "fail": {
+      "n": 4,
+      "key_correct": 2,
+      "rate": 0.5,
+      "ci95": [
+        0.15003898774401986,
+        0.8499610122559802
+      ]
+    },
+    "all": {
+      "n": 39,
+      "key_correct": 30,
+      "rate": 0.7692307692307693,
+      "ci95": [
+        0.6166374264149461,
+        0.873541959356819
+      ]
+    },
+    "by_arm": {
+      "base-2shot": {
+        "pass": {
+          "n": 19,
+          "key_correct": 14,
+          "rate": 0.7368421052631579,
+          "ci95": [
+            0.5120844892295056,
+            0.8819358772791221
+          ]
+        },
+        "fail": {
+          "n": 1,
+          "key_correct": 1,
+          "rate": 1.0,
+          "ci95": [
+            0.2065493117918027,
+            1.0
+          ]
+        }
+      },
+      "finetuned-v2": {
+        "pass": {
+          "n": 16,
+          "key_correct": 14,
+          "rate": 0.875,
+          "ci95": [
+            0.6397717251782153,
+            0.9650225125737311
+          ]
+        },
+        "fail": {
+          "n": 3,
+          "key_correct": 1,
+          "rate": 0.3333333333333333,
+          "ci95": [
+            0.06149194402093078,
+            0.7923404011921757
+          ]
+        }
+      }
+    },
+    "diff": 0.30000000000000004,
+    "fisher_p": 0.22256264361527514
+  },
+  "audit_circular_note": {
+    "auditor": "qwen3.5-9b",
+    "n_judged": 80,
+    "n_unparsed": 0,
+    "pass": {
+      "n": 65,
+      "key_correct": 45,
+      "rate": 0.6923076923076923,
+      "ci95": [
+        0.5720235698691342,
+        0.7911296869946948
+      ]
+    },
+    "fail": {
+      "n": 15,
+      "key_correct": 1,
+      "rate": 0.06666666666666667,
+      "ci95": [
+        0.01186689536153232,
+        0.2981653010887565
+      ]
+    },
+    "all": {
+      "n": 80,
+      "key_correct": 46,
+      "rate": 0.575,
+      "ci95": [
+        0.4656928976162894,
+        0.6774343828499269
+      ]
+    },
+    "by_arm": {
+      "base-2shot": {
+        "pass": {
+          "n": 33,
+          "key_correct": 23,
+          "rate": 0.696969696969697,
+          "ci95": [
+            0.5266186471733927,
+            0.8262446865476278
+          ]
+        },
+        "fail": {
+          "n": 7,
+          "key_correct": 0,
+          "rate": 0.0,
+          "ci95": [
+            0.0,
+            0.35433043867586833
+          ]
+        }
+      },
+      "finetuned-v2": {
+        "pass": {
+          "n": 32,
+          "key_correct": 22,
+          "rate": 0.6875,
+          "ci95": [
+            0.51433321561082,
+            0.8204745844774248
+          ]
+        },
+        "fail": {
+          "n": 8,
+          "key_correct": 1,
+          "rate": 0.125,
+          "ci95": [
+            0.022417491199971912,
+            0.47088818505608376
+          ]
+        }
+      }
+    },
+    "diff": 0.6256410256410256,
+    "fisher_p": 9.928893842037824e-06
+  }
+}
