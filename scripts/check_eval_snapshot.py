@@ -91,7 +91,10 @@ def main() -> None:
     runs = compare.test_runs(ROOT / "reports/eval")
     require(result.get("test_runs") == runs, "test-run count vs reports/eval/test_runs.jsonl")
     if any(a.startswith("finetuned-v2") for a in GEN_ARMS):
-        require(runs is not None and runs["started"] >= 1, "v2 test arms without a logged test run")
+        # The protocol allows one v2 test run: exactly one logged start, and it finished.
+        require(runs is not None, "v2 test arms without a logged test run")
+        require(runs["started"] == 1, f"{runs['started']} logged v2 test runs; the protocol allows one")
+        require(runs["unfinished"] == 0, "the logged v2 test run never finished")
 
     card = json.loads((ROOT / "reports/eval_prompts_card.json").read_text())
     expected_report = report.render(result, "eval_manifest.json", card)
