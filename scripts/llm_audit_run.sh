@@ -1,10 +1,12 @@
 #!/usr/bin/env bash
 # One LLM judge for the blind audit (docs/blind_audit_llm.md): start a Localhost AI server for the
-# preset, fill the audit sheet, stop the server. Run the whole script under the compute lease so it
-# is held for the server's lifetime, one judge at a time:
-#   ~/Developer/portfolio/.tools/compute_lease.py run eduai-openstax -- \
+# preset, fill the audit sheet, stop the server. Localhost AI is a separate local OpenAI-compatible
+# inference server (MLX backend) with pinned model presets; any server that serves the preset's model
+# at /v1 and answers /readyz would do. Run the whole script under the GPU lock you use (this project
+# used a local compute-lease wrapper) so it is held for the server's lifetime, one judge at a time:
+#   <lease-wrapper> run eduai-openstax -- \
 #     scripts/llm_audit_run.sh qwen3.5-9b-mlx4 qwen3.5-9b reports/valid_eval/audit_llm
-# Env: LHAI_DIR (Localhost AI checkout), PORT (8011), CONCURRENCY (4), THINKING_BUDGET (3000),
+# Env: LHAI_DIR (Localhost AI checkout, default ../localhost-ai next to this repo), PORT (8011), CONCURRENCY (4), THINKING_BUDGET (3000),
 # MAX_TOKENS (3600), READY_TIMEOUT seconds (1200), LHAI_MAX_CONTEXT (9216; the server default of
 # 2048 is too short for prompt + thinking + answer). MODE=pilot runs the thinking-length pilot
 # (blind_audit.py pilot, safety cap 6000) instead of the audit. PER_ARM=N judges only the first N
@@ -12,7 +14,7 @@
 set -euo pipefail
 cd "$(dirname "$0")/.."
 preset=$1 judge=$2 audit=$3
-lhai=${LHAI_DIR:-$HOME/Developer/portfolio/localhost-ai}
+lhai=${LHAI_DIR:-$(cd .. && pwd)/localhost-ai}
 port=${PORT:-8011}
 log="$audit/llm_${judge}_server.log"
 mkdir -p "$audit"
