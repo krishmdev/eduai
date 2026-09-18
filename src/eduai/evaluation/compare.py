@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import gc
 import json
+import os
 import time
 from pathlib import Path
 
@@ -70,10 +71,11 @@ def fixed_shots(sft_train: Path = SHOTS_SAMPLE) -> list[tuple[GenerationRequest,
 
 
 def _rel(path: Path | None) -> str | None:
+    """A path for committed metadata: relative to the repo root, even when it lies outside it (a
+    worktree using the main checkout's adapter), so no home-directory path is written."""
     if path is None:
         return None
-    path = Path(path).resolve()
-    return str(path.relative_to(ROOT)) if path.is_relative_to(ROOT) else str(path)
+    return os.path.relpath(Path(path).resolve(), ROOT)
 
 
 def _free_mlx() -> None:

@@ -228,3 +228,10 @@ def test_explicit_and_missing_references_score_on_their_own_ids(tmp_path):
     assert res["summary"]["reference"]["n"] == 1
     assert res["summary"]["finetuned"]["n"] == 2
     assert "finetuned - reference | key" in res["bootstrap"]
+
+
+def test_meta_paths_stay_relative_outside_the_repo():
+    assert compare._rel(None) is None
+    assert compare._rel(compare.ROOT / "adapters" / "x") == "adapters/x"
+    outside = compare.ROOT.parent / "other-checkout" / "adapters" / "x"
+    assert compare._rel(outside) == "../other-checkout/adapters/x"
