@@ -287,7 +287,9 @@ def tagger_eval(
 
 @bank_app.command("add-generated")
 def bank_add_generated(
-    arm: str = "finetuned",
+    arm: str = typer.Option(
+        "base-2shot", help="Eval arm to promote; with the verifier gate it needs verify_<model>.jsonl rows"
+    ),
     out: Path = typer.Option(Path("data/samples/generated_items.jsonl")),
     require_verified: bool = typer.Option(
         None,
@@ -321,7 +323,11 @@ def bank_add_generated(
     tax = default_taxonomy()
     rng = random.Random(0)
     prompts = {p["id"]: p for p in read_jsonl(Path("data/eval/prompts.jsonl"))}
-    passed = promotable(read_jsonl(Path("reports/eval/per_item.jsonl")), arm, verify)
+    try:
+        passed = promotable(read_jsonl(Path("reports/eval/per_item.jsonl")), arm, verify)
+    except ValueError as e:
+        console.print(f"[red]{e}: verify that arm first, pick another --arm, or pass --no-require-verified")
+        raise typer.Exit(1) from None
     rows = []
     for g in read_jsonl(Path(f"reports/eval/gen_{arm}.jsonl")):
         if g["id"] not in passed:
