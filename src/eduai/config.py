@@ -85,8 +85,10 @@ MODEL_PINS: dict[str, ModelPin] = {
         ),
         optional=True,
     ),
-    # Answer-key verifier (docs/key_verification.md). Not a generator or eval judge of any arm. The
-    # snapshot is shared with ../localhost-ai; link its .models/hub entry into .models/hub.
+    # Answer-key verifier (docs/key_verification.md). Not a generator or eval judge of any arm. It is
+    # the same pinned snapshot that Localhost AI (a separate local OpenAI-compatible inference server,
+    # used here for the blind-audit judges) serves; with a checkout at ../localhost-ai, link its
+    # .models/hub entry into .models/hub instead of downloading it again.
     "qwen3.5-9b": ModelPin(
         "qwen3.5-9b",
         "mlx-community/Qwen3.5-9B-MLX-4bit",
