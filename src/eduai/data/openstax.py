@@ -422,10 +422,10 @@ def screen_and_select(
                     if target_lengths:
                         passage = fit_length(passage, rng.choice(target_lengths))
                     st["screened"] += 1
-                    if leakage.ShingleIndex.best(sft_idx, passage)[0] >= leakage.CONTAINMENT_MAX:
+                    if sft_idx.best(passage, both_ways=True)[0] >= leakage.CONTAINMENT_MAX:
                         st["dropped_sft_containment"] += 1
                         continue
-                    if leakage.ShingleIndex.best(sciq_idx, passage)[0] >= leakage.CONTAINMENT_MAX:
+                    if sciq_idx.best(passage, both_ways=True)[0] >= leakage.CONTAINMENT_MAX:
                         st["dropped_sciq_containment"] += 1
                         continue
                     tag = tagger.tag_texts([passage])[0]
@@ -462,8 +462,11 @@ def screen_and_select(
             texts = [f"{q['stem']} {q['choices'][q['key']]}" for q in pool]
             qv = embedder.encode(texts)
             if ref_vecs is not None:
+                # the leak screen compares Q+A in the training side's format (sft_qa uses tag_text);
+                # the passage cosine below keeps the plain text the committed prompts were picked with
+                lv = embedder.encode([tag_text(q["stem"], q["choices"][q["key"]]) for q in pool])
                 leaks = leakage.same_answer_qa_leaks(
-                    qv, [q["choices"][q["key"]] for q in pool], ref_vecs, ref_answers
+                    lv, [q["choices"][q["key"]] for q in pool], ref_vecs, ref_answers
                 )
                 bad = {i for i, _, _ in leaks}
                 st["ref_dropped_same_answer_qa"] += len(bad)

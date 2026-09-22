@@ -23,20 +23,29 @@ class ShingleIndex:
     def __init__(self, texts: Sequence[str], n: int = NGRAM):
         self.n = n
         self.index: dict[str, set[int]] = defaultdict(set)
+        self.sizes: list[int] = []
         for i, t in enumerate(texts):
-            for g in shingles(t, n):
+            sh = shingles(t, n)
+            self.sizes.append(len(sh))
+            for g in sh:
                 self.index[g].add(i)
 
-    def best(self, text: str) -> tuple[float, int | None]:
-        """Largest share of `text`'s n-grams found in a single indexed text, and that text's index."""
+    def best(self, text: str, both_ways: bool = False) -> tuple[float, int | None]:
+        """Largest share of `text`'s n-grams found in a single indexed text, and that text's index.
+
+        With both_ways, the share of the indexed text's own n-grams found in `text` counts too, so
+        a short indexed passage contained in a longer `text` is caught as well."""
         s = shingles(text, self.n)
         if not s:
             return 0.0, None
         c = Counter(j for g in s for j in self.index.get(g, ()))
         if not c:
             return 0.0, None
-        j, k = c.most_common(1)[0]
-        return k / len(s), j
+        if not both_ways:
+            j, k = c.most_common(1)[0]
+            return k / len(s), j
+        share, j = max((max(k / len(s), k / self.sizes[j]), j) for j, k in c.items())
+        return share, j
 
 
 def containment_pairs(

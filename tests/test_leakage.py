@@ -1,6 +1,7 @@
 import numpy as np
 
 from eduai.data.leakage import (
+    CONTAINMENT_MAX,
     ShingleIndex,
     containment_pairs,
     norm_answer,
@@ -52,3 +53,14 @@ def test_same_answer_qa_leaks_detects_article_mismatches():
     leaks = same_answer_qa_leaks(q_vecs, q_answers, ref_vecs, ref_answers, threshold=0.8, strip_articles=True)
     assert len(leaks) == 1
     assert leaks[0] == (0, 0, 1.0)
+
+
+def test_best_both_ways_catches_a_short_indexed_text_inside_a_long_one():
+    short = "one two three four five six seven eight nine ten"
+    idx = ShingleIndex([short])
+    long = short + " " + " ".join(f"w{i}" for i in range(40))
+    fwd, _ = idx.best(long)
+    assert fwd < CONTAINMENT_MAX
+    share, j = idx.best(long, both_ways=True)
+    assert j == 0 and share == 1.0
+    assert idx.best(short, both_ways=True) == (1.0, 0)
