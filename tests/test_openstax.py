@@ -73,3 +73,20 @@ def test_prose_filter():
     assert ox.prose("Energy is conserved.")
     assert not ox.prose("where v is the speed.")
     assert not ox.prose("Under that condition, the equation becomes")
+
+
+def test_parse_mcq_keeps_a_roman_numeral_statement_list_in_the_stem():
+    roman = _el(
+        "<ROOT><problem><para>Which of the following raise the resonant frequency?</para>"
+        '<list number-style="upper-roman"><item>Add water.</item><item>Use a denser fluid.</item>'
+        "<item>Warm the room.</item></list>"
+        '<list number-style="lower-alpha"><item>I only</item><item>I and III</item>'
+        "<item>II and III</item><item>all of the above</item></list></problem>"
+        "<solution><para>(b)</para></solution></ROOT>"
+    )
+    q = ox.parse_mcq(roman)
+    assert q["key"] == "B" and q["choices"]["B"] == "I and III"
+    assert q["stem"].endswith("frequency? I. Add water. II. Use a denser fluid. III. Warm the room.")
+    other = roman.find("{http://cnx.rice.edu/cnxml}problem").find("{http://cnx.rice.edu/cnxml}list")
+    other.set("number-style", "arabic")
+    assert ox.parse_mcq(roman) is None

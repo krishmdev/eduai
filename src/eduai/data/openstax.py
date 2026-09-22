@@ -205,6 +205,9 @@ def _key_letter(solution: ET.Element) -> str | None:
     return x.upper() if x in "abcd" else None
 
 
+ROMAN = ("I", "II", "III", "IV", "V", "VI")
+
+
 def parse_mcq(ex: ET.Element) -> dict | None:
     """A four-option, single-key multiple-choice exercise with a published solution, else None."""
     problem = next((c for c in ex if _local(c.tag) == "problem"), None)
@@ -221,6 +224,14 @@ def parse_mcq(ex: ET.Element) -> dict | None:
             t = _local(c.tag)
             if t == "list" and c.get("number-style") == "lower-alpha":
                 options += [inline_text(i, max_math=6) for i in c if _local(i.tag) == "item"]
+            elif t == "list" and c.get("number-style") == "upper-roman":
+                # statements the options refer to ("I and III"); they belong to the stem
+                items = [inline_text(i, max_math=6) for i in c if _local(i.tag) == "item"]
+                if len(items) > len(ROMAN):
+                    return None
+                stem_parts.append(" ".join(f"{r}. {x}" for r, x in zip(ROMAN, items, strict=False)))
+            elif t == "list":
+                return None  # any other list would be dropped from the stem, so skip the exercise
             elif t == "para":
                 lists = [x for x in c if _local(x.tag) == "list"]
                 if lists and lists[0].get("number-style") == "lower-alpha":
