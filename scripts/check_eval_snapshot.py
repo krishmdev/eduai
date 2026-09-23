@@ -100,6 +100,7 @@ def main() -> None:
     expected_report = report.render(result, "eval_manifest.json", card)
     require((ROOT / "reports/eval_report.md").read_text() == expected_report, "rendered report")
     check_key_verification()
+    check_openstax_report()
     print("eval snapshot: 150 paired prompts, raw hashes, judges, summary, bootstrap and report OK")
     print("full scoring requires ignored source data and pinned local embedding models")
 
@@ -115,6 +116,19 @@ def check_key_verification() -> None:
     require(json.loads(json.dumps(res)) == committed, "key_verification.json vs verify and audit files")
     require(key_verify.REPORT_MD.read_text() == key_verify.render(committed), "key_verification.md")
     print("post-hoc key verification: report matches verify_*.jsonl and the audit verdicts")
+
+
+def check_openstax_report() -> None:
+    """The OpenStax OOD report, when committed, must render from its committed inputs."""
+    import importlib.util
+
+    if not (ROOT / "reports/openstax_ood/eval.json").exists():
+        return
+    spec = importlib.util.spec_from_file_location("openstax_report", ROOT / "scripts/openstax_report.py")
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    require((ROOT / "reports/openstax_ood/report.md").read_text() == mod.rerender(), "openstax_ood/report.md")
+    print("OpenStax OOD: report.md matches eval.json, the prompt card, verification notes and per-item rows")
 
 
 if __name__ == "__main__":
