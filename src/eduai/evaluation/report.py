@@ -116,6 +116,18 @@ def render(res: dict, manifest_name: str, card: dict) -> str:
         "Paired bootstrap (5,000 resamples over prompts), difference in rate with 95% CI. With n = "
         f"{n}, one arm's rate has a standard error around 4 points, so differences under about 10 points "
         "should be read as noise unless the interval excludes zero.",
+        *(
+            [
+                "",
+                "The key and aligned differences count every prompt, and an item that isn't schema-valid counts "
+                "as neither agreeing nor aligned. So a difference against an arm with many schema failures ("
+                + "; ".join(f"{a}, {_p(s[a]['schema'])} schema-valid" for a in schema_short)
+                + ") partly reflects those failures rather than the keys or the objectives. The key agreement "
+                "(valid) column above compares keys on schema-valid items only.",
+            ]
+            if (schema_short := [a for a in arms if s[a]["schema"] < 0.95])
+            else []
+        ),
         "",
         "| Comparison | Metric | Difference | 95% CI |",
         "|---|---|---|---|",

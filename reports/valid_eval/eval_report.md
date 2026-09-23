@@ -29,6 +29,8 @@ Every percentage uses all prompts as the denominator. Checks are scored independ
 
 Paired bootstrap (5,000 resamples over prompts), difference in rate with 95% CI. With n = 150, one arm's rate has a standard error around 4 points, so differences under about 10 points should be read as noise unless the interval excludes zero.
 
+The key and aligned differences count every prompt, and an item that isn't schema-valid counts as neither agreeing nor aligned. So a difference against an arm with many schema failures (base-2shot, 83.3% schema-valid) partly reflects those failures rather than the keys or the objectives. The key agreement (valid) column above compares keys on schema-valid items only.
+
 | Comparison | Metric | Difference | 95% CI |
 |---|---|---|---|
 | finetuned - base-0shot | usable | -8.0% | [-16.7%, +0.7%] |
