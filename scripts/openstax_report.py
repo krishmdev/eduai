@@ -2,6 +2,7 @@
 
     python scripts/openstax_report.py headline   # prints the arm name chosen on valid
     python scripts/openstax_report.py score      # per_item, eval.json and report.md
+    python scripts/openstax_report.py render     # report.md again from the committed files, no models
 
 The headline rule is step 4 of docs/v2_selection.md: whichever of finetuned-v2 (0-shot) and
 finetuned-v2-2shot has the higher valid usable rate, a tie going to 0-shot. The scoring is the main
@@ -73,7 +74,18 @@ def _p(x: float) -> str:
     return f"{100 * x:.1f}%"
 
 
-def render(res: dict, card: dict, verification: dict | None = None) -> str:
+def schema_valid_rates(per_item: dict[str, list[dict]], arms: tuple[str, ...]) -> dict[str, dict]:
+    """Key agreement and alignment over each arm's schema-valid items only."""
+    out = {}
+    for a in arms:
+        rows = [r for r in per_item[a] if r["schema"]]
+        out[a] = {k: sum(bool(r[k]) for r in rows) / len(rows) for k in ("key", "aligned")}
+    return out
+
+
+def render(
+    res: dict, card: dict, verification: dict | None = None, per_item: dict[str, list[dict]] | None = None
+) -> str:
     arm = res["arm"]
     s = res["summary"]
     lines = [
@@ -98,6 +110,20 @@ def render(res: dict, card: dict, verification: dict | None = None) -> str:
             f"| {a} | {r['n']} | {_p(r['json'])} | {_p(r['structure'])} | {_p(r['key'])} | {_p(r['aligned'])} | "
             f"{_p(r['novel'])} | {_p(r['source_copy'])} | {_p(r['usable'])} |"
         )
+    if per_item is not None:
+        sv = schema_valid_rates(per_item, (BASE, arm))
+        lines += [
+            "",
+            "Key agreement and alignment above count every prompt, so an item that isn't schema-valid counts "
+            "as neither. On schema-valid items only:",
+            "",
+            "| | Schema-valid items | Key agreement | Aligned |",
+            "|---|---|---|---|",
+            *(
+                f"| {a} | {s[a]['n_schema_valid']} | {_p(sv[a]['key'])} | {_p(sv[a]['aligned'])} |"
+                for a in (BASE, arm)
+            ),
+        ]
     lines += [
         "",
         f"Usable by subject, {arm} minus {BASE}, paired bootstrap ({N_BOOT:,} resamples over prompts), 95% CI.",
@@ -147,9 +173,7 @@ def score(prompts_path: Path = PROMPTS, out: Path = OUT) -> dict:
         data_dir=ROOT / "data",
         out_dir=gen,
     )
-    per_item: dict[str, list[dict]] = {}
-    for r in read_jsonl(gen / "per_item.jsonl"):
-        per_item.setdefault(r["arm"], []).append(r)
+    per_item = load_per_item(gen)
     subject_of = {p["id"]: p["request"]["lo_id"].split(".")[0] for p in prompts}
     res["arm"] = arms[0]
     res["by_subject"] = by_subject(per_item, subject_of, arms[0])
@@ -157,17 +181,41 @@ def score(prompts_path: Path = PROMPTS, out: Path = OUT) -> dict:
     card = json.loads((out / "prompts_card.json").read_text())
     (out / "eval.json").write_text(json.dumps(res, indent=2) + "\n")
     ver = out / "verification.json"
-    (out / "report.md").write_text(render(res, card, json.loads(ver.read_text()) if ver.exists() else None))
+    (out / "report.md").write_text(
+        render(res, card, json.loads(ver.read_text()) if ver.exists() else None, per_item)
+    )
     return res
+
+
+def load_per_item(gen: Path) -> dict[str, list[dict]]:
+    per_item: dict[str, list[dict]] = {}
+    for line in (gen / "per_item.jsonl").read_text().splitlines():
+        r = json.loads(line)
+        per_item.setdefault(r["arm"], []).append(r)
+    return per_item
+
+
+def rerender(out: Path = OUT) -> str:
+    """report.md from the committed eval.json, prompt card, verification notes and per-item rows,
+    without models."""
+    ver = out / "verification.json"
+    return render(
+        json.loads((out / "eval.json").read_text()),
+        json.loads((out / "prompts_card.json").read_text()),
+        json.loads(ver.read_text()) if ver.exists() else None,
+        load_per_item(out / "gen"),
+    )
 
 
 def main() -> int:
     ap = argparse.ArgumentParser()
-    ap.add_argument("cmd", choices=["headline", "score"])
+    ap.add_argument("cmd", choices=["headline", "score", "render"])
     ap.add_argument("--valid", type=Path, default=VALID)
     args = ap.parse_args()
     if args.cmd == "headline":
         print(headline(args.valid))
+    elif args.cmd == "render":
+        (OUT / "report.md").write_text(rerender())
     else:
         score()
         print((OUT / "report.md").read_text())

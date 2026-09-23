@@ -10,6 +10,13 @@ Reference coverage: 62 of 150 prompts have a human-written book question from th
 | base-2shot | 150 | 98.0% | 64.7% | 49.3% | 59.3% | 77.3% | 0.0% | 26.7% |
 | finetuned-v2 | 150 | 100.0% | 67.3% | 62.0% | 80.7% | 98.7% | 0.0% | 33.3% |
 
+Key agreement and alignment above count every prompt, so an item that isn't schema-valid counts as neither. On schema-valid items only:
+
+| | Schema-valid items | Key agreement | Aligned |
+|---|---|---|---|
+| base-2shot | 116 | 63.8% | 76.7% |
+| finetuned-v2 | 150 | 62.0% | 80.7% |
+
 Usable by subject, finetuned-v2 minus base-2shot, paired bootstrap (5,000 resamples over prompts), 95% CI.
 
 | Subject | n | base-2shot | finetuned-v2 | Difference | 95% CI |
