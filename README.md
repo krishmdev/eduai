@@ -1,7 +1,8 @@
 # EduAI
 
-EduAI generates AP-style multiple-choice science questions with Llama 3.2 3B, either the base
-model with two fixed examples or one of two LoRA adapters trained here (the eval compares them).
+EduAI generates AP-style (format; SciQ source text) multiple-choice science questions with
+Llama 3.2 3B, either the base model with two fixed examples or one of two LoRA adapters trained
+here (the eval compares them).
 An embedding-based tagger maps questions to learning objectives, and an adaptive test chooses
 each next question from the student's earlier responses. It covers Biology, Chemistry,
 Physics 1 and Environmental Science using SciQ source material. The pipeline runs on one
@@ -35,7 +36,9 @@ make demo         # bank-only app on http://127.0.0.1:8001
 ```
 
 The demo serves a committed sample of 634 SciQ-derived items (`data/samples/bank_sample.jsonl`)
-and 32 validated generated items. It needs neither the raw dataset nor a model. In the browser,
+and 32 generated items. The generated ones come from the v1 adapter (source `generated:finetuned`)
+and passed the eval's automatic checks. They were promoted before the answer-key verification gate
+existed and haven't been through it. The demo needs neither the raw dataset nor a model. In the browser,
 choose Biology, start a 10-question practice session, answer a few questions to see source-passage feedback and unit progress, then
 open the report. Assessment mode withholds the answer until the session ends and shows an
 illustrative ability estimate. The sample questions and AI-derived labels await human review;
@@ -60,7 +63,7 @@ started with `--network none`.
 ```bash
 make data SCIQ_DIR=~/Downloads/SciQ\ dataset-2\ 3   # SciQ JSON -> tagged items, splits, SFT data, data card
 make models-llm                                      # Llama 3.2 3B 4-bit (1.8 GB) + 1B judge, pinned revisions
-uv run eduai fetch-adapter                           # or: make train (about 2 hours)
+make train                                           # about 2 hours; the adapter release isn't published yet
 make eval                                            # 3 arms x 150 prompts, then judge and score (about 45 min)
 make serve                                           # full app; auto-selects MLX base 2-shot, then the adapter
 make test
@@ -135,10 +138,12 @@ completion tokens are JSON syntax, and 41% sit inside spans copied verbatim from
 ([reports/target_token_share.json](reports/target_token_share.json)). The training
 explanations are extracted passage sentences, so the model learns to extract, not to explain.
 
-The adapter is not committed. It ships as the GitHub Release asset `adapter-v1`
+The adapter is not committed. It is packaged for a GitHub Release asset `adapter-v1`
 (`llama-3.2-3b-eduai-lora-v1.tar.gz`, with the Llama 3.2 license and use policy inside), and its
-sha256 and size are listed in [adapters/MANIFEST.json](adapters/MANIFEST.json).
-`eduai fetch-adapter` downloads and verifies it once the release is published. The CUDA route is
+sha256 and size are listed in [adapters/MANIFEST.json](adapters/MANIFEST.json). That release isn't
+published yet, so `eduai fetch-adapter` fails for now; train with `make train`, or pass a local
+tarball with `eduai fetch-adapter --source`. Once the release is up, `eduai fetch-adapter`
+downloads and verifies it. The CUDA route is
 [notebooks/colab_qlora_peft.ipynb](notebooks/colab_qlora_peft.ipynb) (QLoRA with PEFT and TRL).
 That notebook is a reference and hasn't been run.
 
