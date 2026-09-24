@@ -255,12 +255,18 @@ the main eval. Full table: [reports/openstax_ood/report.md](reports/openstax_ood
 Intervals are paired bootstraps over prompts (5,000 resamples). The pre-registered reading uses
 the pooled interval, and it includes zero, so this check didn't show a difference between v2 and
 2-shot base out of distribution. The per-subject intervals are descriptive only. Biology's is
-the one that excludes zero. v2 had higher key agreement (62.0% vs 49.3%) and alignment (80.7% vs
-59.3%) but failed the structure checks more often (49 items vs 19 rejected there first). The run
-briefly overlapped another process using the GPU without the lease, so the scores were checked
-again on CPU and 10 generations were regenerated: every verdict matched, and all 10 generations
-were byte-identical ([verification.json](reports/openstax_ood/verification.json)). That was a
-check, not a second run.
+the one that excludes zero. Over all 150 prompts, v2 had higher key agreement (62.0% vs 49.3%) and
+alignment (80.7% vs 59.3%), but that gap mostly comes from 2-shot base's 34 items that weren't
+schema-valid, which count as misses. On schema-valid items only, key agreement is 62.0% for v2 and
+63.8% for 2-shot base, and alignment is 80.7% and 76.7%. v2 failed the structure checks more often
+(49 items vs 19 rejected there first). The run briefly overlapped another process using the GPU
+without the lease, so the scores were checked again on CPU and 10 generations were regenerated:
+every verdict matched, and all 10 generations were byte-identical
+([verification.json](reports/openstax_ood/verification.json)). That was a check, not a second run.
+
+The key check is weak out of distribution. The 1B key judge agrees with the textbooks' own answer
+keys on only 41.9% of the 62 book questions, against 93.3% for the SciQ reference items in the main
+eval, so key agreement and usable say little here about whether the keys are right.
 
 ### Blind audit with LLM judges
 
