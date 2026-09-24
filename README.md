@@ -204,7 +204,7 @@ It also learned the wrong things from its targets, which were the SciQ source qu
 - It writes near-identical options on 63 of 150 items, including 9 where all four options are the same string.
 - It puts the key at A on 104 of 150 valid items, even though the SFT answer letters were exactly 25% each.
 
-Before items enter the bank, their options are reshuffled and the key is remapped. Alignment is at the reference ceiling (70.7%) for 0-shot and fine-tuned; 2-shot is lower at 64.0%. Generation with the unfused adapter ran at 48 tok/s, against 80 for the base model, on a machine with other background load (see the eval manifest), so treat the speeds as rough.
+Before items enter the bank, their options are reshuffled and the key is remapped. Alignment is at the reference ceiling (70.7%) for 0-shot and fine-tuned; 2-shot is lower at 64.0%, but that counts its schema failures as misses (79.3% on its schema-valid items). Generation with the unfused adapter ran at 48 tok/s, against 80 for the base model, on a machine with other background load (see the eval manifest), so treat the speeds as rough.
 
 In short, the v1 LoRA fine-tune of Llama 3.2 3B taught format reliability, but the 3,000 SciQ-derived targets also taught copying and a key-position bias.
 
@@ -219,7 +219,7 @@ The v2 LoRA was trained on items the base 3B wrote itself: samples drawn with th
 
 Compared with v1, v2 copies the source question less (8.7% against 25.3%), puts the key at A less often (61 of 150 valid items, against 104), and writes near-identical options on 22 items instead of 63. It keeps v1's schema-valid rate (100.0%). Its key agreement on schema-valid items (75.3%) is about the same as 2-shot base (75.2%). Its most common structure problem is a stem that gives away the answer (27 items, against 11 for 2-shot base).
 
-Usable overstates v2 more than the other arms. v2's targets were picked with these same checks and with the base 3B as key judge, and the 3B agrees closely with the 1B eval judge. The manual blind audit planned in the protocol was not done. Instead, two LLM judges from other model families audited a sample of usable test items blind (see the blind audit below). No person has checked these items.
+Usable overstates v2 more than the other arms. v2's targets were picked with these same checks and with the base 3B as key judge, and the 3B gives the same key verdict as the 1B eval judge on 78.7% of v2's schema-valid items (74.4% for 2-shot base, 90.7% for v1). The manual blind audit planned in the protocol was not done. Instead, two LLM judges from other model families audited a sample of usable test items blind (see the blind audit below). No person has checked these items.
 <!-- eval:end -->
 
 `make eval-check` audits the committed evaluation snapshot without models: it checks the 150

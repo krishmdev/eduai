@@ -1,4 +1,5 @@
-"""Write the README "Generation eval" section from reports/eval.json (between the eval markers)."""
+"""Write the README "Generation eval" section from reports/eval.json and reports/eval/per_item.jsonl
+(between the eval markers)."""
 
 from __future__ import annotations
 
@@ -24,7 +25,7 @@ def ci(v: dict) -> str:
     return f"{v['diff'] * 100:+.1f} points (95% CI {v['ci95'][0] * 100:+.1f} to {v['ci95'][1] * 100:+.1f})"
 
 
-def render(r: dict, card: dict) -> str:
+def render(r: dict, card: dict, per_item: list[dict]) -> str:
     s, b, t = r["summary"], r["bootstrap"], r["timing"]
     lf = card["leakage_filter"]
     ft = s["finetuned"]
@@ -93,7 +94,9 @@ def render(r: dict, card: dict) -> str:
         "",
         "Before items enter the bank, their options are reshuffled and the key is remapped. "
         f"Alignment is at the reference ceiling ({pct(s['reference']['aligned'])}) for 0-shot and fine-tuned; "
-        f"2-shot is lower at {pct(s['base-2shot']['aligned'])}. Generation with the unfused adapter ran at "
+        f"2-shot is lower at {pct(s['base-2shot']['aligned'])}, but that counts its schema failures as misses "
+        f"({pct(aligned_on_valid(per_item, 'base-2shot'))} on its schema-valid items). "
+        "Generation with the unfused adapter ran at "
         f"{t['finetuned']['mean_generation_tps']:.0f} tok/s, against {t['base-0shot']['mean_generation_tps']:.0f} "
         "for the base model, on a machine with other background load (see the eval manifest), so treat the "
         "speeds as rough.",
@@ -102,11 +105,26 @@ def render(r: dict, card: dict) -> str:
         "targets also taught copying and a key-position bias.",
     ]
     if "finetuned-v2" in s:
-        L += ["", *v2_section(r)]
+        L += ["", *v2_section(r, judge_agreement(per_item))]
     return "\n".join(L)
 
 
-def v2_section(r: dict) -> list[str]:
+def aligned_on_valid(per_item: list[dict], arm: str) -> float:
+    rows = [r for r in per_item if r["arm"] == arm and r["schema"]]
+    return sum(bool(r["aligned"]) for r in rows) / len(rows)
+
+
+def judge_agreement(per_item: list[dict]) -> dict[str, float]:
+    """Share of each arm's schema-valid items where the 3B secondary judge's key verdict matches the 1B's."""
+    out = {}
+    for arm in {r["arm"] for r in per_item if r["arm"] != "reference"}:
+        rows = [r for r in per_item if r["arm"] == arm and r["schema"] and r.get("key_secondary") is not None]
+        if rows:
+            out[arm] = sum(r["key"] == r["key_secondary"] for r in rows) / len(rows)
+    return out
+
+
+def v2_section(r: dict, agree: dict[str, float]) -> list[str]:
     s, b = r["summary"], r["bootstrap"]
     v2, v2s, b2, v1 = s["finetuned-v2"], s["finetuned-v2-2shot"], s["base-2shot"], s["finetuned"]
     sp = r["structure_problems"]["finetuned-v2"]
@@ -150,7 +168,9 @@ def v2_section(r: dict) -> list[str]:
         f"{r['structure_problems']['base-2shot'].get('stem gives away the answer', 0)} for 2-shot base).",
         "",
         "Usable overstates v2 more than the other arms. v2's targets were picked with these same checks and "
-        "with the base 3B as key judge, and the 3B agrees closely with the 1B eval judge. The manual blind "
+        "with the base 3B as key judge, and the 3B gives the same key verdict as the 1B eval judge on "
+        f"{pct(agree['finetuned-v2'])} of v2's schema-valid items ({pct(agree['base-2shot'])} for 2-shot base, "
+        f"{pct(agree['finetuned'])} for v1). The manual blind "
         "audit planned in the protocol was not done. Instead, two LLM judges from other model families "
         "audited a sample of usable test items blind (see the blind audit below). No person has checked "
         "these items.",
@@ -160,9 +180,12 @@ def v2_section(r: dict) -> list[str]:
 def main() -> None:
     r = json.loads((ROOT / "reports" / "eval.json").read_text())
     card = json.loads((ROOT / "reports" / "eval_prompts_card.json").read_text())
+    per_item = [
+        json.loads(x) for x in (ROOT / "reports" / "eval" / "per_item.jsonl").read_text().splitlines() if x
+    ]
     readme = (ROOT / "README.md").read_text()
     a, b = readme.index(START) + len(START), readme.index(END)
-    (ROOT / "README.md").write_text(readme[:a] + "\n" + render(r, card) + "\n" + readme[b:])
+    (ROOT / "README.md").write_text(readme[:a] + "\n" + render(r, card, per_item) + "\n" + readme[b:])
 
 
 if __name__ == "__main__":
