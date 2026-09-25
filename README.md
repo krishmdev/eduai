@@ -316,6 +316,24 @@ The two judges don't agree on how many usable items are real, so this audit can'
 how much "usable" overstates either arm. It gives no sign that v2's usable items are better or
 worse than 2-shot base's.
 
+Two caveats on the blinding and the parsing, found after the audit:
+
+- The arm hid less than planned. v2 puts the key at A on 20 of its 40 sheet items, against 8 of 40
+  for 2-shot base, and 14 of v2's items carry a requested misconception, against 5 of base's. A
+  judge could pick up on either. The misconception items also score differently. Qwen judged the
+  key correct on 7 of the 14 v2 items with a misconception and 16 of the 26 without. Split the same
+  way, precision (key correct and on objective) is:
+
+  | Judge | v2, with misconception | v2, without | Base, with | Base, without |
+  |---|---|---|---|---|
+  | Qwen3.5 9B | 0 of 14 | 2 of 26 | 0 of 5 | 3 of 35 |
+  | Gemma 4 12B | 4 of 8 | 6 of 11 | 1 of 2 | 8 of 18 |
+
+- The one Gemma verdict that never parsed (a018, a v2 item) failed only because the model
+  misspelled a field (`distractors_plplausible`). Its other fields read key correct and not on
+  objective. Counting it would put Gemma's v2 precision at 50.0% (10 of 20) and the v2 minus base
+  difference at +5.0 points instead of +7.6. The parser and the committed scores are unchanged.
+
 ### Post-hoc: answer-key verification
 
 This part is exploratory. I planned it after seeing the audit, which found wrong keys among items
