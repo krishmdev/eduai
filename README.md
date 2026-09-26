@@ -273,7 +273,8 @@ eval, so key agreement and usable say little here about whether the keys are rig
 No person reviewed the generated items. Instead, two language models from families other than
 Llama read usable test items with the arm hidden and judged whether the key is correct, whether
 the item fits its objective, and whether the distractors are plausible. The two judges are
-Qwen3.5 9B and Gemma 4 12B, served locally through Localhost AI with thinking turned on. Their
+Qwen3.5 9B and Gemma 4 12B, served locally with thinking turned on through Localhost AI, a
+separate local OpenAI-compatible inference server; any server with the same pinned models would do. Their
 verdicts are another machine opinion, and they can be wrong. The plan and its three dated
 amendments are in [docs/blind_audit_llm.md](docs/blind_audit_llm.md). Results are in
 [reports/eval/audit_llm/](reports/eval/audit_llm/).
