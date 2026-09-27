@@ -483,7 +483,8 @@ unfinished practice session's report is marked as in progress, with a link back 
 
 The code is MIT. SciQ is CC BY-NC 3.0, so the samples, eval outputs and adapter are
 non-commercial. The models are Llama 3.2 under the Llama 3.2 Community License ("Built with
-Llama"). The embedders are bge-small (MIT) and MiniLM (Apache-2.0). See
+Llama"). The audit and verification judges are Qwen3.5 9B (Apache-2.0) and Gemma 4 12B
+(Apache-2.0 per Google's model card). The embedders are bge-small (MIT) and MiniLM (Apache-2.0). See
 [DATA_LICENSES.md](DATA_LICENSES.md). AP is a registered trademark of the College Board, which
 isn't affiliated with this project.
 

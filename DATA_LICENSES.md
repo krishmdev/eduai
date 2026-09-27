@@ -35,7 +35,9 @@ The pinned sources are licensed Creative Commons Attribution-NonCommercial-Share
 International (CC BY-NC-SA 4.0), as stated in each collection file and repository LICENSE.
 Changes: paragraphs were extracted from the section text, figures, equations, cross-references and
 most math were removed or flattened to plain text, and paragraphs were merged or cut at sentence
-boundaries. Questions keep their wording; the answer letter comes from the book's solution. The
+boundaries. Questions keep their wording, except where the parser lost part of a stem: in the
+committed prompt file, the book question for ox-phys-010 is missing its I-III statement list,
+which later parser versions keep. The answer letter comes from the book's solution. The
 derived prompt file is shared under the same license. The raw CNXML is not committed;
 `scripts/fetch_openstax.py` downloads it.
 
@@ -54,6 +56,18 @@ Both files are included in the adapter release tarball.
 Built with Llama. The adapter distributed as a release asset (`Llama-3.2-3B-EduAI-AP-LoRA`) is a derivative of
 Llama 3.2. It is subject to the Llama 3.2 Community License and Acceptable Use Policy. Its
 training data also limits it to non-commercial use.
+
+## Audit and verification models
+
+These models judged items for the blind audit (`reports/eval/audit_llm/`) and the answer-key
+verification (`reports/**/verify_qwen3.5-9b.jsonl`). Their verdicts and scores are committed; the
+weights are not redistributed.
+
+- Qwen3.5 9B (`mlx-community/Qwen3.5-9B-MLX-4bit`, pinned in `src/eduai/config.py`), a 4-bit MLX
+  conversion of Qwen's Qwen3.5 9B: Apache-2.0.
+- Gemma 4 12B (`mlx-community/gemma-4-12B-it-4bit`, revision 73bcf09 in the audit manifest), a
+  4-bit MLX conversion of Google's Gemma 4 12B instruction-tuned model. Google's model card lists
+  Apache-2.0 under the Gemma 4 license page; the pinned mlx-community card has no license field.
 
 ## Embedding and reranking models
 
