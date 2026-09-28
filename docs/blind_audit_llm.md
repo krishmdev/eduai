@@ -155,3 +155,16 @@ measured Gemma speed (about 16 tokens/s at concurrency 2), 80 items would take a
 - Reported for Gemma: per-arm precision on n = 20 + 20, and Qwen-vs-Gemma kappa on those 40 items.
 - Hard stop at 2.25 hours of Gemma judging. If it triggers, the report says exactly how many items
   were judged, from `verdicts.partial.jsonl`.
+
+## Note (2026-09-28, after the audit; nothing above is changed)
+
+Found in the final review, and reported in the README next to the audit numbers:
+
+- The sheet hides the arm name but not every cue. finetuned-v2 keys A on 20 of its 40 sheet
+  items against 8 of 40 for base-2shot, and 14 of its items carry a requested misconception
+  against 5. Qwen judged the key correct on 7 of 14 v2 items with a misconception and 16 of 26
+  without.
+- Gemma's one unparsed verdict (a018, finetuned-v2) failed because of a misspelled field,
+  `distractors_plplausible`. Its other fields read key correct, not on objective. Counted as
+  written, Gemma's v2 precision would be 50.0% (10 of 20) and the v2 minus base difference +5.0
+  points instead of +7.6. The parser and committed scores stay as they are.

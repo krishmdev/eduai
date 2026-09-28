@@ -76,3 +76,17 @@ default for new promotions (`--require-verified`, `EDUAI_REQUIRE_KEY_VERIFICATIO
 `verify_<model>.jsonl` from the eval directory and stops if that file doesn't exist. Passing
 `--no-require-verified` gives the old behaviour. The live `Pipeline` accepts an optional
 `verifier` and, when one is given, rejects unverified items with the reason `key_unverified`.
+
+## Note (2026-09-28, after the run; nothing above is changed)
+
+- Commit map. The four verify manifests (`reports/eval/verify_qwen3.5-9b_manifest*.json` and
+  `reports/valid_eval/gen/verify_qwen3.5-9b_manifest*.json`) record commit
+  af3cc16fd792ee3486fa0bd5e9fd3747c01032f6. That commit was on a side branch that was later
+  rebased onto main, where it became 91ceae9 with the same subject. The rebase added only the
+  Gemma audit commits underneath it (README, `scripts/blind_audit.py`, `scripts/readme_eval.py`,
+  audit results and tests); the verifier and eval code are identical between the two. The
+  manifests are left as recorded.
+- Localhost AI, named above as `../localhost-ai`, is a separate local OpenAI-compatible inference
+  server (MLX backend, pinned model presets) that served the blind-audit judges. The verifier
+  doesn't use it; it only shares the same pinned Qwen3.5 9B snapshot, so a checkout next to this
+  repo saves a second download.

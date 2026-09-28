@@ -93,3 +93,25 @@ pooled interval (n = 150) is the one read.
 
 About 25 minutes on the M1 Pro under the compute lease: generation took 587 s (base 2-shot) and
 564 s (finetuned-v2) for 150 valid prompts, and the 1B judge about 5 minutes for two arms.
+
+## Note (2026-09-28, after the single run; nothing above is changed)
+
+Issues found in the final review. The committed prompts and results are unchanged; the code is
+fixed for any future build.
+
+- Denominators. Key agreement and alignment in the report count all 150 prompts, and 34
+  base-2shot items weren't schema-valid. On schema-valid items only, key agreement is 63.8%
+  (base-2shot) vs 62.0% (finetuned-v2) and alignment 76.7% vs 80.7%, so most of the all-prompt
+  gap is schema failures. `scripts/openstax_report.py` now prints both.
+- The 1B judge agrees with the books' own keys on 41.9% of the 62 reference questions, so the
+  key check is weak on this material.
+- Parser. `parse_mcq` dropped an upper-roman statement list from a stem, so the reference
+  question for ox-phys-010 lacks its I-III statements. It now keeps such lists in the stem and
+  skips an exercise with any other kind of list. Rerunning the parser on the pinned books changes
+  no other committed reference question.
+- Leak screen. Passage containment was checked one way (the share of the OpenStax chunk found in
+  a SciQ or training passage), and the reference Q+A was embedded as plain "stem answer" text,
+  not in the training side's `tag_text` format. Both are fixed for future builds.
+- `reports/openstax_ood/gen/gen_finetuned-v2.meta.json` records the adapter as an absolute
+  `/Users/...` path, because the run was made from a worktree and the adapter sat in the main
+  checkout. The path has no other meaning. New runs write it relative to the repo root.

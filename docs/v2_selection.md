@@ -77,3 +77,10 @@ Written after the valid runs and a pre-test code review, and committed before th
 - The test results split by whether the reference question is tagger-aligned are exploratory.
   They are not used to decide whether v2 beat base 2-shot. That decision stays with the full-set
   interval rule above.
+
+## Note (2026-09-28, after the test run; nothing above is changed)
+
+"Agrees closely" above had no number. On the test split's schema-valid items, the base 3B's key
+verdict (the secondary judge) matches the 1B eval judge's on 74.4% of base-2shot items, 78.7% of
+finetuned-v2 items and 90.7% of v1 (finetuned) items, from `reports/eval/per_item.jsonl`. The
+README now gives these numbers.
