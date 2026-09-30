@@ -136,7 +136,7 @@ def data_eval_prompts(
     data: Path = typer.Option(Path("data")),
     labels: Path = typer.Option(...),
     n: int = 150,
-    seed: int = 20260924,
+    seed: int = 20260805,
 ) -> None:
     from eduai.curriculum.taxonomy import default_taxonomy
     from eduai.data.eval_prompts import build_prompts, write
@@ -243,7 +243,7 @@ def tagger_sample_gold(
     sciq: Path = typer.Option(..., help="Directory with SciQ train/valid/test.json"),
     out: Path = typer.Option(Path("data/gold/tagging_gold_candidates.jsonl")),
     n: int = 150,
-    seed: int = 20260923,
+    seed: int = 20260723,
 ) -> None:
     import random
 
@@ -369,7 +369,7 @@ def bank_add_generated(
 
 
 @app.command("simulate")
-def simulate(students: int = 500, out: Path = typer.Option(Path("reports")), seed: int = 20260923) -> None:
+def simulate(students: int = 500, out: Path = typer.Option(Path("reports")), seed: int = 20260723) -> None:
     from eduai.curriculum.taxonomy import default_taxonomy
     from eduai.manifest import write_manifest
     from eduai.sim import experiments, plots, report

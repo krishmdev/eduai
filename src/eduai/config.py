@@ -20,7 +20,7 @@ class ModelPin:
     template_kwargs: tuple[tuple[str, object], ...] = ()
 
 
-# Revisions resolved against the Hugging Face API on 2026-09-23. `make models` downloads exactly
+# Revisions resolved against the Hugging Face API on 2026-07-23. `make models` downloads exactly
 # these commits into .models/ and checks every file against models.lock.
 EMBED_FILES = (
     "config.json",

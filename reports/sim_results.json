@@ -1,7 +1,7 @@
 {
  "config": {
   "students": 500,
-  "seed": 20260923,
+  "seed": 20260723,
   "subject": "BIO",
   "per_lo": 12,
   "a_lengths": [

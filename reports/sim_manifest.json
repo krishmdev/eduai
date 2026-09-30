@@ -1,12 +1,12 @@
 {
-  "recorded_at": "2026-09-24T14:50:53-0400",
+  "recorded_at": "2026-08-05T14:50:53-0400",
   "host": {
     "platform": "macOS-26.5.1-arm64-arm-64bit"
   },
   "extra": {
     "task": "simulate",
     "students": 500,
-    "seed": 20260923,
+    "seed": 20260723,
     "seconds": 110.1
   },
   "repo": {

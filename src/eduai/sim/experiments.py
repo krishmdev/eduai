@@ -30,7 +30,7 @@ SUBJECT = "BIO"
 @dataclass
 class SimConfig:
     students: int = 500
-    seed: int = 20260923
+    seed: int = 20260723
     subject: str = SUBJECT
     per_lo: int = 12
     a_lengths: tuple[int, ...] = (5, 10, 15, 20, 30, 40, 60)
